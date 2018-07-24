@@ -12,18 +12,12 @@ namespace Richiban.CommandLine
             var scanner = new Scanner(Assembly.GetEntryAssembly());
 
             var model = scanner.BuildModel();
-
-            try
-            {
-                var commandLineAction = new CommandLineActionFactory(model)
-                    .Create(CommandLineArgumentCollection.Parse(args));
-
-                commandLineAction.Execute();
-            }
-            catch (Exception)
-            {
-                Console.WriteLine(GenerateHelp(model));
-            }
+            
+            new CommandLineActionFactory(model)
+                .Create(CommandLineArgumentList.Parse(args))
+                .Match(
+                    None: () => Console.WriteLine(GenerateHelp(model)),
+                    Some: commandLineAction => commandLineAction.Execute());
         }
 
         private static string GenerateHelp(IEnumerable<TypeModel> implementingTypes) => 

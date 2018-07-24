@@ -1,17 +1,43 @@
-﻿namespace Richiban.CommandLine
+﻿using System;
+using System.Collections.Generic;
+
+namespace Richiban.CommandLine
 {
     internal struct Option<T>
     {
-        public T Value { get; }
-        public bool HasValue { get; }
+        private readonly T _value;
 
         public Option(T value)
         {
-            Value = value;
+            _value = value;
             HasValue = value != null;
         }
+        public bool HasValue { get; }
 
         public static implicit operator Option<T>(Prelude.OptionNone none) => new Option<T>();
         public static implicit operator Option<T>(T value) => new Option<T>(value);
+
+        internal void Match(Action None, Action<T> Some)
+        {
+            if (HasValue)
+                Some(_value);
+            else
+                None();
+        }
+
+        public Option<R> IfSome<R>(Func<T, R> f)
+        {
+            if (HasValue)
+                return f(_value);
+
+            return default;
+        }
+
+        public static IEnumerable<T> Choose(IEnumerable<Option<T>> source)
+        {
+            foreach (var item in source)
+                if (item.HasValue)
+                    yield return item._value;
+        }
     }
 }

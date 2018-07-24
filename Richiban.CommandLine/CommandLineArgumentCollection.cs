@@ -4,16 +4,16 @@ using System.Linq;
 
 namespace Richiban.CommandLine
 {
-    internal class CommandLineArgumentCollection : IReadOnlyList<CommandLineArgument>
+    internal class CommandLineArgumentList : IReadOnlyList<CommandLineArgument>
     {
         private readonly IReadOnlyList<CommandLineArgument> _args;
 
-        private CommandLineArgumentCollection(IReadOnlyList<CommandLineArgument> args) =>
+        private CommandLineArgumentList(IReadOnlyList<CommandLineArgument> args) =>
             _args = args;
 
-        public static CommandLineArgumentCollection Parse(string[] args)
+        public static CommandLineArgumentList Parse(string[] args)
         {
-            return new CommandLineArgumentCollection(args.SelectMany(CommandLineArgument.Parse).ToList());
+            return new CommandLineArgumentList(args.SelectMany(CommandLineArgument.Parse).ToList());
         }
 
         public int Count => _args.Count;
@@ -21,7 +21,7 @@ namespace Richiban.CommandLine
         public IEnumerator<CommandLineArgument> GetEnumerator() => _args.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        public CommandLineArgumentCollection Without(CommandLineArgument commandLineArgument) =>
-            new CommandLineArgumentCollection(_args.Where(x => x != commandLineArgument).ToList());
+        public CommandLineArgumentList Without(CommandLineArgument commandLineArgument) =>
+            new CommandLineArgumentList(_args.Where(x => x != commandLineArgument).ToList());
     }
 }

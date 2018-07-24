@@ -13,10 +13,10 @@ namespace Richiban.CommandLine
             _assemblyModel = model;
         }
 
-        public ICommandLineAction Create(CommandLineArgumentCollection commandLineArgs) =>
-            GetTypeMapping(commandLineArgs).CreateInstance();
+        public Option<ICommandLineAction> Create(CommandLineArgumentList commandLineArgs) =>
+            GetTypeMapping(commandLineArgs).IfSome(x => x.CreateInstance());
 
-        private TypeMapping GetTypeMapping(CommandLineArgumentCollection args)
+        private Option<TypeMapping> GetTypeMapping(CommandLineArgumentList args)
         {
             var matchingTypes = _assemblyModel
                 .Select(t => MapType(args, t))
@@ -26,7 +26,7 @@ namespace Richiban.CommandLine
             switch (matchingTypes.Count)
             {
                 case 0:
-                    throw new Exception("No type found");
+                    return default;
                 case 1:
                     return matchingTypes.Single();
                 case var n:
@@ -38,7 +38,7 @@ namespace Richiban.CommandLine
 
                     if (bestMatch.Count() > 1)
                     {
-                        throw new Exception("Multiple types found");
+                        return default;
                     }
                     else
                     {
@@ -48,7 +48,7 @@ namespace Richiban.CommandLine
         }
 
         private Option<TypeMapping> MapType(
-            CommandLineArgumentCollection args,
+            CommandLineArgumentList args,
             TypeModel typeModel)
         {
             if (typeModel.MatchesVerb(args, ref args) == false)

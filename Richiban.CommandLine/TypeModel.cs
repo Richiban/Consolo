@@ -67,7 +67,7 @@ namespace Richiban.CommandLine
             return instance;
         }
 
-        public bool MatchesVerb(CommandLineArgumentCollection args1, ref CommandLineArgumentCollection args2)
+        public bool MatchesVerb(CommandLineArgumentList args1, ref CommandLineArgumentList args2)
         {
             switch(args1.FirstOrDefault())
             {
