@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace Richiban.CommandLine
 {
@@ -8,15 +9,20 @@ namespace Richiban.CommandLine
     {
         public static void Execute(params string[] args)
         {
-            var scanner = new Scanner();
+            var scanner = new Scanner(Assembly.GetEntryAssembly());
+
+            var model = scanner.BuildModel();
 
             try
             {
-                scanner.Scan(CommandLineArgumentCollection.Parse(args));
+                var commandLineAction = new CommandLineActionFactory(model)
+                    .Create(CommandLineArgumentCollection.Parse(args));
+
+                commandLineAction.Execute();
             }
             catch (Exception)
             {
-                Console.WriteLine(GenerateHelp(scanner.ImplementingTypes));
+                Console.WriteLine(GenerateHelp(model));
             }
         }
 
