@@ -6,7 +6,10 @@ namespace Richiban.CommandLine
     {
         private readonly Action _action;
 
-        public CommandLineAction(Action action) => _action = action;
+        public CommandLineAction(Action action, string help) => 
+            (_action, Help) = (action, help);
+
+        public string Help { get; }
 
         internal void Execute() => _action();
     }

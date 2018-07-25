@@ -11,19 +11,32 @@ namespace Richiban.CommandLine
     {
         private readonly IReadOnlyList<CommandLineArgument> _args;
 
-        private CommandLineArgumentList(IReadOnlyList<CommandLineArgument> args) =>
-            _args = args;
+        private CommandLineArgumentList(IReadOnlyList<CommandLineArgument> args, bool isCallForHelp) =>
+            (_args, IsCallForHelp) = (args, isCallForHelp);
 
-        public static CommandLineArgumentList Parse(string[] args) =>
-            new CommandLineArgumentList(args.Select(CommandLineArgument.Parse).ToList());
+        public static CommandLineArgumentList Parse(string[] args)
+        {
+            var parsedArgs = args.Select(CommandLineArgument.Parse).ToList();
+
+            var helpGlyphs = parsedArgs.OfType<CommandLineArgument.HelpGlyph>().ToList();
+
+            foreach(var helpGlyph in helpGlyphs)
+            {
+                parsedArgs.Remove(helpGlyph);
+            }
+
+            return new CommandLineArgumentList(parsedArgs, helpGlyphs.Any());
+        }
 
         public int Count => _args.Count;
+
+        public bool IsCallForHelp { get; }
         public CommandLineArgument this[int index] => _args[index];
         public IEnumerator<CommandLineArgument> GetEnumerator() => _args.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         public CommandLineArgumentList Without(CommandLineArgument[] commandLineArguments) =>
-            new CommandLineArgumentList(_args.Except(commandLineArguments).ToList());
+            new CommandLineArgumentList(_args.Except(commandLineArguments).ToList(), IsCallForHelp);
 
         public CommandLineArgumentList ExpandShortFormArgument(
             CommandLineArgument.BareNameOrFlag argumentToExpand)
@@ -37,7 +50,7 @@ namespace Richiban.CommandLine
                 newArgumentList.Add(new CommandLineArgument.BareNameOrFlag(c.ToString()));
             }
 
-            return new CommandLineArgumentList(newArgumentList);
+            return new CommandLineArgumentList(newArgumentList, IsCallForHelp);
         }
     }
 }

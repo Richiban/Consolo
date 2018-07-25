@@ -33,8 +33,17 @@ namespace Richiban.CommandLine
             public BareNameOrFlag(string name) => Name = name;
         }
 
+        [DebuggerDisplay("/?")]
+        public class HelpGlyph : CommandLineArgument
+        {
+
+        }
+
         public static CommandLineArgument Parse(string raw)
         {
+            if (raw == "/?" || raw == "-?" || raw == "--?")
+                return new HelpGlyph();
+
             if (raw.StartsWith("/"))
             {
                 var parts = raw.TrimStart('/').Split(':');

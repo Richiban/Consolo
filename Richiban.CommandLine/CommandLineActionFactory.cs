@@ -13,38 +13,17 @@ namespace Richiban.CommandLine
             _assemblyModel = model;
         }
 
-        public Option<CommandLineAction> Create(CommandLineArgumentList commandLineArgs) =>
-            GetTypeMapping(commandLineArgs).IfSome(x => x.CreateInstance());
+        public IReadOnlyCollection<CommandLineAction> Create(CommandLineArgumentList commandLineArgs) =>
+            GetMethodMappings(commandLineArgs).Select(x => x.CreateInstance()).ToList();
 
-        private Option<MethodMapping> GetTypeMapping(CommandLineArgumentList args)
+        private IReadOnlyCollection<MethodMapping> GetMethodMappings(CommandLineArgumentList args)
         {
-            var matchingTypes = _assemblyModel
+            var matches = _assemblyModel
                 .Select(t => MapType(args, t))
                 .Choose()
                 .ToList();
 
-            switch (matchingTypes.Count)
-            {
-                case 0:
-                    return default;
-                case 1:
-                    return matchingTypes.Single();
-                case var n:
-                    var bestMatch =
-                        matchingTypes.GroupBy(m => m.PropertyMappings.Count)
-                        .OrderByDescending(m => m.Key)
-                        .First()
-                        .ToList();
-
-                    if (bestMatch.Count() > 1)
-                    {
-                        return default;
-                    }
-                    else
-                    {
-                        return bestMatch.Single();
-                    }
-            }
+            return matches;
         }
 
         private Option<MethodMapping> MapType(

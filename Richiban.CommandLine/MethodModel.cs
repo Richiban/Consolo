@@ -38,7 +38,7 @@ namespace Richiban.CommandLine
             var methodArguments =
                 mappings.Select(m => m.Value).ToArray();
 
-            return new CommandLineAction(() => _methodInfo.Invoke(instance, methodArguments));
+            return new CommandLineAction(() => _methodInfo.Invoke(instance, methodArguments), Help);
         }
     }
 }
