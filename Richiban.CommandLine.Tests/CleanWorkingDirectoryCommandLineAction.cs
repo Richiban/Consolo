@@ -2,19 +2,15 @@
 
 namespace ConsoleApp1
 {
-    [Verb("clean")]
-    public sealed class CleanWorkingDirectoryCommandLineAction : ICommandLineAction
+    public sealed class CleanWorkingDirectoryCommandLineAction
     {
-        [Switch, AlternativeName("d")]
-        public bool RemoveDirectories { get; set; }
-        [Switch, AlternativeName("f")]
-        public bool Force { get; set; }
-        [Switch, AlternativeName("x")]
-        public bool IgnoreIgnore { get; set; }
-
-        public void Execute()
+        [CommandLine, Verb]
+        public void Clean(
+            [ShortForm('d')] bool removeDirectories = false,
+            [ShortForm('f')] bool force = false,
+            [ShortForm('x')] bool ignoreIgnore = false)
         {
-            $"Cleaning working directory ({new { RemoveDirectories, Force, IgnoreIgnore }})".Dump();
+            $"Cleaning working directory ({new { removeDirectories, force, ignoreIgnore }})".Dump();
         }
     }
 }

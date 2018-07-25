@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Richiban.CommandLine
@@ -7,6 +8,7 @@ namespace Richiban.CommandLine
     {
         private CommandLineArgument() { }
 
+        [DebuggerDisplay("{Value}")]
         public class Free : CommandLineArgument
         {
             public string Value { get; }
@@ -14,22 +16,24 @@ namespace Richiban.CommandLine
             public Free(string value) => Value = value;
         }
 
-        public class Named : CommandLineArgument
+        [DebuggerDisplay("/{Name}:{Value}")]
+        public class NameValuePair : CommandLineArgument
         {
             public string Name { get; }
             public string Value { get; }
 
-            public Named(string name, string value) => (Name, Value) = (name, value);
+            public NameValuePair(string name, string value) => (Name, Value) = (name, value);
         }
 
-        public class Flag : CommandLineArgument
+        [DebuggerDisplay("/{Name}")]
+        public class BareNameOrFlag : CommandLineArgument
         {
             public string Name { get; }
 
-            public Flag(string name) => Name = name;
+            public BareNameOrFlag(string name) => Name = name;
         }
 
-        public static IEnumerable<CommandLineArgument> Parse(string raw)
+        public static CommandLineArgument Parse(string raw)
         {
             if (raw.StartsWith("/"))
             {
@@ -37,22 +41,33 @@ namespace Richiban.CommandLine
 
                 if (parts.Length > 1)
                 {
-                    return new[] { new Named(parts[0], parts[1]) };
+                    return new NameValuePair(parts[0], parts[1]);
                 }
                 else
                 {
-                    return new[] { new Flag(parts[0]) };
+                    return new BareNameOrFlag(parts[0]);
+                }
+            }
+            else if (raw.StartsWith("--"))
+            {
+                var parts = raw.TrimStart('-').Split('=');
+
+                if (parts.Length > 1)
+                {
+                    return new NameValuePair(parts[0], parts[1]);
+                }
+                else
+                {
+                    return new BareNameOrFlag(parts[0]);
                 }
             }
             else if (raw.StartsWith("-"))
             {
-                var parts = raw.TrimStart('-').ToCharArray();
-
-                return parts.Select(c => new Flag(c.ToString()));
+                return new BareNameOrFlag(raw.TrimStart('-'));
             }
             else
             {
-                return new[] { new Free(raw) };
+                return new Free(raw);
             }
         }
     }

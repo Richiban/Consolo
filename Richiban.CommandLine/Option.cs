@@ -33,6 +33,12 @@ namespace Richiban.CommandLine
             return default;
         }
 
+        public void IfSome(Action<T> f)
+        {
+            if (HasValue)
+                f(_value);
+        }
+
         public static IEnumerable<T> Choose(IEnumerable<Option<T>> source)
         {
             foreach (var item in source)

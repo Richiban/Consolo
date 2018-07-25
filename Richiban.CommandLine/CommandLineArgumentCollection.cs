@@ -1,9 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Collections;
 using System.Linq;
+using System.Diagnostics;
+using System;
 
 namespace Richiban.CommandLine
 {
+    [DebuggerDisplay("{string.Join(\", \", _args)}")]
     internal class CommandLineArgumentList : IReadOnlyList<CommandLineArgument>
     {
         private readonly IReadOnlyList<CommandLineArgument> _args;
@@ -13,7 +16,7 @@ namespace Richiban.CommandLine
 
         public static CommandLineArgumentList Parse(string[] args)
         {
-            return new CommandLineArgumentList(args.SelectMany(CommandLineArgument.Parse).ToList());
+            return new CommandLineArgumentList(args.Select(CommandLineArgument.Parse).ToList());
         }
 
         public int Count => _args.Count;
@@ -21,7 +24,22 @@ namespace Richiban.CommandLine
         public IEnumerator<CommandLineArgument> GetEnumerator() => _args.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        public CommandLineArgumentList Without(CommandLineArgument commandLineArgument) =>
-            new CommandLineArgumentList(_args.Where(x => x != commandLineArgument).ToList());
+        public CommandLineArgumentList Without(CommandLineArgument[] commandLineArguments) =>
+            new CommandLineArgumentList(_args.Except(commandLineArguments).ToList());
+
+        public CommandLineArgumentList ExpandShortFormArgument(
+            CommandLineArgument.BareNameOrFlag argumentToExpand)
+        {
+            var newArgumentList = this.ToList();
+
+            newArgumentList.Remove(argumentToExpand);
+
+            foreach (var c in argumentToExpand.Name.ToCharArray())
+            {
+                newArgumentList.Add(new CommandLineArgument.BareNameOrFlag(c.ToString()));
+            }
+
+            return new CommandLineArgumentList(newArgumentList);
+        }
     }
 }

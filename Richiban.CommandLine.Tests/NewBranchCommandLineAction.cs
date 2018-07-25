@@ -2,14 +2,12 @@
 
 namespace ConsoleApp1
 {
-    [Verb("Branch")]
-    public sealed class NewBranchCommandLineAction : ICommandLineAction
+    public sealed class NewBranchCommandLineAction
     {
-        public string Name { get; set; }
-
-        public void Execute()
+        [CommandLine, Verb("branch")]
+        public void Execute(string branchName)
         {
-            $"Creating new branch ({Name})".Dump();
+            $"Creating branch {branchName}".Dump();
         }
     }
 }

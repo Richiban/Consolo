@@ -2,9 +2,9 @@
 
 namespace ConsoleApp1
 {
-    [Verb("", "version")]
-    public sealed class DisplayVersionCommandLineAction : ICommandLineAction
+    public sealed class DisplayVersionCommandLineAction
     {
+        [CommandLine, Verb("", "version")]
         public void Execute()
         {
             $"Displaying version".Dump();

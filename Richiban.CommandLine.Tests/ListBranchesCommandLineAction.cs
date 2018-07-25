@@ -2,9 +2,9 @@
 
 namespace ConsoleApp1
 {
-    [Verb("branch")]
-    public sealed class ListBranchesCommandLineAction : ICommandLineAction
+    public sealed class ListBranchesCommandLineAction
     {
+        [CommandLine, Verb("branch")]
         public void Execute()
         {
             $"Listing branches".Dump();

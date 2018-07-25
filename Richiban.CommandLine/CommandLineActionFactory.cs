@@ -13,10 +13,10 @@ namespace Richiban.CommandLine
             _assemblyModel = model;
         }
 
-        public Option<ICommandLineAction> Create(CommandLineArgumentList commandLineArgs) =>
+        public Option<CommandLineAction> Create(CommandLineArgumentList commandLineArgs) =>
             GetTypeMapping(commandLineArgs).IfSome(x => x.CreateInstance());
 
-        private Option<TypeMapping> GetTypeMapping(CommandLineArgumentList args)
+        private Option<MethodMapping> GetTypeMapping(CommandLineArgumentList args)
         {
             var matchingTypes = _assemblyModel
                 .Select(t => MapType(args, t))
@@ -47,77 +47,53 @@ namespace Richiban.CommandLine
             }
         }
 
-        private Option<TypeMapping> MapType(
+        private Option<MethodMapping> MapType(
             CommandLineArgumentList args,
-            TypeModel typeModel)
+            MethodModel typeModel)
         {
-            if (typeModel.MatchesVerb(args, ref args) == false)
+            return MapProperties(args, typeModel)
+                .IfSome(pairings => new MethodMapping(typeModel, (pairings)));
+        }
+
+        public Option<PropertyMappingList> MapProperties(
+            CommandLineArgumentList args,
+            MethodModel methodModel)
+        {
+            var parameterMappings = new List<PropertyMapping>();
+
             {
+                if (methodModel.Verbs.Matches(args, out var argumentsMatched))
+                {
+                    args = args.Without(argumentsMatched);
+                }
+                else
+                {
+                    return default;
+                }
+            }
+
+            args = methodModel.Parameters.ExpandShortForms(args);
+
+            foreach (var prop in methodModel.Parameters)
+            {
+                var x = prop.Matches(args, out var argumentsMatched);
+
+                x.IfSome(s => 
+                {
+                    parameterMappings.Add(s);
+                    args = args.Without(argumentsMatched);
+                });
+
+                if(x.HasValue == false)
+                {
+                    return default;
+                }
+            }
+
+            if (args.Any())
                 return default;
-            }
 
-            var namedArgPool = args.OfType<CommandLineArgument.Named>().ToList();
-            var flagPool = args.OfType<CommandLineArgument.Flag>().ToList();
-            var freePool = args.Where(a => a is CommandLineArgument.Free).ToList();
-
-            var propPool = typeModel.Properties.ToList();
-
-            var namedPairings = new List<(CommandLineArgument, PropertyModel)>();
-
-            foreach (var namedArg in namedArgPool.ToList())
-            {
-                var prop = propPool.SingleOrDefault(p => p.NameMatches(namedArg.Name));
-
-                if (prop == null) return default;
-
-                namedPairings.Add((namedArg, prop));
-
-                namedArgPool.Remove(namedArg);
-                propPool.Remove(prop);
-            }
-
-            if (namedArgPool.Any())
-            {
-                return default;
-            }
-
-            foreach (var flag in flagPool.ToList())
-            {
-                var prop = propPool
-                    .Where(p => p.NameMatches(flag.Name))
-                    .SingleOrDefault(p => p.PropertyType == typeof(bool));
-
-                if (prop == null) return default;
-
-                namedPairings.Add((flag, prop));
-
-                flagPool.Remove(flag);
-                propPool.Remove(prop);
-            }
-
-            if (flagPool.Any())
-            {
-                return default;
-            }
-
-            foreach (var free in freePool.ToList())
-            {
-                var prop = propPool.FirstOrDefault();
-
-                if (prop == null) break;
-
-                namedPairings.Add((free, prop));
-
-                freePool.Remove(free);
-                propPool.Remove(prop);
-            }
-
-            if (propPool.All(p => p.IsOptional) == false || freePool.Any())
-            {
-                return default;
-            }
-
-            return new TypeMapping(typeModel, new PropertyMappingCollection(namedPairings));
+            return new PropertyMappingList(parameterMappings);
         }
     }
 }
