@@ -6,7 +6,7 @@ using System;
 
 namespace Richiban.CommandLine
 {
-    [DebuggerDisplay("{string.Join(\", \", _args)}")]
+    [DebuggerDisplay("{string.Join(\" \", _args)}")]
     internal class CommandLineArgumentList : IReadOnlyList<CommandLineArgument>
     {
         private readonly IReadOnlyList<CommandLineArgument> _args;
@@ -14,10 +14,8 @@ namespace Richiban.CommandLine
         private CommandLineArgumentList(IReadOnlyList<CommandLineArgument> args) =>
             _args = args;
 
-        public static CommandLineArgumentList Parse(string[] args)
-        {
-            return new CommandLineArgumentList(args.Select(CommandLineArgument.Parse).ToList());
-        }
+        public static CommandLineArgumentList Parse(string[] args) =>
+            new CommandLineArgumentList(args.Select(CommandLineArgument.Parse).ToList());
 
         public int Count => _args.Count;
         public CommandLineArgument this[int index] => _args[index];

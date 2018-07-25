@@ -10,16 +10,17 @@ namespace ConsoleApp1
         {
             var tests = new[] {
                 //(new string[0], "Displaying version"),
-                //(new [] { "version" }, "Displaying version"),
+                (new [] { "version" }, "Displaying version"),
                 //(new [] { "branch" }, "Listing branches"),
                 //(new [] { "branch", "myNewBranchName" }, "Creating branch myNewBranchName"),
                 //(new [] { "branch", "/branchName:myNewBranchName2" }, "Creating branch myNewBranchName2"),
                 //(new [] { "branch", "-branchName", "myNewBranchName3" }, "Creating branch myNewBranchName3"),
                 //(new [] { "clean" }, "Cleaning working directory ({ removeDirectories = False, force = False, ignoreIgnore = False })"),
                 //(new [] { "clean", "-x" }, "Cleaning working directory ({ removeDirectories = False, force = False, ignoreIgnore = True })"),
-                (new [] { "clean", "-xfd" }, "Cleaning working directory ({ removeDirectories = True, force = True, ignoreIgnore = True })"),
+                //(new [] { "clean", "-xfd" }, "Cleaning working directory ({ removeDirectories = True, force = True, ignoreIgnore = True })"),
                 //(new [] { "clean", "/x", "/f" }, "Cleaning working directory ({ removeDirectories = False, force = True, ignoreIgnore = True })"),
                 //(new [] { "clean", "/remove", "/f" }, "Cleaning working directory ({ removeDirectories = True, force = True, ignoreIgnore = False })"),
+                (new [] { "testint", "-somenumber", "99" }, "Receiving some number: 99"),
             };
 
             foreach (var (input, output) in tests)
@@ -30,7 +31,7 @@ namespace ConsoleApp1
 
         private static void RunTest(string[] args, string expectedOutput)
         {
-            CommandLine.Execute(args);
+            CommandLine.Execute(args, _ => { });
 
             if(Output == expectedOutput)
             {

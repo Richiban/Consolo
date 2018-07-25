@@ -9,13 +9,18 @@ namespace Richiban.CommandLine
     {
         public static void Execute(params string[] args)
         {
+            Execute(args, Console.WriteLine);
+        }
+
+        public static void Execute(string[] args, Action<string> helpOutput)
+        {
             var model = AssemblyModel.Scan(Assembly.GetEntryAssembly());
             var commandLineArgs = CommandLineArgumentList.Parse(args);
             
             new CommandLineActionFactory(model)
                 .Create(commandLineArgs)
                 .Match(
-                    None: () => Console.WriteLine(GenerateHelp(model)),
+                    None: () => helpOutput(GenerateHelp(model)),
                     Some: commandLineAction => commandLineAction.Execute());
         }
 

@@ -43,6 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CleanWorkingDirectoryCommandLineAction.cs" />
+    <Compile Include="CommandLineActionWithInt.cs" />
     <Compile Include="DisplayVersionCommandLineAction.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="ListBranchesCommandLineAction.cs" />
