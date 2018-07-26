@@ -5,8 +5,17 @@ using System.Reflection;
 
 namespace Richiban.CommandLine
 {
-    public static class CommandLine
+    public class CommandLine
     {
+        private readonly IObjectFactory _objectFactory;
+        private readonly Action<string> _helpOutput;
+
+        public CommandLine(IObjectFactory objectFactory, Action<string> helpOutput)
+        {
+            _objectFactory = objectFactory;
+            _helpOutput = helpOutput;
+        }
+
         public static void Execute(params string[] args)
         {
             Execute(args, Console.WriteLine);
@@ -14,22 +23,30 @@ namespace Richiban.CommandLine
 
         public static void Execute(string[] args, Action<string> helpOutput)
         {
+            var commandLine = new CommandLine(new SystemActivatorObjectFactory(), helpOutput);
+
+            commandLine.Execute2(args);
+        }
+
+        public void Execute2(string[] args)
+        {
             var model = AssemblyModel.Scan(Assembly.GetEntryAssembly());
             var commandLineArgs = CommandLineArgumentList.Parse(args);
 
-            var commandLineActions = new CommandLineActionFactory(model)
+            var commandLineActions = new CommandLineActionFactory(model, _objectFactory)
                 .Create(commandLineArgs);
 
             if (commandLineArgs.IsCallForHelp)
             {
                 if(commandLineArgs.Count == 0)
                 {
-                    helpOutput(GenerateHelp(model));
+                    _helpOutput(GenerateHelp(model));
+                    return;
                 }
 
                 foreach (var help in commandLineActions.Select(x => x.Help))
                 {
-                    helpOutput(help);
+                    _helpOutput(help);
                 }
 
                 return;
@@ -38,6 +55,7 @@ namespace Richiban.CommandLine
             switch(commandLineActions.Count)
             {
                 case 0:
+                    _helpOutput(GenerateHelp(model));
                     throw new Exception("Could not match the given arguments to a command");
                 case 1:
                     commandLineActions.Single().Execute();

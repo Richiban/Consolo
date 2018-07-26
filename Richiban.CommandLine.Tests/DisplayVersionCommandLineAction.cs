@@ -2,10 +2,10 @@
 
 namespace ConsoleApp1
 {
-    public sealed class DisplayVersionCommandLineAction
+    public static class DisplayVersionCommandLineAction
     {
         [CommandLine, Verb("", "version")]
-        public void Execute()
+        public static void Execute()
         {
             $"Displaying version".Dump();
         }

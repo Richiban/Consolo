@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace Richiban.CommandLine
@@ -7,34 +6,28 @@ namespace Richiban.CommandLine
     internal class CommandLineActionFactory
     {
         private readonly AssemblyModel _assemblyModel;
+        private readonly IObjectFactory _objectFactory;
 
-        public CommandLineActionFactory(AssemblyModel model)
+        public CommandLineActionFactory(AssemblyModel model, IObjectFactory objectFactory)
         {
             _assemblyModel = model;
+            _objectFactory = objectFactory;
         }
 
         public IReadOnlyCollection<CommandLineAction> Create(CommandLineArgumentList commandLineArgs) =>
-            GetMethodMappings(commandLineArgs).Select(x => x.CreateInstance()).ToList();
+            GetMethodMappings(commandLineArgs)
+            .Select(mapping => new CommandLineAction(mapping, _objectFactory))
+            .ToList();
 
         private IReadOnlyCollection<MethodMapping> GetMethodMappings(CommandLineArgumentList args)
         {
-            var matches = _assemblyModel
-                .Select(t => MapType(args, t))
+            return _assemblyModel
+                .Select(t => GetMethodMapping(args, t))
                 .Choose()
                 .ToList();
-
-            return matches;
         }
 
-        private Option<MethodMapping> MapType(
-            CommandLineArgumentList args,
-            MethodModel typeModel)
-        {
-            return MapProperties(args, typeModel)
-                .IfSome(pairings => new MethodMapping(typeModel, (pairings)));
-        }
-
-        public Option<PropertyMappingList> MapProperties(
+        public Option<MethodMapping> GetMethodMapping(
             CommandLineArgumentList args,
             MethodModel methodModel)
         {
@@ -72,7 +65,7 @@ namespace Richiban.CommandLine
             if (args.Any())
                 return default;
 
-            return new PropertyMappingList(parameterMappings);
+            return new MethodMapping(methodModel, parameterMappings);
         }
     }
 }
