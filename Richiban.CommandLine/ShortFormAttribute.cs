@@ -11,6 +11,8 @@ namespace Richiban.CommandLine
             ShortForms = shortForms.Distinct().ToList();
         }
 
+        public bool DisallowLongForm { get; set; }
+
         public IReadOnlyList<char> ShortForms { get; }
     }
 }

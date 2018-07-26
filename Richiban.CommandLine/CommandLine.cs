@@ -66,6 +66,9 @@ namespace Richiban.CommandLine
         }
 
         private static string GenerateHelp(IEnumerable<MethodModel> implementingTypes) => 
-            String.Join($"{Environment.NewLine}\t", implementingTypes.Select(t => t.Help));
+            "Usage:" +
+            Environment.NewLine +
+            String.Join($"{Environment.NewLine}{Environment.NewLine}",
+                implementingTypes.Select(t => $"\t{AppDomain.CurrentDomain.FriendlyName} {t.Help}"));
     }
 }

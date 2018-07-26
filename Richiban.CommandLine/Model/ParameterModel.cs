@@ -18,14 +18,13 @@ namespace Richiban.CommandLine
 
             IsOptional = parameterInfo.IsOptional;
 
-            Name = parameterInfo.Name;
-
-            ShortForms =
+            var shortFormAttributes = 
                 parameterInfo
                     .GetCustomAttributes(inherit: true)
-                    .OfType<ShortFormAttribute>()
-                    .SelectMany(a => a.ShortForms)
-                    .ToArray();
+                    .OfType<ShortFormAttribute>();
+
+            ShortForms =
+                shortFormAttributes.SelectMany(a => a.ShortForms).ToArray();
 
             _names =
                 (new[] { parameterInfo.Name })
@@ -36,11 +35,21 @@ namespace Richiban.CommandLine
                 .Concat(ShortForms.Select(c => c.ToString()))
                 .ToList();
 
+            if (shortFormAttributes.SingleOrDefault()?.DisallowLongForm == true)
+                _names = ShortForms.Select(c => c.ToString()).ToList();
+
+            Name = _names.First();
+
             HasShortForm = ShortForms.Any();
 
             PropertyType = parameterInfo.ParameterType;
 
-            var helpForm = $"<{Name.ToLowerInvariant()}>";
+            var isFlag = PropertyType == typeof(bool);
+
+            var helpForm = 
+                isFlag
+                ? $"-{Name.ToLowerInvariant()}"
+                : $"<{Name.ToLowerInvariant()}>";
 
             Help = IsOptional ? $"[{helpForm}]" : helpForm;
         }

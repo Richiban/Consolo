@@ -8,7 +8,13 @@ namespace ConsoleApp1
     {
         public static void Main(string[] args)
         {
+            {
+                CommandLine.Execute(args);
+                return;
+            }
+
             var tests = new[] {
+                (new [] { "branch", "/?" }, "Listing branches"),
                 (new [] { "/?" }, "Help"),
                 (new string[0], "Displaying version"),
                 (new [] { "version" }, "Displaying version"),

@@ -6,9 +6,9 @@ namespace ConsoleApp1
     {
         [CommandLine, Verb]
         public void Clean(
-            [ShortForm('d')] bool removeDirectories = false,
-            [ShortForm('f')] bool force = false,
-            [ShortForm('x')] bool ignoreIgnore = false)
+            [ShortForm('d', DisallowLongForm = true)] bool removeDirectories = false,
+            [ShortForm('f', DisallowLongForm = true)] bool force = false,
+            [ShortForm('x', DisallowLongForm = true)] bool ignoreIgnore = false)
         {
             $"Cleaning working directory ({new { removeDirectories, force, ignoreIgnore }})".Dump();
         }
