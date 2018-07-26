@@ -7,7 +7,10 @@ namespace Richiban.CommandLine
         public PropertyMapping(ParameterModel parameterModel, object value)
         {
             ParameterModel = parameterModel ?? throw new ArgumentNullException(nameof(parameterModel));
-            Value = Convert.ChangeType(value, parameterModel.PropertyType);
+            Value = 
+                value == Type.Missing
+                    ? value
+                    : Convert.ChangeType(value, parameterModel.PropertyType);
         }
 
         public ParameterModel ParameterModel { get; }
