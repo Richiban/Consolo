@@ -1,6 +1,6 @@
 ﻿using Richiban.CommandLine;
 
-namespace ConsoleApp1
+namespace Richiban.CommandLine.Samples
 {
     class ConfigActions
     {

@@ -1,7 +1,7 @@
 ﻿using Richiban.CommandLine;
 using System;
 
-namespace ConsoleApp1
+namespace Richiban.CommandLine.Samples
 {
     class RemoteActions
     {

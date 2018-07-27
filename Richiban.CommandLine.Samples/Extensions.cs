@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ConsoleApp1
+namespace Richiban.CommandLine.Samples
 {
     public static class Extensions
     {

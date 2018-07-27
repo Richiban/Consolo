@@ -2,7 +2,7 @@
 using System;
 using System.Diagnostics;
 
-namespace ConsoleApp1
+namespace Richiban.CommandLine.Samples
 {
     /// <summary>
     /// This program is intended to be a copy of the git command line.

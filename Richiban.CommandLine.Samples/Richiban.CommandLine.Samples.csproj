@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Actions\AddAction.cs" />
     <Compile Include="Actions\CleanWorkingDirectoryAction.cs" />
     <Compile Include="Actions\ConfigActions.cs" />
     <Compile Include="Actions\DisplayVersionAction.cs" />
