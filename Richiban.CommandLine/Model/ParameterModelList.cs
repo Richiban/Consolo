@@ -48,13 +48,13 @@ namespace Richiban.CommandLine
             if (parts.Count == 0)
                 return false;
 
-            foreach(var parameter in _parameterModels.Where(p => p.HasShortForm))
+            foreach(var parameter in _parameterModels)
             {
-                foreach(var shortForm in parameter.ShortForms)
+                foreach(var c in parts)
                 {
-                    if(parts.Contains(shortForm))
+                    if(parameter.MatchesShortForm(c))
                     {
-                        parts.Remove(shortForm);
+                        parts.Remove(c);
                         break;
                     }
                 }

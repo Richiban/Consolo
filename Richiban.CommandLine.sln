@@ -5,13 +5,13 @@ VisualStudioVersion = 15.0.27703.2026
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Richiban.CommandLine", "Richiban.CommandLine\Richiban.CommandLine.csproj", "{13AB2751-5319-4591-9FFF-75F2C0089845}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Richiban.CommandLine.Tests", "Richiban.CommandLine.Tests\Richiban.CommandLine.Tests.csproj", "{27685147-11B2-429E-8202-B7AEA75388A0}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{87D73C94-A981-4A55-94B9-1BE73BD94C89}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
 		README.md = README.md
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Richiban.CommandLine.Samples", "Richiban.CommandLine.Samples\Richiban.CommandLine.Samples.csproj", "{27685147-11B2-429E-8202-B7AEA75388A0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

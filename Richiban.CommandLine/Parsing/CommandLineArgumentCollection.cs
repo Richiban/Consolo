@@ -35,7 +35,7 @@ namespace Richiban.CommandLine
         public IEnumerator<CommandLineArgument> GetEnumerator() => _args.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        public CommandLineArgumentList Without(CommandLineArgument[] commandLineArguments) =>
+        public CommandLineArgumentList Without(IEnumerable<CommandLineArgument> commandLineArguments) =>
             new CommandLineArgumentList(_args.Except(commandLineArguments).ToList(), IsCallForHelp);
 
         public CommandLineArgumentList ExpandShortFormArgument(

@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{27685147-11B2-429E-8202-B7AEA75388A0}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>ConsoleApp1</RootNamespace>
-    <AssemblyName>ConsoleApp1</AssemblyName>
+    <RootNamespace>Richiban.CommandLine.Samples</RootNamespace>
+    <AssemblyName>Richiban.CommandLine.Samples</AssemblyName>
     <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -21,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Debug\Richiban.CommandLine.Samples.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -42,15 +43,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CleanWorkingDirectoryCommandLineAction.cs" />
-    <Compile Include="CommandLineActionWithInt.cs" />
-    <Compile Include="DisplayVersionCommandLineAction.cs" />
+    <Compile Include="Actions\CleanWorkingDirectoryCommandLineAction.cs" />
+    <Compile Include="Actions\CommandLineActionWithInt.cs" />
+    <Compile Include="Actions\DisplayVersionCommandLineAction.cs" />
     <Compile Include="Extensions.cs" />
-    <Compile Include="ListBranchesCommandLineAction.cs" />
-    <Compile Include="NewBranchCommandLineAction.cs" />
+    <Compile Include="Actions\GitConfigCommandLineAction.cs" />
+    <Compile Include="Actions\GitRemoteCommandLineActions.cs" />
+    <Compile Include="Actions\ListBranchesCommandLineAction.cs" />
+    <Compile Include="Actions\NewBranchCommandLineAction.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PushCommandLineAction.cs" />
+    <Compile Include="Actions\PushCommandLineAction.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

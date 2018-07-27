@@ -4,8 +4,9 @@ namespace ConsoleApp1
 {
     public static class DisplayVersionCommandLineAction
     {
-        [CommandLine, Verb("", "version")]
-        public static void Execute()
+        //[CommandLine]
+        public static void Execute(
+            [ParameterName("version")] bool displayVersion = false)
         {
             $"Displaying version".Dump();
         }

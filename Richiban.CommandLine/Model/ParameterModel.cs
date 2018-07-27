@@ -11,6 +11,7 @@ namespace Richiban.CommandLine
     {
         private readonly IReadOnlyCollection<string> _names;
         private ParameterInfo _parameterInfo;
+        public readonly IReadOnlyCollection<char> _shortForms;
 
         public ParameterModel(ParameterInfo parameterInfo)
         {
@@ -18,50 +19,71 @@ namespace Richiban.CommandLine
 
             IsOptional = parameterInfo.IsOptional;
 
-            var shortFormAttributes = 
+            var shortFormAttributes =
                 parameterInfo
                     .GetCustomAttributes(inherit: true)
                     .OfType<ShortFormAttribute>();
 
-            ShortForms =
+            _shortForms =
                 shortFormAttributes.SelectMany(a => a.ShortForms).ToArray();
 
-            _names =
-                (new[] { parameterInfo.Name })
-                .Concat(parameterInfo
-                    .GetCustomAttributes(inherit: true)
-                    .OfType<AlternativeNameAttribute>()
-                    .SelectMany(attr => attr.AlternativeNames))
-                .Concat(ShortForms.Select(c => c.ToString()))
-                .ToList();
+            _names = BuildNamesList(parameterInfo, _shortForms);
 
             if (shortFormAttributes.SingleOrDefault()?.DisallowLongForm == true)
-                _names = ShortForms.Select(c => c.ToString()).ToList();
-
-            Name = _names.First();
-
-            HasShortForm = ShortForms.Any();
+                _names = _shortForms.Select(c => c.ToString()).ToList();
+            
+            HasShortForm = _shortForms.Any();
 
             PropertyType = parameterInfo.ParameterType;
 
-            var isFlag = PropertyType == typeof(bool);
+            IsFlag = PropertyType == typeof(bool);
+            var primaryName = _names.First();
 
-            var helpForm = 
-                isFlag
-                ? $"-{Name.ToLowerInvariant()}"
-                : $"<{Name.ToLowerInvariant()}>";
+            var helpForm =
+                IsFlag
+                ? $"-{primaryName.ToLowerInvariant()}"
+                : $"<{primaryName.ToLowerInvariant()}>";
 
             Help = IsOptional ? $"[{helpForm}]" : helpForm;
         }
 
-        public string Name { get; }
+        private static IReadOnlyList<string> BuildNamesList(
+            ParameterInfo parameterInfo, IReadOnlyCollection<char> shortForms)
+        {
+            var allNames = new List<string>
+            {
+                parameterInfo.Name
+            };
+
+            allNames.AddRange(shortForms.Select(c => c.ToString()));
+
+            var parameterNameAttribute = parameterInfo
+                .GetCustomAttributes(inherit: true)
+                .OfType<ParameterNameAttribute>()
+                .SingleOrDefault();
+
+            if(parameterNameAttribute != null)
+            {
+                allNames.AddRange(parameterNameAttribute.Names);
+
+                if(parameterNameAttribute.IncludeOriginal == false)
+                {
+                    allNames.Remove(parameterInfo.Name);
+                }
+            }
+
+            return allNames;
+        }
+        
         public Type PropertyType { get; }
+        public bool IsFlag { get; }
         public string Help { get; }
         public bool IsOptional { get; }
         public bool HasShortForm { get; }
-        public IReadOnlyCollection<char> ShortForms { get; }
 
-        internal Option<PropertyMapping> Matches(
+        public bool MatchesShortForm(char c) => _shortForms.Contains(c);
+
+        public Option<PropertyMapping> Matches(
             CommandLineArgumentList args, 
             out CommandLineArgument[] argumentsMatched)
         {
@@ -76,7 +98,7 @@ namespace Richiban.CommandLine
                         return new PropertyMapping(this, nv.Value);
 
                     case CommandLineArgument.BareNameOrFlag bnf 
-                        when NameMatches(bnf.Name) && PropertyType == typeof(bool):
+                        when NameMatches(bnf.Name) && IsFlag:
                         argumentsMatched = new[] { bnf };
                         return new PropertyMapping(this, true);
 

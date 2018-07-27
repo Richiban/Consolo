@@ -55,13 +55,15 @@ namespace Richiban.CommandLine
             switch(commandLineActions.Count)
             {
                 case 0:
+                    _helpOutput("Could not match the given arguments to a command");
                     _helpOutput(GenerateHelp(model));
-                    throw new Exception("Could not match the given arguments to a command");
+                    break;
                 case 1:
                     commandLineActions.Single().Execute();
                     break;
                 default:
-                    throw new Exception("The given arguments are ambigous");
+                    _helpOutput("The given arguments are ambigous");
+                    break;
             }
         }
 

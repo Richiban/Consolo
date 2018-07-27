@@ -12,12 +12,18 @@ namespace Richiban.CommandLine
         {
             MethodInfo = methodInfo ?? throw new ArgumentNullException(nameof(methodInfo));
 
-            var verbAttribute = methodInfo
+            var verbAttributes = methodInfo
                 .GetCustomAttributes(inherit: true)
                 .OfType<VerbAttribute>()
-                .SingleOrDefault();
+                .ToArray();
 
-            Verbs = new VerbCollection(methodInfo.Name, verbAttribute);
+            var verbSequenceAttributes =
+                methodInfo
+                .GetCustomAttributes(inherit: true)
+                .OfType<VerbSequenceAttribute>()
+                .ToArray();
+
+            Verbs = new VerbModel(methodInfo.Name, verbAttributes, verbSequenceAttributes);
 
             Parameters = new ParameterModelList(methodInfo.GetParameters());
 
@@ -27,7 +33,7 @@ namespace Richiban.CommandLine
         }
 
         public ParameterModelList Parameters { get; }
-        public VerbCollection Verbs { get; }
+        public VerbModel Verbs { get; }
         public string Help { get; }
         public bool IsStatic { get; }
         public MethodInfo MethodInfo { get; }
