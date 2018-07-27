@@ -22,6 +22,11 @@ namespace Richiban.CommandLine
                 return suppliedValue;
             }
 
+            if (convertToType.IsEnum && suppliedValue is string s)
+            {
+                return Enum.Parse(convertToType, s, ignoreCase: true);
+            }
+
             try
             {
                 return Convert.ChangeType(suppliedValue, convertToType);
