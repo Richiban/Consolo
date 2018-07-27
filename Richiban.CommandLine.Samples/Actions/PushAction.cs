@@ -2,7 +2,7 @@
 
 namespace ConsoleApp1
 {
-    public class PushCommandLineAction
+    public class PushAction
     {
         [CommandLine, Verb]
         public void Push(

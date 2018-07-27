@@ -39,8 +39,8 @@ namespace Richiban.CommandLine
         public bool IsStatic { get; }
         public MethodInfo MethodInfo { get; }
 
-        public bool IsPartialMatch(CommandLineArgumentList commandLineArgs) =>
-            Verbs.Matches(commandLineArgs, out _);
+        public int GetPartialMatchAccuracy(CommandLineArgumentList commandLineArgs) =>
+            Verbs.GetPartialMatchAccuracy(commandLineArgs);
 
         public Option<MethodMapping> GetMethodMapping(CommandLineArgumentList args)
         {

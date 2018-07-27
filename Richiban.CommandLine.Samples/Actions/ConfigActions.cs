@@ -2,7 +2,7 @@
 
 namespace ConsoleApp1
 {
-    class GitConfigCommandLineAction
+    class ConfigActions
     {
         [CommandLine, Verb("config")]
         public void GetConfigValue(string settingName, bool global = false)

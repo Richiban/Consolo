@@ -29,7 +29,7 @@ namespace Richiban.CommandLine
             _methodName = methodName ?? throw new ArgumentNullException(nameof(methodName));
 
             _verbSequences = verbAttributes
-                    .Select(a => (IReadOnlyList<string>)new[] 
+                    .Select(a => (IReadOnlyList<string>)new[]
                     {
                         a.Verb ?? methodName.ToLower(CultureInfo.CurrentCulture)
                     })
@@ -48,6 +48,38 @@ namespace Richiban.CommandLine
             {
                 return String.Join(" ", verbSequence);
             }
+        }
+
+        public int GetPartialMatchAccuracy(CommandLineArgumentList commandLineArgs)
+        {
+            var bestAccuracy = 0;
+
+            foreach (var verbSequence in _verbSequences)
+            {
+                using (var verbEnumerator = verbSequence.GetEnumerator())
+                using (var inputArgumentEnumerator = commandLineArgs.GetEnumerator())
+                {
+                    var currentAccuracy = 0;
+
+                    while (verbEnumerator.MoveNext())
+                    {
+                        if (inputArgumentEnumerator.MoveNext() &&
+                            inputArgumentEnumerator.Current is CommandLineArgument.Free free &&
+                            verbEnumerator.Current.Equals(free.Value, StringComparison.CurrentCultureIgnoreCase))
+                        {
+                            currentAccuracy++;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    bestAccuracy = Math.Max(bestAccuracy, currentAccuracy);
+                }
+            }
+            
+            return bestAccuracy;
         }
 
         public bool Matches(

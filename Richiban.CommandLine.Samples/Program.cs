@@ -19,7 +19,7 @@ namespace ConsoleApp1
         public static void Main(string[] args)
         {
             {
-                CommandLine.Execute(args);
+                CommandLine.Run(args);
                 return;
             }
 
@@ -49,7 +49,7 @@ namespace ConsoleApp1
         private static void RunTest(string[] args, string expectedOutput)
         {
             Console.WriteLine(String.Join(" ", args));
-            CommandLine.Execute(args);
+            CommandLine.Run(args);
         }
 
         internal static string Output { get; set; }

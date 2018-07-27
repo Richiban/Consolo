@@ -2,7 +2,7 @@
 
 namespace ConsoleApp1
 {
-    public static class DisplayVersionCommandLineAction
+    public static class DisplayVersionAction
     {
         //[CommandLine]
         public static void Execute(

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Richiban.CommandLine
 {
@@ -7,15 +8,32 @@ namespace Richiban.CommandLine
         public static IEnumerable<T> Choose<T>(this IEnumerable<Option<T>> source) =>
             Option<T>.Choose(source);
 
-        public static IEnumerable<(T1, T2)> Zip<T1, T2>(this IEnumerable<T1> sequence1, IEnumerable<T2> sequence2)
+        public static IEnumerable<T> MaxByAll<T, TProp>(
+            this IEnumerable<T> source,
+            Func<T, TProp> propertySelector)
+            where TProp : IComparable<TProp>
         {
-            var e1 = sequence1.GetEnumerator();
-            var e2 = sequence2.GetEnumerator();
+            var max = default(TProp);
+            var result = new List<T>();
 
-            while(e1.MoveNext() && e2.MoveNext())
+            foreach(var item in source)
             {
-                yield return (e1.Current, e2.Current);
+                var current = propertySelector(item);
+                var compare = current.CompareTo(max);
+
+                if (compare == 0)
+                {
+                    result.Add(item);
+                }
+                else if (compare > 0)
+                {
+                    max = current;
+                    result = new List<T>();
+                    result.Add(item);
+                }
             }
+
+            return result.AsReadOnly();
         }
     }
 }

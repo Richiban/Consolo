@@ -17,19 +17,14 @@ namespace Richiban.CommandLine
             _helpOutput = helpOutput;
         }
 
-        public static void Execute(params string[] args)
+        public static void Run(string[] args)
         {
-            Execute(args, Console.WriteLine);
+            var commandLine = new CommandLine(new SystemActivatorObjectFactory(), Console.WriteLine);
+
+            commandLine.Execute(args);
         }
 
-        public static void Execute(string[] args, Action<string> helpOutput)
-        {
-            var commandLine = new CommandLine(new SystemActivatorObjectFactory(), helpOutput);
-
-            commandLine.Execute2(args);
-        }
-
-        public void Execute2(string[] args)
+        public void Execute(string[] args)
         {
             var model = AssemblyModel.Scan(Assembly.GetEntryAssembly());
             var commandLineArgs = CommandLineArgumentList.Parse(args);
@@ -76,8 +71,9 @@ namespace Richiban.CommandLine
             else
             {
                 sb.AppendLine($"Help for {commandLineArgs}:");
+
                 modelsForHelp = modelsForHelp
-                    .Where(m => m.IsPartialMatch(commandLineArgs));
+                    .MaxByAll(m => m.GetPartialMatchAccuracy(commandLineArgs));
             }
 
             sb.Append(

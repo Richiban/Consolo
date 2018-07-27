@@ -2,7 +2,7 @@
 
 namespace ConsoleApp1
 {
-    public sealed class CleanWorkingDirectoryCommandLineAction
+    public sealed class CleanWorkingDirectoryAction
     {
         [CommandLine, Verb]
         public void Clean(
