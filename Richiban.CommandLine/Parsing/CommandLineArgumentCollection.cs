@@ -6,7 +6,7 @@ using System;
 
 namespace Richiban.CommandLine
 {
-    [DebuggerDisplay("{string.Join(\" \", _args)}")]
+    [DebuggerDisplay("{ToString()}")]
     internal class CommandLineArgumentList : IReadOnlyList<CommandLineArgument>
     {
         private readonly IReadOnlyList<CommandLineArgument> _args;
@@ -47,10 +47,12 @@ namespace Richiban.CommandLine
 
             foreach (var c in argumentToExpand.Name.ToCharArray())
             {
-                newArgumentList.Add(new CommandLineArgument.BareNameOrFlag(c.ToString()));
+                newArgumentList.Add(new CommandLineArgument.BareNameOrFlag(c.ToString(), $"-{c}"));
             }
 
             return new CommandLineArgumentList(newArgumentList, IsCallForHelp);
         }
+
+        public override string ToString() => string.Join(" ", _args);
     }
 }

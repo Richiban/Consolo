@@ -4,16 +4,23 @@ using System.Linq;
 
 namespace Richiban.CommandLine
 {
+    [DebuggerDisplay("{ToString()}")]
     public abstract class CommandLineArgument
     {
-        private CommandLineArgument() { }
+        private readonly string _raw;
+
+        private CommandLineArgument(string raw)
+        {
+            _raw = raw;
+        }
 
         [DebuggerDisplay("{Value}")]
         public class Free : CommandLineArgument
         {
             public string Value { get; }
 
-            public Free(string value) => Value = value;
+            public Free(string value, string raw) : base(raw) => 
+                Value = value;
         }
 
         [DebuggerDisplay("/{Name}:{Value}")]
@@ -22,7 +29,8 @@ namespace Richiban.CommandLine
             public string Name { get; }
             public string Value { get; }
 
-            public NameValuePair(string name, string value) => (Name, Value) = (name, value);
+            public NameValuePair(string name, string value, string raw) : base(raw) =>
+                (Name, Value) = (name, value);
         }
 
         [DebuggerDisplay("/{Name}")]
@@ -30,19 +38,20 @@ namespace Richiban.CommandLine
         {
             public string Name { get; }
 
-            public BareNameOrFlag(string name) => Name = name;
+            public BareNameOrFlag(string name, string raw) : base(raw) =>
+                Name = name;
         }
 
         [DebuggerDisplay("/?")]
         public class HelpGlyph : CommandLineArgument
         {
-
+            public HelpGlyph(string raw) : base(raw) {}
         }
 
         public static CommandLineArgument Parse(string raw)
         {
             if (raw == "/?" || raw == "-?" || raw == "--?")
-                return new HelpGlyph();
+                return new HelpGlyph(raw);
 
             if (raw.StartsWith("/"))
             {
@@ -50,11 +59,11 @@ namespace Richiban.CommandLine
 
                 if (parts.Length > 1)
                 {
-                    return new NameValuePair(parts[0], parts[1]);
+                    return new NameValuePair(parts[0], parts[1], raw);
                 }
                 else
                 {
-                    return new BareNameOrFlag(parts[0]);
+                    return new BareNameOrFlag(parts[0], raw);
                 }
             }
             else if (raw.StartsWith("--"))
@@ -63,21 +72,23 @@ namespace Richiban.CommandLine
 
                 if (parts.Length > 1)
                 {
-                    return new NameValuePair(parts[0], parts[1]);
+                    return new NameValuePair(parts[0], parts[1], raw);
                 }
                 else
                 {
-                    return new BareNameOrFlag(parts[0]);
+                    return new BareNameOrFlag(parts[0], raw);
                 }
             }
             else if (raw.StartsWith("-"))
             {
-                return new BareNameOrFlag(raw.TrimStart('-'));
+                return new BareNameOrFlag(raw.TrimStart('-'), raw);
             }
             else
             {
-                return new Free(raw);
+                return new Free(raw, raw);
             }
         }
+
+        public override string ToString() => _raw;
     }
 }

@@ -44,7 +44,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Actions\CleanWorkingDirectoryCommandLineAction.cs" />
-    <Compile Include="Actions\CommandLineActionWithInt.cs" />
     <Compile Include="Actions\DisplayVersionCommandLineAction.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Actions\GitConfigCommandLineAction.cs" />

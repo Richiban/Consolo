@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace Richiban.CommandLine
 {
@@ -38,39 +39,53 @@ namespace Richiban.CommandLine
 
             if (commandLineArgs.IsCallForHelp)
             {
-                if(commandLineArgs.Count == 0)
-                {
-                    _helpOutput(GenerateHelp(model));
-                    return;
-                }
-
-                foreach (var help in commandLineActions.Select(x => x.Help))
-                {
-                    _helpOutput(help);
-                }
+                _helpOutput(GenerateHelp(model, commandLineArgs));
 
                 return;
             }
 
-            switch(commandLineActions.Count)
+            if (commandLineActions.Count == 0)
             {
-                case 0:
-                    _helpOutput("Could not match the given arguments to a command");
-                    _helpOutput(GenerateHelp(model));
-                    break;
-                case 1:
-                    commandLineActions.Single().Execute();
-                    break;
-                default:
-                    _helpOutput("The given arguments are ambigous");
-                    break;
+                _helpOutput("Could not match the given arguments to a command");
+                _helpOutput(GenerateHelp(model, commandLineArgs));
+
+                return;
             }
+
+            if (commandLineActions.Count > 1)
+            {
+                _helpOutput("The given arguments are ambigous between the following commands:");
+                _helpOutput(GenerateHelp(model, commandLineArgs));
+
+                return;
+            }
+
+            commandLineActions.Single().Execute();
         }
 
-        private static string GenerateHelp(IEnumerable<MethodModel> implementingTypes) => 
-            "Usage:" +
-            Environment.NewLine +
-            String.Join($"{Environment.NewLine}{Environment.NewLine}",
-                implementingTypes.Select(t => $"\t{AppDomain.CurrentDomain.FriendlyName} {t.Help}"));
+        private static string GenerateHelp(IEnumerable<MethodModel> model, CommandLineArgumentList commandLineArgs)
+        {
+            var sb = new StringBuilder();
+
+            var modelsForHelp = model;
+
+            if (commandLineArgs.Count == 0)
+            {
+                sb.AppendLine($"Usage:");
+            }
+            else
+            {
+                sb.AppendLine($"Help for {commandLineArgs}:");
+                modelsForHelp = modelsForHelp
+                    .Where(m => m.IsPartialMatch(commandLineArgs));
+            }
+
+            sb.Append(
+                string.Join($"{Environment.NewLine}{Environment.NewLine}",
+                modelsForHelp
+                .Select(t => $"\t{AppDomain.CurrentDomain.FriendlyName} {t.Help}")));
+
+            return sb.ToString();
+        }
     }
 }
