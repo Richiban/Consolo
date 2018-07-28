@@ -14,8 +14,10 @@ namespace Richiban.CommandLine
         }
 
         public bool HasValue { get; }
-        
+
         public static implicit operator Option<T>(T value) => new Option<T>(value);
+
+        public static implicit operator Option<T>(Prelude.OptionNone _) => new Option<T>();
 
         internal void Match(Action None, Action<T> Some)
         {

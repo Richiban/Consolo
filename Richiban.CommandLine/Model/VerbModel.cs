@@ -1,39 +1,59 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
+using System.Reflection;
 
 namespace Richiban.CommandLine
 {
     internal class VerbModel
     {
-        private string _methodName;
         private readonly IReadOnlyList<IReadOnlyList<string>> _verbSequences;
 
-        public VerbModel(
-            string methodName,
-            IReadOnlyCollection<VerbAttribute> verbAttributes,
-            IReadOnlyCollection<VerbSequenceAttribute> verbSequenceAttributes)
+        public VerbModel(MethodInfo methodInfo)
         {
-            if (verbAttributes == null)
+            if (methodInfo == null)
             {
-                throw new ArgumentNullException(nameof(verbAttributes));
+                throw new ArgumentNullException(nameof(methodInfo));
             }
 
-            if (verbSequenceAttributes == null)
+            var methodRoutes =
+                methodInfo
+                .GetCustomAttributes(inherit: true)
+                .OfType<RouteAttribute>()
+                .Select(m => {
+                    if (m.Verbs.Count == 0)
+                        return new[] { methodInfo.Name };
+                    return m.Verbs;
+                })
+                .ToArray();
+
+            var classRoutes =
+                methodInfo
+                .DeclaringType
+                .GetCustomAttributes(inherit: true)
+                .OfType<RouteAttribute>()
+                .Select(c => {
+                    if (c.Verbs.Count == 0)
+                        return new[] { methodInfo.DeclaringType.Name };
+                    return c.Verbs;
+                })
+                .ToArray();
+
+            if (classRoutes.Length == 0)
             {
-                throw new ArgumentNullException(nameof(verbSequenceAttributes));
+                classRoutes = new[] { new string[] { } };
             }
 
-            _methodName = methodName ?? throw new ArgumentNullException(nameof(methodName));
+            if (methodRoutes.Length == 0)
+            {
+                methodRoutes = new[] { new string[] { } };
+            }
 
-            _verbSequences = verbAttributes
-                    .Select(a => (IReadOnlyList<string>)new[]
-                    {
-                        a.Verb ?? methodName.ToLower(CultureInfo.CurrentCulture)
-                    })
-                    .Concat(verbSequenceAttributes.Select(s => s.Verbs).ToList()).ToList();
+            _verbSequences = (
+                from c in classRoutes
+                from m in methodRoutes
+                select c.Concat(m).ToList())
+                .ToList();
 
             Help = BuildHelp(_verbSequences);
         }
@@ -46,7 +66,7 @@ namespace Richiban.CommandLine
 
             string buildHelpForSequence(IReadOnlyList<string> verbSequence)
             {
-                return String.Join(" ", verbSequence);
+                return String.Join(" ", verbSequence.Select(s => s.ToLowerInvariant()));
             }
         }
 

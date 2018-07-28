@@ -4,7 +4,7 @@ namespace Richiban.CommandLine.Samples.Actions
 {
     class AddAction
     {
-        [CommandLine, Verb]
+        [CommandLine, Route]
         public void Add(FileInfo file)
         {
             $"Adding file {file}".Dump();

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using static Richiban.CommandLine.Prelude;
 
 namespace Richiban.CommandLine
 {
@@ -13,18 +14,7 @@ namespace Richiban.CommandLine
         {
             MethodInfo = methodInfo ?? throw new ArgumentNullException(nameof(methodInfo));
 
-            var verbAttributes = methodInfo
-                .GetCustomAttributes(inherit: true)
-                .OfType<VerbAttribute>()
-                .ToArray();
-
-            var verbSequenceAttributes =
-                methodInfo
-                .GetCustomAttributes(inherit: true)
-                .OfType<VerbSequenceAttribute>()
-                .ToArray();
-
-            Verbs = new VerbModel(methodInfo.Name, verbAttributes, verbSequenceAttributes);
+            Verbs = new VerbModel(methodInfo);
 
             Parameters = new ParameterModelList(methodInfo.GetParameters());
 
@@ -53,7 +43,7 @@ namespace Richiban.CommandLine
                 }
                 else
                 {
-                    return default;
+                    return None;
                 }
             }
 
@@ -61,22 +51,22 @@ namespace Richiban.CommandLine
 
             foreach (var prop in Parameters)
             {
-                var x = prop.Matches(args, out var argumentsMatched);
+                var maybePropertyMapping = prop.Matches(args, out var argumentsMatched);
 
-                x.IfSome(s =>
+                maybePropertyMapping.IfSome(s =>
                 {
                     parameterMappings.Add(s);
                     args = args.Without(argumentsMatched);
                 });
 
-                if (x.HasValue == false)
+                if (maybePropertyMapping.HasValue == false)
                 {
-                    return default;
+                    return None;
                 }
             }
 
             if (args.Any())
-                return default;
+                return None;
 
             return new MethodMapping(this, parameterMappings);
         }

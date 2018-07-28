@@ -4,7 +4,7 @@ namespace Richiban.CommandLine.Samples
 {
     public class PushAction
     {
-        [CommandLine, Verb]
+        [CommandLine, Route]
         public void Push(
             string branchName = null,
             [ShortForm('u')] bool setUpstreamBranch = false,

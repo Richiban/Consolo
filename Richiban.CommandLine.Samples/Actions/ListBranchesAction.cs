@@ -4,7 +4,7 @@ namespace Richiban.CommandLine.Samples
 {
     public sealed class ListBranchesAction
     {
-        [CommandLine, Verb("branch")]
+        [CommandLine, Route("branch")]
         public void Execute()
         {
             $"Listing branches".Dump();

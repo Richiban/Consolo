@@ -4,7 +4,7 @@ namespace Richiban.CommandLine.Samples
 {
     public sealed class CleanWorkingDirectoryAction
     {
-        [CommandLine, Verb]
+        [CommandLine, Route]
         public void Clean(
             [ShortForm('d', DisallowLongForm = true)] bool removeDirectories = false,
             [ShortForm('f', DisallowLongForm = true)] bool force = false,
