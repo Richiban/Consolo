@@ -109,6 +109,7 @@ namespace Richiban.CommandLine
                             if (enumerator.Current is CommandLineArgument.Free free)
                             {
                                 argumentsMatched = new CommandLineArgument[] { bnf, free };
+
                                 return new ParameterMapping(PropertyType, free.Value, MatchDisambiguation.ExplicitMatch);
                             }
                         }
