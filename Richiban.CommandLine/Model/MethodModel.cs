@@ -37,12 +37,13 @@ namespace Richiban.CommandLine
 
         public Option<MethodMapping> GetMethodMapping(CommandLineArgumentList args)
         {
+            var remainingArgs = args;
             var parameterMappings = new List<ParameterMapping>();
 
             {
-                if (Verbs.Matches(args, out var argumentsMatched))
+                if (Verbs.Matches(remainingArgs, out var argumentsMatched))
                 {
-                    args = args.Without(argumentsMatched);
+                    remainingArgs = remainingArgs.Without(argumentsMatched);
                 }
                 else
                 {
@@ -50,16 +51,16 @@ namespace Richiban.CommandLine
                 }
             }
 
-            args = Parameters.ExpandShortForms(args);
+            remainingArgs = Parameters.ExpandShortForms(remainingArgs);
 
             foreach (var prop in Parameters)
             {
-                var maybePropertyMapping = prop.Matches(args, out var argumentsMatched);
+                var maybePropertyMapping = prop.Matches(remainingArgs, out var argumentsMatched);
 
                 maybePropertyMapping.IfSome(s =>
                 {
                     parameterMappings.Add(s);
-                    args = args.Without(argumentsMatched);
+                    remainingArgs = remainingArgs.Without(argumentsMatched);
                 });
 
                 if (maybePropertyMapping.HasValue == false)
@@ -68,10 +69,10 @@ namespace Richiban.CommandLine
                 }
             }
 
-            if (args.Any())
+            if (remainingArgs.Any())
                 return None;
 
-            return new MethodMapping(this, parameterMappings);
+            return new MethodMapping(IsStatic, InvokeFunc, parameterMappings);
         }
     }
 }

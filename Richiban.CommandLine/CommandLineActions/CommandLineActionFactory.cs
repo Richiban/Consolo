@@ -52,7 +52,7 @@ namespace Richiban.CommandLine
                     .Select(m => TypeConverter.ConvertValue(m.ConvertToType, m.SuppliedValue))
                     .ToArray();
 
-                return methodMapping.MethodModel.InvokeFunc(
+                return methodMapping.InvokeFunc(
                     instance,
                     methodArguments);
             },
