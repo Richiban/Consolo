@@ -2,6 +2,6 @@
 {
     enum MatchDisambiguation
     {
-        ImplicitMatch, ExplicitMatch
+        ImplicitMatch, ExplicitWithOptionals, ExplicitMatch
     }
 }

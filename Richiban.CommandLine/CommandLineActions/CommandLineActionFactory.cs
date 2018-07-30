@@ -17,16 +17,22 @@ namespace Richiban.CommandLine
 
         public IReadOnlyCollection<CommandLineAction> Create(CommandLineArgumentList commandLineArgs)
         {
-            var (explicitMatches, implicitMatches) =
+            var matchGroups =
                 GetMethodMappings(commandLineArgs)
-                .Partition(mapping => mapping.MatchDisambiguation == MatchDisambiguation.ExplicitMatch);
+                .ToLookup(mapping => mapping.MatchDisambiguation)
+                .OrderByDescending(group => group.Key);
 
-            var mappings =
-                explicitMatches.Any()
-                ? explicitMatches
-                : implicitMatches;
+            var bestGroup =
+                matchGroups
+                .FirstOrDefault(group => group.Any());
 
-            return mappings
+            if(bestGroup == null)
+            {
+                return new List<CommandLineAction>();
+            }
+
+            return
+                bestGroup
                 .Select(mapping => CreateAction(mapping, _objectFactory))
                 .ToList();
         }
@@ -42,9 +48,11 @@ namespace Richiban.CommandLine
             {
                 var instance = CreateInstanceOfDeclaringType(methodMapping, objectFactory);
 
-                var methodArguments = methodMapping.Select(m => m.ConvertValue()).ToArray();
+                var methodArguments = methodMapping
+                    .Select(m => TypeConverter.ConvertValue(m.ConvertToType, m.SuppliedValue))
+                    .ToArray();
 
-                methodMapping.MethodModel.InvokeFunc(
+                return methodMapping.MethodModel.InvokeFunc(
                     instance,
                     methodArguments);
             },

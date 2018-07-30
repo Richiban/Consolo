@@ -4,6 +4,8 @@
     {
         public static OptionNone None { get; } = new OptionNone();
 
+        public static Option<T> Some<T>(T value) => new Option<T>(value);
+
         public struct OptionNone { }
     }
 }

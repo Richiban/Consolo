@@ -18,9 +18,9 @@ namespace Richiban.CommandLine
         }
 
         public static void Execute(params string[] args) => 
-            Execute(CommandLineConfiguration.Default, args);
+            Execute(CommandLineConfiguration.GetDefault(), args);
 
-        public static void Execute(CommandLineConfiguration config, params string[] args)
+        public static object Execute(CommandLineConfiguration config, params string[] args)
         {
             var model = AssemblyModel.Scan(config.AssemblyToScan);
             var commandLineArgs = CommandLineArgumentList.Parse(args);
@@ -32,7 +32,7 @@ namespace Richiban.CommandLine
             {
                 config.HelpOutput(GenerateHelp(model, commandLineArgs));
 
-                return;
+                return null;
             }
 
             if (commandLineActions.Count == 0)
@@ -41,7 +41,7 @@ namespace Richiban.CommandLine
 
                 config.HelpOutput(GenerateHelp(model, commandLineArgs));
 
-                return;
+                return null;
             }
 
             if (commandLineActions.Count > 1)
@@ -50,10 +50,10 @@ namespace Richiban.CommandLine
 
                 config.HelpOutput(GenerateHelp(commandLineActions));
 
-                return;
+                return null;
             }
 
-            commandLineActions.Single().Invoke();
+            return commandLineActions.Single().Invoke();
         }
 
         private static string GenerateHelp(IEnumerable<MethodModel> model, CommandLineArgumentList commandLineArgs)

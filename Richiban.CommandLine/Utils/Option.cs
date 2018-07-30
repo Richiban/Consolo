@@ -43,6 +43,20 @@ namespace Richiban.CommandLine
             return default;
         }
 
+        internal bool IsSome(out T value)
+        {
+            if(HasValue)
+            {
+                value = _value;
+                return true;
+            }
+            else
+            {
+                value = default;
+                return false;
+            }
+        }
+
         public void IfSome(Action<T> f)
         {
             if (HasValue)

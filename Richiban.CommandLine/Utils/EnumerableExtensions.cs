@@ -35,27 +35,5 @@ namespace Richiban.CommandLine
 
             return result.AsReadOnly();
         }
-
-        public static (IReadOnlyCollection<T>, IReadOnlyCollection<T>) Partition<T>(
-            this IEnumerable<T> source,
-            Func<T, bool> partitionBy)
-        {
-            var trueList = new List<T>();
-            var falseList = new List<T>();
-
-            foreach(var item in source)
-            {
-                if(partitionBy(item))
-                {
-                    trueList.Add(item);
-                }
-                else
-                {
-                    falseList.Add(item);
-                }
-            }
-
-            return (trueList, falseList);
-        }
     }
 }

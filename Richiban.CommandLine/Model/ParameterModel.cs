@@ -131,7 +131,7 @@ namespace Richiban.CommandLine
 
             if(IsOptional)
             {
-                return new ParameterMapping(PropertyType, None, MatchDisambiguation.ImplicitMatch);
+                return new ParameterMapping(PropertyType, None, MatchDisambiguation.ExplicitWithOptionals);
             }
 
             return default;

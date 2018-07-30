@@ -4,9 +4,9 @@ namespace Richiban.CommandLine
 {
     internal class CommandLineAction
     {
-        private readonly Action _action;
+        private readonly Func<object> _action;
 
-        public CommandLineAction(Action action, string help)
+        public CommandLineAction(Func<object> action, string help)
         {
             _action = action;
             Help = help;
@@ -14,6 +14,6 @@ namespace Richiban.CommandLine
 
         public string Help { get; }
 
-        public void Invoke() => _action();
+        public object Invoke() => _action();
     }
 }
