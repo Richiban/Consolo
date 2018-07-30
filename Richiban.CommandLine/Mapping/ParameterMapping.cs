@@ -4,18 +4,25 @@ using System.Reflection;
 
 namespace Richiban.CommandLine
 {
-    internal class PropertyMapping
+    internal class ParameterMapping
     {
-        public PropertyMapping(ParameterModel parameterModel, object suppliedValue)
+        private readonly Option<string> _suppliedValue;
+        private readonly Type convertToType;
+
+        public ParameterMapping(
+            ParameterModel parameterModel, 
+            Option<string> suppliedValue,
+            MatchDisambiguation matchDisambiguation)
         {
             ParameterModel = parameterModel ?? throw new ArgumentNullException(nameof(parameterModel));
-            Value = ConvertValue(parameterModel.PropertyType, suppliedValue);
+            MatchDisambiguation = matchDisambiguation;
+            _suppliedValue = suppliedValue;
         }
 
         public ParameterModel ParameterModel { get; }
-        public object Value { get; }
+        public MatchDisambiguation MatchDisambiguation { get; }
 
-        private static object ConvertValue(Type convertToType, object suppliedValue)
+        public object ConvertValue()
         {
             if (convertToType == typeof(string) || suppliedValue == Type.Missing)
             {

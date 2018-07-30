@@ -14,10 +14,21 @@ namespace Richiban.CommandLine
             _objectFactory = objectFactory;
         }
 
-        public IReadOnlyCollection<CommandLineAction> Create(CommandLineArgumentList commandLineArgs) =>
-            GetMethodMappings(commandLineArgs)
+        public IReadOnlyCollection<CommandLineAction> Create(CommandLineArgumentList commandLineArgs)
+        {
+            var (explicitMatches, implicitMatches) =
+                GetMethodMappings(commandLineArgs)
+                .Partition(mapping => mapping.MatchDisambiguation == MatchDisambiguation.ExplicitMatch);
+
+            var mappings =
+                explicitMatches.Any()
+                ? explicitMatches
+                : implicitMatches;
+
+            return mappings
                 .Select(mapping => new CommandLineAction(mapping, _objectFactory))
                 .ToList();
+        }
 
         private IReadOnlyCollection<MethodMapping> GetMethodMappings(CommandLineArgumentList args) =>
             _assemblyModel

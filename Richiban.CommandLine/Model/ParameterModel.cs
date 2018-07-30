@@ -83,7 +83,7 @@ namespace Richiban.CommandLine
 
         public bool MatchesShortForm(char c) => _shortForms.Contains(c);
 
-        public Option<PropertyMapping> Matches(
+        public Option<ParameterMapping> Matches(
             CommandLineArgumentList args, 
             out CommandLineArgument[] argumentsMatched)
         {
@@ -95,12 +95,12 @@ namespace Richiban.CommandLine
                 {
                     case CommandLineArgument.NameValuePair nv when NameMatches(nv.Name):
                         argumentsMatched = new[] { nv };
-                        return new PropertyMapping(this, nv.Value);
+                        return new ParameterMapping(this, nv.Value, MatchDisambiguation.ExplicitMatch);
 
                     case CommandLineArgument.BareNameOrFlag bnf 
                         when NameMatches(bnf.Name) && IsFlag:
                         argumentsMatched = new[] { bnf };
-                        return new PropertyMapping(this, true);
+                        return new ParameterMapping(this, true, MatchDisambiguation.ExplicitMatch);
 
                     case CommandLineArgument.BareNameOrFlag bnf when NameMatches(bnf.Name):
                         if(enumerator.MoveNext())
@@ -108,7 +108,7 @@ namespace Richiban.CommandLine
                             if (enumerator.Current is CommandLineArgument.Free free)
                             {
                                 argumentsMatched = new CommandLineArgument[] { bnf, free };
-                                return new PropertyMapping(this, free.Value);
+                                return new ParameterMapping(this, free.Value, MatchDisambiguation.ExplicitMatch);
                             }
                         }
 
@@ -116,7 +116,7 @@ namespace Richiban.CommandLine
 
                     case CommandLineArgument.Free free:
                         argumentsMatched = new[] { free };
-                        return new PropertyMapping(this, free.Value);
+                        return new ParameterMapping(this, free.Value, MatchDisambiguation.ImplicitMatch);
 
                     default:
                         break;
@@ -127,7 +127,7 @@ namespace Richiban.CommandLine
 
             if(IsOptional)
             {
-                return new PropertyMapping(this, Type.Missing);
+                return new ParameterMapping(this, Type.Missing, MatchDisambiguation.ImplicitMatch);
             }
 
             return default;

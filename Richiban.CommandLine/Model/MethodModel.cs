@@ -34,7 +34,7 @@ namespace Richiban.CommandLine
 
         public Option<MethodMapping> GetMethodMapping(CommandLineArgumentList args)
         {
-            var parameterMappings = new List<PropertyMapping>();
+            var parameterMappings = new List<ParameterMapping>();
 
             {
                 if (Verbs.Matches(args, out var argumentsMatched))
