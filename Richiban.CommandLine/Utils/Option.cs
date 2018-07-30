@@ -27,6 +27,14 @@ namespace Richiban.CommandLine
                 None();
         }
 
+        internal R Match<R>(Func<R> None, Func<T, R> Some)
+        {
+            if (HasValue)
+                return Some(_value);
+            else
+                return None();
+        }
+
         public Option<R> IfSome<R>(Func<T, R> f)
         {
             if (HasValue)

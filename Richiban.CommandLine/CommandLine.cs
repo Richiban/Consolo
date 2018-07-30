@@ -35,15 +35,25 @@ namespace Richiban.CommandLine
                 return;
             }
 
-            if (commandLineActions.Count != 1)
+            if (commandLineActions.Count == 0)
             {
                 config.HelpOutput("Could not match the given arguments to a command");
+
                 config.HelpOutput(GenerateHelp(model, commandLineArgs));
 
                 return;
             }
 
-            commandLineActions.Single().Execute();
+            if (commandLineActions.Count > 1)
+            {
+                config.HelpOutput("The given arguments are ambiguous between the following:");
+
+                config.HelpOutput(GenerateHelp(commandLineActions));
+
+                return;
+            }
+
+            commandLineActions.Single().Invoke();
         }
 
         private static string GenerateHelp(IEnumerable<MethodModel> model, CommandLineArgumentList commandLineArgs)
@@ -68,6 +78,18 @@ namespace Richiban.CommandLine
                 string.Join($"{Environment.NewLine}{Environment.NewLine}",
                 modelsForHelp
                 .Select(t => $"\t{AppDomain.CurrentDomain.FriendlyName} {t.Help}")));
+
+            return sb.ToString();
+        }
+
+        private static string GenerateHelp(IEnumerable<CommandLineAction> actions)
+        {
+            var sb = new StringBuilder();
+
+            sb.Append(
+                string.Join($"{Environment.NewLine}{Environment.NewLine}",
+                actions
+                .Select(act => $"\t{AppDomain.CurrentDomain.FriendlyName} {act.Help}")));
 
             return sb.ToString();
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using static Richiban.CommandLine.Prelude;
 
 namespace Richiban.CommandLine
 {
@@ -93,14 +94,14 @@ namespace Richiban.CommandLine
             {
                 switch (enumerator.Current)
                 {
-                    case CommandLineArgument.NameValuePair nv when NameMatches(nv.Name):
-                        argumentsMatched = new[] { nv };
-                        return new ParameterMapping(this, nv.Value, MatchDisambiguation.ExplicitMatch);
+                    case CommandLineArgument.NameValuePair nvPair when NameMatches(nvPair.Name):
+                        argumentsMatched = new[] { nvPair };
+                        return new ParameterMapping(PropertyType, nvPair.Value, MatchDisambiguation.ExplicitMatch);
 
-                    case CommandLineArgument.BareNameOrFlag bnf 
-                        when NameMatches(bnf.Name) && IsFlag:
-                        argumentsMatched = new[] { bnf };
-                        return new ParameterMapping(this, true, MatchDisambiguation.ExplicitMatch);
+                    case CommandLineArgument.BareNameOrFlag nameOrFlag
+                        when NameMatches(nameOrFlag.Name) && IsFlag:
+                        argumentsMatched = new[] { nameOrFlag };
+                        return new ParameterMapping(PropertyType, $"{true}", MatchDisambiguation.ExplicitMatch);
 
                     case CommandLineArgument.BareNameOrFlag bnf when NameMatches(bnf.Name):
                         if(enumerator.MoveNext())
@@ -108,15 +109,18 @@ namespace Richiban.CommandLine
                             if (enumerator.Current is CommandLineArgument.Free free)
                             {
                                 argumentsMatched = new CommandLineArgument[] { bnf, free };
-                                return new ParameterMapping(this, free.Value, MatchDisambiguation.ExplicitMatch);
+                                return new ParameterMapping(PropertyType, free.Value, MatchDisambiguation.ExplicitMatch);
                             }
                         }
 
                         break;
 
+                    case CommandLineArgument.Free free when IsFlag:
+                        continue;
+
                     case CommandLineArgument.Free free:
                         argumentsMatched = new[] { free };
-                        return new ParameterMapping(this, free.Value, MatchDisambiguation.ImplicitMatch);
+                        return new ParameterMapping(PropertyType, free.Value, MatchDisambiguation.ImplicitMatch);
 
                     default:
                         break;
@@ -127,7 +131,7 @@ namespace Richiban.CommandLine
 
             if(IsOptional)
             {
-                return new ParameterMapping(this, Type.Missing, MatchDisambiguation.ImplicitMatch);
+                return new ParameterMapping(PropertyType, None, MatchDisambiguation.ImplicitMatch);
             }
 
             return default;

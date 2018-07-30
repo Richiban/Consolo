@@ -14,6 +14,8 @@ namespace Richiban.CommandLine
             MethodModel = methodModel ?? throw new ArgumentNullException(nameof(methodModel));
             _propertyMappings = propertyMappings ?? throw new ArgumentNullException(nameof(propertyMappings));
             IsStatic = methodModel.IsStatic;
+            InvokeFunc = methodModel.InvokeFunc;
+
             MatchDisambiguation = propertyMappings
                 .Any(prop => prop.MatchDisambiguation == MatchDisambiguation.ImplicitMatch)
                 ? MatchDisambiguation.ImplicitMatch
@@ -22,16 +24,12 @@ namespace Richiban.CommandLine
 
         public MethodModel MethodModel { get; }
         public MatchDisambiguation MatchDisambiguation { get; }
+        public bool IsStatic { get; }
+        public Func<object, object[], object> InvokeFunc { get; }
+
         public int Count => _propertyMappings.Count;
         public ParameterMapping this[int index] => _propertyMappings[index];
         public IEnumerator<ParameterMapping> GetEnumerator() => _propertyMappings.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-        internal Action GetInvokeAction(object instance, object[] methodArguments)
-        {
-            return () => MethodModel.MethodInfo.Invoke(instance, methodArguments);
-        }
-
-        public bool IsStatic { get; }
     }
 }
