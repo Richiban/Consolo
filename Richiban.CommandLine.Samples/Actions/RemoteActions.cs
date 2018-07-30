@@ -31,21 +31,28 @@ namespace Richiban.CommandLine.Samples
         }
 
         [CommandLine, Route("set-head")]
-        public void SetHeadToBranch(string name, string branch)
+        public void SetHeadToBranch(
+            string name,
+            string branch = null, 
+            [ShortForm('d')] bool delete = false,
+            [ShortForm('a')] bool auto = false)
         {
-            $"Setting head for remote {name}".Dump();
-        }
-
-        [CommandLine, Route("set-head"), Flag('d', "delete")]
-        public void SetHeadAuto(string name)
-        {
-            $"Auto-setting head for remote {name}".Dump();
-        }
-
-        [CommandLine, Route("set-head"), Flag('a', "auto")]
-        public void SetHeadDelete(string name)
-        {
-            $"Deleting head for remote {name}".Dump();
+            if (branch != null)
+            {
+                $"Setting head for remote {name} to branch {branch}".Dump();
+            }
+            else if (delete)
+            {
+                $"Deleting head for remote {name}".Dump();
+            }
+            else if(auto)
+            {
+                $"Auto-setting head for remote {name}".Dump();
+            }
+            else
+            {
+                Console.WriteLine("You must supply either a branch name or one of the flags [delete] or [auto]");
+            }
         }
     }
 }

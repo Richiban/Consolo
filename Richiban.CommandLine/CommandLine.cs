@@ -1,22 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 
 namespace Richiban.CommandLine
 {
     public class CommandLine
     {
-        private readonly IObjectFactory _objectFactory;
-        private readonly Action<string> _helpOutput;
-
-        public CommandLine(IObjectFactory objectFactory, Action<string> helpOutput)
-        {
-            _objectFactory = objectFactory;
-            _helpOutput = helpOutput;
-        }
-
         public static void Execute(params string[] args) => 
             Execute(CommandLineConfiguration.GetDefault(), args);
 

@@ -42,7 +42,7 @@ namespace Richiban.CommandLine
 
             var helpForm =
                 IsFlag
-                ? $"-{primaryName.ToLowerInvariant()}"
+                ? $"{CommandLineEnvironment.FlagGlyph}{primaryName.ToLowerInvariant()}"
                 : $"<{primaryName.ToLowerInvariant()}>";
 
             Help = IsOptional ? $"[{helpForm}]" : helpForm;
