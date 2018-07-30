@@ -204,10 +204,6 @@ public class SomeClass
     [CommandLine, Route("method1")]
     public void Method1(string argument)
     {
-        var serviceA = ObjectContainer.Instance.Resolve<ServiceA>();
-        var serviceB = ObjectContainer.Instance.Resolve<ServiceB>();
-        var serviceC = ObjectContainer.Instance.Resolve<ServiceC>();
-
         // ... Implementation goes here
     }
 }
