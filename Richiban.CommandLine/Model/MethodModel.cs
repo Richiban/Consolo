@@ -12,7 +12,9 @@ namespace Richiban.CommandLine
     {
         public MethodModel(MethodInfo methodInfo)
         {
-            MethodInfo = methodInfo ?? throw new ArgumentNullException(nameof(methodInfo));
+            DeclaringType = methodInfo.DeclaringType;
+
+            InvokeFunc = methodInfo.Invoke;
 
             Verbs = new VerbModel(methodInfo);
 
@@ -27,14 +29,15 @@ namespace Richiban.CommandLine
         public VerbModel Verbs { get; }
         public string Help { get; }
         public bool IsStatic { get; }
-        public MethodInfo MethodInfo { get; }
+        public Type DeclaringType { get; }
+        public Func<object, object[], object> InvokeFunc { get; }
 
         public int GetPartialMatchAccuracy(CommandLineArgumentList commandLineArgs) =>
             Verbs.GetPartialMatchAccuracy(commandLineArgs);
 
         public Option<MethodMapping> GetMethodMapping(CommandLineArgumentList args)
         {
-            var parameterMappings = new List<PropertyMapping>();
+            var parameterMappings = new List<ParameterMapping>();
 
             {
                 if (Verbs.Matches(args, out var argumentsMatched))

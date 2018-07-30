@@ -16,6 +16,6 @@ namespace Richiban.CommandLine.Samples
     /// </summary>
     class Program
     {
-        public static void Main(string[] args) => CommandLine.Run(args);
+        public static void Main(string[] args) => CommandLine.Execute(args);
     }
 }

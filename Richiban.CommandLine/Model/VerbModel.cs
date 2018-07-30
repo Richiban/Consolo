@@ -23,7 +23,7 @@ namespace Richiban.CommandLine
                 .Select(m => {
                     if (m.Verbs.Count == 0)
                         return new[] { methodInfo.Name };
-                    return m.Verbs;
+                    return m.Verbs.Where(v => v != "");
                 })
                 .ToArray();
 
@@ -35,7 +35,7 @@ namespace Richiban.CommandLine
                 .Select(c => {
                     if (c.Verbs.Count == 0)
                         return new[] { methodInfo.DeclaringType.Name };
-                    return c.Verbs;
+                    return c.Verbs.Where(v => v != "");
                 })
                 .ToArray();
 

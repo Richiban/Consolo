@@ -17,45 +17,43 @@ namespace Richiban.CommandLine
             _helpOutput = helpOutput;
         }
 
-        public static void Run(string[] args)
-        {
-            var commandLine = new CommandLine(new SystemActivatorObjectFactory(), Console.WriteLine);
+        public static void Execute(params string[] args) => 
+            Execute(CommandLineConfiguration.Default, args);
 
-            commandLine.Execute(args);
-        }
-
-        public void Execute(string[] args)
+        public static void Execute(CommandLineConfiguration config, params string[] args)
         {
-            var model = AssemblyModel.Scan(Assembly.GetEntryAssembly());
+            var model = AssemblyModel.Scan(config.AssemblyToScan);
             var commandLineArgs = CommandLineArgumentList.Parse(args);
 
-            var commandLineActions = new CommandLineActionFactory(model, _objectFactory)
+            var commandLineActions = new CommandLineActionFactory(model, config.ObjectFactory)
                 .Create(commandLineArgs);
 
             if (commandLineArgs.IsCallForHelp)
             {
-                _helpOutput(GenerateHelp(model, commandLineArgs));
+                config.HelpOutput(GenerateHelp(model, commandLineArgs));
 
                 return;
             }
 
             if (commandLineActions.Count == 0)
             {
-                _helpOutput("Could not match the given arguments to a command");
-                _helpOutput(GenerateHelp(model, commandLineArgs));
+                config.HelpOutput("Could not match the given arguments to a command");
+
+                config.HelpOutput(GenerateHelp(model, commandLineArgs));
 
                 return;
             }
 
             if (commandLineActions.Count > 1)
             {
-                _helpOutput("The given arguments are ambigous between the following commands:");
-                _helpOutput(GenerateHelp(model, commandLineArgs));
+                config.HelpOutput("The given arguments are ambiguous between the following:");
+
+                config.HelpOutput(GenerateHelp(commandLineActions));
 
                 return;
             }
 
-            commandLineActions.Single().Execute();
+            commandLineActions.Single().Invoke();
         }
 
         private static string GenerateHelp(IEnumerable<MethodModel> model, CommandLineArgumentList commandLineArgs)
@@ -80,6 +78,18 @@ namespace Richiban.CommandLine
                 string.Join($"{Environment.NewLine}{Environment.NewLine}",
                 modelsForHelp
                 .Select(t => $"\t{AppDomain.CurrentDomain.FriendlyName} {t.Help}")));
+
+            return sb.ToString();
+        }
+
+        private static string GenerateHelp(IEnumerable<CommandLineAction> actions)
+        {
+            var sb = new StringBuilder();
+
+            sb.Append(
+                string.Join($"{Environment.NewLine}{Environment.NewLine}",
+                actions
+                .Select(act => $"\t{AppDomain.CurrentDomain.FriendlyName} {act.Help}")));
 
             return sb.ToString();
         }

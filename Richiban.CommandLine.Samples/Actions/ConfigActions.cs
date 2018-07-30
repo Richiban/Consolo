@@ -13,7 +13,7 @@ namespace Richiban.CommandLine.Samples
         [CommandLine, Route("config")]
         public void SetConfigValue(string settingName, string settingValue, bool global = false)
         {
-            $"Setting {(global ? " (global)" : "")} {settingName} = {settingValue}".Dump();
+            $"Setting{(global ? " (global)" : "")} {settingName} = {settingValue}".Dump();
         }
     }
 }
