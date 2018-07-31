@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Richiban.CommandLine
 {
@@ -6,16 +7,16 @@ namespace Richiban.CommandLine
     {
         public ParameterMapping(
             Type parameterType,
-            Option<string> suppliedValue,
+            IReadOnlyList<string> suppliedValues,
             MatchDisambiguation matchDisambiguation)
         {
             MatchDisambiguation = matchDisambiguation;
-            SuppliedValue = suppliedValue;
+            SuppliedValues = suppliedValues;
             ConvertToType = parameterType;
         }
         
         public MatchDisambiguation MatchDisambiguation { get; }
-        public Option<string> SuppliedValue { get; }
+        public IReadOnlyList<string> SuppliedValues { get; }
         public Type ConvertToType { get; }
     }
 }

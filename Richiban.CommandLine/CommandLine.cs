@@ -6,18 +6,35 @@ using System.Text;
 
 namespace Richiban.CommandLine
 {
-    public class CommandLine
+    /// <summary>
+    /// The entrypoints for Richiban.CommandLine
+    /// </summary>
+    public static class CommandLine
     {
-        public static void Execute(params string[] args) => 
+        /// <summary>
+        /// The default entrypoint for Richiban.CommandLine
+        /// </summary>
+        /// <param name="args">The command line arguments</param>
+        /// <returns>The object returned by the target method (or null if the method was void)</returns>
+        [return: AllowNull]
+        public static object Execute(params string[] args) => 
             Execute(CommandLineConfiguration.GetDefault(), args);
 
+        /// <summary>
+        /// The entrypoint for Richiban.CommandLine that supports custom configuration
+        /// </summary>
+        /// <param name="config">The CommandLine configuration</param>
+        /// <param name="args">The command line arguments</param>
+        /// <returns>The object returned by the target method (or null if the method was void)</returns>
         [return:AllowNull]
         public static object Execute(CommandLineConfiguration config, params string[] args)
         {
-            var model = AssemblyModel.Scan(config.AssemblyToScan);
+            var model = AssemblyModel.Scan(config.AssembliesToScan);
             var commandLineArgs = CommandLineArgumentList.Parse(args);
+            var typeConverterCollection = new TypeConverterCollection(config.TypeConverters);
 
-            var commandLineActions = new CommandLineActionFactory(model, config.ObjectFactory)
+            var commandLineActions = 
+                new CommandLineActionFactory(model, config.ObjectFactory, typeConverterCollection)
                 .Create(commandLineArgs);
 
             if (commandLineArgs.IsCallForHelp)

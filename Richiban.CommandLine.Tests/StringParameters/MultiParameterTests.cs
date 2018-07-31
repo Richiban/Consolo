@@ -1,5 +1,7 @@
 ﻿using NUnit.Framework;
 using System;
+using System.Collections.Generic;
+using System.Reflection;
 
 namespace Richiban.CommandLine.Tests
 {
@@ -9,7 +11,7 @@ namespace Richiban.CommandLine.Tests
         private dynamic RunTest(params string[] args)
         {
             var config = CommandLineConfiguration.GetDefault();
-            config.AssemblyToScan = GetType().Assembly;
+            config.AssembliesToScan = new List<Assembly> { GetType().Assembly };
             return CommandLine.Execute(config, args);
         }
 

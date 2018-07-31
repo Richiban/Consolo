@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -18,19 +19,19 @@ namespace Richiban.CommandLine
         public IEnumerator<MethodModel> GetEnumerator() => _typeModels.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        public static AssemblyModel Scan(Assembly assembly)
+        public static AssemblyModel Scan(IEnumerable<Assembly> assembliesToScan)
         {
-            return
-                new AssemblyModel(
-                    assembly
-                        .GetTypes()
-                        .SelectMany(t => t.GetMethods())
-                        .Where(m => m
-                            .GetCustomAttributes(inherit: true)
-                            .OfType<CommandLineAttribute>()
-                            .Any())
-                        .Select(m => new MethodModel(m))
-                        .ToArray());
+            var methodModels =
+                from assembly in assembliesToScan
+                from type in assembly.GetTypes()
+                from method in type.GetMethods()
+                where method
+                        .GetCustomAttributes(inherit: true)
+                        .OfType<CommandLineAttribute>()
+                        .Any()
+                select new MethodModel(method);
+
+            return new AssemblyModel(methodModels.ToArray());
         }
     }
 }

@@ -4,15 +4,29 @@ using System.Linq;
 
 namespace Richiban.CommandLine
 {
+    /// <summary>
+    /// Define a short form for your flag parameter.
+    /// 
+    /// Must be used on <see cref="bool"/> parameters only.
+    /// </summary>
     public class ShortFormAttribute : Attribute
     {
-        public ShortFormAttribute(params char[] shortForms)
+        /// <summary>
+        /// Define one or more short forms for the parameter
+        /// </summary>
+        /// <param name="firstShortForm">The first short form</param>
+        /// <param name="otherShortForms">Any alternative short forms</param>
+        public ShortFormAttribute(char firstShortForm, params char[] otherShortForms)
         {
-            ShortForms = shortForms.Distinct().ToList();
+            ShortForms = new[] {firstShortForm }.Concat(otherShortForms).Distinct().ToList();
         }
 
-        public bool DisallowLongForm { get; set; }
+        /// <summary>
+        /// Setting <see cref="DisallowLongForm"/> to true will mean that the parameter can
+        /// only be set through its short form
+        /// </summary>
+        public bool DisallowLongForm { internal get; set; }
 
-        public IReadOnlyList<char> ShortForms { get; }
+        internal IReadOnlyList<char> ShortForms { get; }
     }
 }

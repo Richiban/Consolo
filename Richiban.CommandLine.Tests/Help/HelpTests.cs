@@ -1,4 +1,6 @@
 ﻿using NUnit.Framework;
+using System.Collections.Generic;
+using System.Reflection;
 
 namespace Richiban.CommandLine.Tests.Routes
 {
@@ -9,7 +11,7 @@ namespace Richiban.CommandLine.Tests.Routes
         private dynamic RunTest(params string[] args)
         {
             var config = CommandLineConfiguration.GetDefault();
-            config.AssemblyToScan = GetType().Assembly;
+            config.AssembliesToScan = new List<Assembly> { GetType().Assembly };
             config.HelpOutput = s => outputHelp = s;
 
             return CommandLine.Execute(config, args);

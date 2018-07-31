@@ -96,12 +96,18 @@ namespace Richiban.CommandLine
                 {
                     case CommandLineArgument.NameValuePair nvPair when NameMatches(nvPair.Name):
                         argumentsMatched = new[] { nvPair };
-                        return new ParameterMapping(PropertyType, nvPair.Value, MatchDisambiguation.ExplicitMatch);
+                        return new ParameterMapping(
+                            PropertyType,
+                            new[] { nvPair.Value },
+                            MatchDisambiguation.ExplicitMatch);
 
                     case CommandLineArgument.BareNameOrFlag nameOrFlag
                         when NameMatches(nameOrFlag.Name) && IsFlag:
                         argumentsMatched = new[] { nameOrFlag };
-                        return new ParameterMapping(PropertyType, $"{true}", MatchDisambiguation.ExplicitMatch);
+                        return new ParameterMapping(
+                            PropertyType, 
+                            new[] { $"{true}" },
+                            MatchDisambiguation.ExplicitMatch);
 
                     case CommandLineArgument.BareNameOrFlag bnf when NameMatches(bnf.Name):
                         if(enumerator.MoveNext())
@@ -110,7 +116,10 @@ namespace Richiban.CommandLine
                             {
                                 argumentsMatched = new CommandLineArgument[] { bnf, free };
 
-                                return new ParameterMapping(PropertyType, free.Value, MatchDisambiguation.ExplicitMatch);
+                                return new ParameterMapping(
+                                    PropertyType, 
+                                    new[] { free.Value },
+                                    MatchDisambiguation.ExplicitMatch);
                             }
                         }
 
@@ -121,7 +130,10 @@ namespace Richiban.CommandLine
 
                     case CommandLineArgument.Free free:
                         argumentsMatched = new[] { free };
-                        return new ParameterMapping(PropertyType, free.Value, MatchDisambiguation.ImplicitMatch);
+                        return new ParameterMapping(
+                            PropertyType,
+                            new[] { free.Value },
+                            MatchDisambiguation.ImplicitMatch);
 
                     default:
                         break;
@@ -132,7 +144,10 @@ namespace Richiban.CommandLine
 
             if(IsOptional)
             {
-                return new ParameterMapping(PropertyType, None, MatchDisambiguation.ExplicitWithOptionals);
+                return new ParameterMapping(
+                    PropertyType,
+                    new string[0], 
+                    MatchDisambiguation.ExplicitWithOptionals);
             }
 
             return default;

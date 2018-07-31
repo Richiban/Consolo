@@ -8,11 +8,17 @@ namespace Richiban.CommandLine
     {
         private readonly AssemblyModel _assemblyModel;
         private readonly Func<Type, object> _objectFactory;
+        private readonly TypeConverterCollection _typeConverterCollection;
 
-        public CommandLineActionFactory(AssemblyModel model, Func<Type, object> objectFactory)
+
+        public CommandLineActionFactory(
+            AssemblyModel model, 
+            Func<Type, object> objectFactory,
+            TypeConverterCollection typeConverterCollection)
         {
             _assemblyModel = model;
             _objectFactory = objectFactory;
+            _typeConverterCollection = typeConverterCollection;
         }
 
         public IReadOnlyCollection<CommandLineAction> Create(CommandLineArgumentList commandLineArgs)
@@ -43,7 +49,7 @@ namespace Richiban.CommandLine
                 .Choose()
                 .ToList();
 
-        private static CommandLineAction CreateAction(
+        private CommandLineAction CreateAction(
             MethodMapping methodMapping,
             Func<Type, object> objectFactory) =>
             new CommandLineAction(() =>
@@ -51,8 +57,10 @@ namespace Richiban.CommandLine
                 var instance = CreateInstanceOfDeclaringType(methodMapping.MethodModel, objectFactory);
 
                 var methodArguments = methodMapping
-                    .Select(paramMapping => 
-                        TypeConverter.ConvertValue(paramMapping.ConvertToType, paramMapping.SuppliedValue))
+                    .Select(paramMapping =>
+                        _typeConverterCollection.ConvertValue(
+                            paramMapping.ConvertToType,
+                            paramMapping.SuppliedValues))
                     .ToArray();
 
                 return methodMapping.MethodModel.InvokeFunc(

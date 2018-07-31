@@ -9,8 +9,6 @@ namespace Richiban.CommandLine
     /// on a method or a class.
     /// 
     /// Using the RouteAttribute without argument will infer the verb from the method name or class name.
-    /// 
-    /// When inferring from a class name the suffixes "Action(s)" "CommandLineAction(s)" are stripped off.
     /// </summary>
     /// <example>
     /// <code>
@@ -39,11 +37,15 @@ namespace Richiban.CommandLine
     [AttributeUsage(AttributeTargets.Method|AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
     public class RouteAttribute : Attribute
     {
+        /// <summary>
+        /// Define a route
+        /// </summary>
+        /// <param name="routeParts">The sequence of words that form the route. Empty string is allowed</param>
         public RouteAttribute(params string[] routeParts)
         {
-            Verbs = routeParts.ToList();
+            RouteParts = routeParts.ToList();
         }
 
-        public IReadOnlyList<string> Verbs { get; }
+        internal IReadOnlyList<string> RouteParts { get; }
     }
 }

@@ -21,9 +21,9 @@ namespace Richiban.CommandLine
                 .GetCustomAttributes(inherit: true)
                 .OfType<RouteAttribute>()
                 .Select(m => {
-                    if (m.Verbs.Count == 0)
+                    if (m.RouteParts.Count == 0)
                         return new[] { methodInfo.Name };
-                    return m.Verbs.Where(v => v != "");
+                    return m.RouteParts.Where(v => v != "");
                 })
                 .ToArray();
 
@@ -33,9 +33,9 @@ namespace Richiban.CommandLine
                 .GetCustomAttributes(inherit: true)
                 .OfType<RouteAttribute>()
                 .Select(c => {
-                    if (c.Verbs.Count == 0)
+                    if (c.RouteParts.Count == 0)
                         return new[] { methodInfo.DeclaringType.Name };
-                    return c.Verbs.Where(v => v != "");
+                    return c.RouteParts.Where(v => v != "");
                 })
                 .ToArray();
 
