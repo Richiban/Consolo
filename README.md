@@ -152,6 +152,50 @@ public void AddRemote(string remoteName, Uri remoteUri)
 
 > Note that here we have an argument of type `Uri`. See [Argument types are converted].
 
+For the purposes of code organisation and not repeating oneself, you can also put route attributes
+on the containing class. So, instead of having to write:
+
+```csharp
+class MyRemoteActions
+{
+	[CommandLine, Route("remote", "add")]
+	public void AddRemote(...) => ... 
+
+	[CommandLine, Route("remote", "remove")]
+	public void RemoveRemote(...) => ... 
+
+	[CommandLine, Route("remote", "rename")]
+	public void RemoveRemote(...) => ... 
+}
+```
+
+you can instead write:
+
+```csharp
+[Route("remote")]
+class MyRemoteActions
+{
+	[CommandLine, Route("add")]
+	public void AddRemote(...) => ... 
+
+	[CommandLine, Route("remove")]
+	public void RemoveRemote(...) => ... 
+
+	[CommandLine, Route("rename")]
+	public void RenameRemote(...) => ... 
+}
+```
+
+Note also that you can infer the route name by using the route attribute bare, like so:
+
+```csharp
+[CommandLine, Route]
+public void MyAction()
+{
+	// This method will respond to the "MyAction" route (case-insensitive)
+}
+```
+
 ### Argument types are converted 
 
 Note that arguments do not have to be strings.
