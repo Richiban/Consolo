@@ -9,16 +9,18 @@ namespace Richiban.CommandLine
         private readonly AssemblyModel _assemblyModel;
         private readonly Func<Type, object> _objectFactory;
         private readonly TypeConverterCollection _typeConverterCollection;
-
+        private readonly MethodMapper _methodMapper;
 
         public CommandLineActionFactory(
             AssemblyModel model, 
             Func<Type, object> objectFactory,
-            TypeConverterCollection typeConverterCollection)
+            TypeConverterCollection typeConverterCollection,
+            MethodMapper methodMapper)
         {
             _assemblyModel = model;
             _objectFactory = objectFactory;
             _typeConverterCollection = typeConverterCollection;
+            _methodMapper = methodMapper;
         }
 
         public IReadOnlyCollection<CommandLineAction> Create(CommandLineArgumentList commandLineArgs)
@@ -45,7 +47,7 @@ namespace Richiban.CommandLine
 
         private IReadOnlyCollection<MethodMapping> GetMethodMappings(CommandLineArgumentList args) =>
             _assemblyModel
-                .Select(model => model.GetMethodMapping(args))
+                .Select(model => _methodMapper.GetMethodMapping(model, args))
                 .Choose()
                 .ToList();
 

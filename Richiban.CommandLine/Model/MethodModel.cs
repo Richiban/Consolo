@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using static Richiban.CommandLine.Prelude;
 
 namespace Richiban.CommandLine
 {
@@ -25,7 +24,7 @@ namespace Richiban.CommandLine
             IsStatic = methodInfo.IsStatic;
         }
 
-        private ParameterModelList Parameters { get; }
+        public ParameterModelList Parameters { get; }
         public VerbModel Verbs { get; }
         public string Help { get; }
         public bool IsStatic { get; }
@@ -34,45 +33,5 @@ namespace Richiban.CommandLine
 
         public int GetPartialMatchAccuracy(CommandLineArgumentList commandLineArgs) =>
             Verbs.GetPartialMatchAccuracy(commandLineArgs);
-
-        public Option<MethodMapping> GetMethodMapping(CommandLineArgumentList args)
-        {
-            var remainingArgs = args;
-            var parameterMappings = new List<ParameterMapping>();
-
-            {
-                if (Verbs.Matches(remainingArgs, out var argumentsMatched))
-                {
-                    remainingArgs = remainingArgs.Without(argumentsMatched);
-                }
-                else
-                {
-                    return None;
-                }
-            }
-
-            remainingArgs = Parameters.ExpandShortForms(remainingArgs);
-
-            foreach (var prop in Parameters)
-            {
-                var maybePropertyMapping = prop.Matches(remainingArgs, out var argumentsMatched);
-
-                maybePropertyMapping.IfSome(s =>
-                {
-                    parameterMappings.Add(s);
-                    remainingArgs = remainingArgs.Without(argumentsMatched);
-                });
-
-                if (maybePropertyMapping.HasValue == false)
-                {
-                    return None;
-                }
-            }
-
-            if (remainingArgs.Any())
-                return None;
-
-            return new MethodMapping(this, parameterMappings);
-        }
     }
 }

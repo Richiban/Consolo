@@ -32,9 +32,11 @@ namespace Richiban.CommandLine
             var model = AssemblyModel.Scan(config.AssembliesToScan);
             var commandLineArgs = CommandLineArgumentList.Parse(args);
             var typeConverterCollection = new TypeConverterCollection(config.TypeConverters);
+            var methodMapper = new MethodMapper(new ParameterMapper());
 
             var commandLineActions = 
-                new CommandLineActionFactory(model, config.ObjectFactory, typeConverterCollection)
+                new CommandLineActionFactory(
+                    model, config.ObjectFactory, typeConverterCollection, methodMapper)
                 .Create(commandLineArgs);
 
             if (commandLineArgs.IsCallForHelp)

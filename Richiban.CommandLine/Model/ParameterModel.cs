@@ -84,76 +84,7 @@ namespace Richiban.CommandLine
 
         public bool MatchesShortForm(char c) => _shortForms.Contains(c);
 
-        public Option<ParameterMapping> Matches(
-            CommandLineArgumentList args, 
-            out CommandLineArgument[] argumentsMatched)
-        {
-            var enumerator = args.GetEnumerator();
-
-            while(enumerator.MoveNext())
-            {
-                switch (enumerator.Current)
-                {
-                    case CommandLineArgument.NameValuePair nvPair when NameMatches(nvPair.Name):
-                        argumentsMatched = new[] { nvPair };
-                        return new ParameterMapping(
-                            PropertyType,
-                            new[] { nvPair.Value },
-                            MatchDisambiguation.ExplicitMatch);
-
-                    case CommandLineArgument.BareNameOrFlag nameOrFlag
-                        when NameMatches(nameOrFlag.Name) && IsFlag:
-                        argumentsMatched = new[] { nameOrFlag };
-                        return new ParameterMapping(
-                            PropertyType, 
-                            new[] { $"{true}" },
-                            MatchDisambiguation.ExplicitMatch);
-
-                    case CommandLineArgument.BareNameOrFlag bnf when NameMatches(bnf.Name):
-                        if(enumerator.MoveNext())
-                        {
-                            if (enumerator.Current is CommandLineArgument.Free free)
-                            {
-                                argumentsMatched = new CommandLineArgument[] { bnf, free };
-
-                                return new ParameterMapping(
-                                    PropertyType, 
-                                    new[] { free.Value },
-                                    MatchDisambiguation.ExplicitMatch);
-                            }
-                        }
-
-                        break;
-
-                    case CommandLineArgument.Free free when IsFlag:
-                        continue;
-
-                    case CommandLineArgument.Free free:
-                        argumentsMatched = new[] { free };
-                        return new ParameterMapping(
-                            PropertyType,
-                            new[] { free.Value },
-                            MatchDisambiguation.ImplicitMatch);
-
-                    default:
-                        break;
-                }
-            }
-
-            argumentsMatched = new CommandLineArgument[0];
-
-            if(IsOptional)
-            {
-                return new ParameterMapping(
-                    PropertyType,
-                    new string[0], 
-                    MatchDisambiguation.ExplicitWithOptionals);
-            }
-
-            return default;
-        }
-
-        private bool NameMatches(string argumentName) =>
+        public bool NameMatches(string argumentName) =>
             _names.Any(n => n.StartsWith(argumentName, StringComparison.CurrentCultureIgnoreCase));
     }
 }
