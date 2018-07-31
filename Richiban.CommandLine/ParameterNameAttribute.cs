@@ -28,6 +28,6 @@ namespace Richiban.CommandLine
         /// Setting <see cref="IncludeOriginal"/> to true will use the given alternative names 
         /// <strong>in addition</strong> to the original name
         /// </summary>
-        public bool IncludeOriginal { internal get; set;  }
+        public bool IncludeOriginal { get; set;  }
     }
 }

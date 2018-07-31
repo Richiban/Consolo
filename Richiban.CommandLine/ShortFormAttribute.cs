@@ -25,7 +25,7 @@ namespace Richiban.CommandLine
         /// Setting <see cref="DisallowLongForm"/> to true will mean that the parameter can
         /// only be set through its short form
         /// </summary>
-        public bool DisallowLongForm { internal get; set; }
+        public bool DisallowLongForm { get; set; }
 
         internal IReadOnlyList<char> ShortForms { get; }
     }
