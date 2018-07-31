@@ -7,9 +7,9 @@ namespace Richiban.CommandLine
     internal class CommandLineActionFactory
     {
         private readonly AssemblyModel _assemblyModel;
-        private readonly IObjectFactory _objectFactory;
+        private readonly Func<Type, object> _objectFactory;
 
-        public CommandLineActionFactory(AssemblyModel model, IObjectFactory objectFactory)
+        public CommandLineActionFactory(AssemblyModel model, Func<Type, object> objectFactory)
         {
             _assemblyModel = model;
             _objectFactory = objectFactory;
@@ -26,7 +26,7 @@ namespace Richiban.CommandLine
                 matchGroups
                 .FirstOrDefault(group => group.Any());
 
-            if(bestGroup == null)
+            if (bestGroup == null)
             {
                 return new List<CommandLineAction>();
             }
@@ -43,30 +43,31 @@ namespace Richiban.CommandLine
                 .Choose()
                 .ToList();
 
-        private static CommandLineAction CreateAction(MethodMapping methodMapping, IObjectFactory objectFactory) => 
+        private static CommandLineAction CreateAction(
+            MethodMapping methodMapping,
+            Func<Type, object> objectFactory) =>
             new CommandLineAction(() =>
             {
-                var instance = CreateInstanceOfDeclaringType(methodMapping, objectFactory);
+                var instance = CreateInstanceOfDeclaringType(methodMapping.MethodModel, objectFactory);
 
                 var methodArguments = methodMapping
-                    .Select(m => TypeConverter.ConvertValue(m.ConvertToType, m.SuppliedValue))
+                    .Select(paramMapping => 
+                        TypeConverter.ConvertValue(paramMapping.ConvertToType, paramMapping.SuppliedValue))
                     .ToArray();
 
-                return methodMapping.InvokeFunc(
+                return methodMapping.MethodModel.InvokeFunc(
                     instance,
                     methodArguments);
             },
             methodMapping.MethodModel.Help);
 
         private static object CreateInstanceOfDeclaringType(
-            MethodMapping methodMapping, IObjectFactory objectFactory)
+            MethodModel methodModel, Func<Type, object> objectFactory)
         {
-            if (methodMapping.IsStatic)
+            if (methodModel.IsStatic)
                 return null;
 
-            var declaringType = methodMapping.MethodModel.DeclaringType;
-
-            return objectFactory.CreateInstance(declaringType);
+            return objectFactory(methodModel.DeclaringType);
         }
     }
 }

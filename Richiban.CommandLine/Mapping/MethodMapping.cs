@@ -9,25 +9,22 @@ namespace Richiban.CommandLine
     {
         private readonly IReadOnlyList<ParameterMapping> _propertyMappings;
 
+
         public MethodMapping(
-            bool isStatic, 
-            Func<object, object[], object> invokeFunc,
+            MethodModel methodModel,
             IReadOnlyList<ParameterMapping> propertyMappings)
         {
-            _propertyMappings = propertyMappings ?? throw new ArgumentNullException(nameof(propertyMappings));
-            IsStatic = isStatic;
-            InvokeFunc = invokeFunc;
+            _propertyMappings = propertyMappings;
+            MethodModel = methodModel;
 
             MatchDisambiguation = propertyMappings
                 .Any(prop => prop.MatchDisambiguation == MatchDisambiguation.ImplicitMatch)
                 ? MatchDisambiguation.ImplicitMatch
                 : MatchDisambiguation.ExplicitMatch;
         }
-
+        
         public MethodModel MethodModel { get; }
         public MatchDisambiguation MatchDisambiguation { get; }
-        public bool IsStatic { get; }
-        public Func<object, object[], object> InvokeFunc { get; }
 
         public int Count => _propertyMappings.Count;
         public ParameterMapping this[int index] => _propertyMappings[index];

@@ -72,7 +72,7 @@ namespace Richiban.CommandLine
             if (remainingArgs.Any())
                 return None;
 
-            return new MethodMapping(IsStatic, InvokeFunc, parameterMappings);
+            return new MethodMapping(this, parameterMappings);
         }
     }
 }

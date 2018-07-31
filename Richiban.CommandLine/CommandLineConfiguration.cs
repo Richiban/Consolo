@@ -16,7 +16,7 @@ namespace Richiban.CommandLine
         /// Defaults to an implementation using System.Activator, replace with the resolve method of your
         /// favourite DI container to enable dependency injection.
         /// </summary>
-        public IObjectFactory ObjectFactory { get; set; }
+        public Func<Type, object> ObjectFactory { get; set; }
 
         /// <summary>
         /// The assembly to scan for CommandLine methods.

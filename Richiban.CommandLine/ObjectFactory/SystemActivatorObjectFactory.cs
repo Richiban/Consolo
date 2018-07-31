@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Richiban.CommandLine
 {
-    internal class SystemActivatorObjectFactory : IObjectFactory
+    internal class SystemActivatorObjectFactory
     {
         public object CreateInstance(Type typeToInstantiate)
         {
@@ -21,5 +21,8 @@ namespace Richiban.CommandLine
 
             return constructor.Invoke(new object[0]);
         }
+
+        public static implicit operator Func<Type, object>(SystemActivatorObjectFactory factory) =>
+            factory.CreateInstance;
     }
 }

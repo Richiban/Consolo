@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NullGuard;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,7 @@ namespace Richiban.CommandLine
         public static void Execute(params string[] args) => 
             Execute(CommandLineConfiguration.GetDefault(), args);
 
+        [return:AllowNull]
         public static object Execute(CommandLineConfiguration config, params string[] args)
         {
             var model = AssemblyModel.Scan(config.AssemblyToScan);
