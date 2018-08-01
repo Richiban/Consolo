@@ -9,6 +9,13 @@ namespace Richiban.CommandLine
 
         public TypeConverterCollection(Stack<ITypeConverter> typeConverters)
         {
+            CommandLine.Log("Creating type converter collection from:");
+
+            foreach(var converter in typeConverters)
+            {
+                CommandLine.Log(converter, indentationLevel: 1);
+            }
+
             _typeConverters = ImmutableStack<ITypeConverter>.CopyFrom(typeConverters);
         }
 

@@ -11,6 +11,8 @@ namespace Richiban.CommandLine
     /// </summary>
     public static class CommandLine
     {
+        internal static CommandLineConfiguration CurrentConfiguration { get; private set; }
+
         /// <summary>
         /// The default entrypoint for Richiban.CommandLine
         /// </summary>
@@ -29,11 +31,22 @@ namespace Richiban.CommandLine
         [return:AllowNull]
         public static object Execute(CommandLineConfiguration config, params string[] args)
         {
-            var model = AssemblyModel.Scan(config.AssembliesToScan);
+            CurrentConfiguration = config;
+
+            Log("Lexing commandline arguments");
             var commandLineArgs = CommandLineArgumentList.Parse(args);
+
+            if(commandLineArgs.RedirectDiagnosticsToStandardOutput)
+            {
+                config.DebugOutput = config.HelpOutput;
+            }
+
+            var model = AssemblyModel.Scan(config.AssembliesToScan);
+
             var typeConverterCollection = new TypeConverterCollection(config.TypeConverters);
             var methodMapper = new MethodMapper(new ParameterMapper());
 
+            Log("Creating CommandLineActions");
             var commandLineActions = 
                 new CommandLineActionFactory(
                     model, config.ObjectFactory, typeConverterCollection, methodMapper)
@@ -41,30 +54,48 @@ namespace Richiban.CommandLine
 
             if (commandLineArgs.IsCallForHelp)
             {
-                config.HelpOutput(GenerateHelp(model, commandLineArgs));
+                Log(new { commandLineArgs.IsCallForHelp });
+
+                Log("Generating help");
+                var help = GenerateHelp(model, commandLineArgs);
+                Log(help);
+                config.HelpOutput(help);
 
                 return null;
             }
 
             if (commandLineActions.Count == 0)
             {
+                Log(new { commandLineActionsCount = commandLineActions.Count });
                 config.HelpOutput("Could not match the given arguments to a command");
 
-                config.HelpOutput(GenerateHelp(model, commandLineArgs));
+                Log("Generating help");
+                var help = GenerateHelp(model, commandLineArgs);
+                Log(help);
+                config.HelpOutput(help);
 
                 return null;
             }
 
             if (commandLineActions.Count > 1)
             {
+                Log(new { commandLineActionsCount = commandLineActions.Count });
                 config.HelpOutput("The given arguments are ambiguous between the following:");
 
-                config.HelpOutput(GenerateHelp(commandLineActions));
+                Log("Generating help");
+                var help = GenerateHelp(commandLineActions);
+                Log(help);
+                config.HelpOutput(help);
 
                 return null;
             }
 
-            return commandLineActions.Single().Invoke();
+            var commandLineAction = commandLineActions.Single();
+            Log("Found target method");
+            Log(commandLineAction.Help);
+
+            Log("Executing target method");
+            return commandLineAction.Invoke();
         }
 
         private static string GenerateHelp(IEnumerable<MethodModel> model, CommandLineArgumentList commandLineArgs)
@@ -103,6 +134,14 @@ namespace Richiban.CommandLine
                 .Select(act => $"\t{AppDomain.CurrentDomain.FriendlyName} {act.Help}")));
 
             return sb.ToString();
+        }
+
+        internal static void Log(object message, int indentationLevel = 0)
+        {
+            var indentation = String.Concat(Enumerable.Repeat(0, indentationLevel).Select(_ => "\t"));
+            var fullMessage = $"[Debug {DateTime.Now:HH:mm:ss}] {indentation}{message}";
+
+            CurrentConfiguration.DebugOutput(fullMessage);
         }
     }
 }

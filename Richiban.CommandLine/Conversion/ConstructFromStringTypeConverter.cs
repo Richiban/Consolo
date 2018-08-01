@@ -23,8 +23,8 @@ namespace Richiban.CommandLine
                 }
                 catch (TargetInvocationException e)
                 {
-                    throw new Exception(
-                        $"An exception was thrown when constructing type {convertToType} with value '{String.Join(", ", rawValues)}'",
+                    throw new TypeConversionException(
+                        TypeConversionException.TheConstructorForTypeXThrewAnException(convertToType, rawValues),
                         e.InnerException);
                 }
             }

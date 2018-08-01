@@ -21,7 +21,9 @@ namespace Richiban.CommandLine
 
         public static AssemblyModel Scan(IEnumerable<Assembly> assembliesToScan)
         {
-            var methodModels =
+            CommandLine.Log("Scanning assemblies");
+
+            var methodModels = (
                 from assembly in assembliesToScan
                 from type in assembly.GetTypes()
                 from method in type.GetMethods()
@@ -29,9 +31,16 @@ namespace Richiban.CommandLine
                         .GetCustomAttributes(inherit: true)
                         .OfType<CommandLineAttribute>()
                         .Any()
-                select new MethodModel(method);
+                select new MethodModel(method)).ToArray();
 
-            return new AssemblyModel(methodModels.ToArray());
+            CommandLine.Log("Modelled the following methods:");
+
+            foreach(var method in methodModels)
+            {
+                CommandLine.Log(method, indentationLevel: 1);
+            }
+
+            return new AssemblyModel(methodModels);
         }
     }
 }

@@ -1,14 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
 
 namespace Richiban.CommandLine
 {
-    [DebuggerDisplay("{Help}")]
+    [DebuggerDisplay("Help")]
     internal class MethodModel
     {
+        private readonly string _toString;
+
         public MethodModel(MethodInfo methodInfo)
         {
             DeclaringType = methodInfo.DeclaringType;
@@ -22,6 +22,8 @@ namespace Richiban.CommandLine
             Help = $"{Verbs.Help} {Parameters.Help}";
 
             IsStatic = methodInfo.IsStatic;
+
+            _toString = $"{methodInfo.DeclaringType}.{methodInfo.Name}";
         }
 
         public ParameterModelList Parameters { get; }
@@ -33,5 +35,7 @@ namespace Richiban.CommandLine
 
         public int GetPartialMatchAccuracy(CommandLineArgumentList commandLineArgs) =>
             Verbs.GetPartialMatchAccuracy(commandLineArgs);
+
+        public override string ToString() => _toString;
     }
 }
