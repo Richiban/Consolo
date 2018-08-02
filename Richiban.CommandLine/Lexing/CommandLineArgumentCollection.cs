@@ -14,11 +14,11 @@ namespace Richiban.CommandLine
         private CommandLineArgumentList(
             IReadOnlyList<CommandLineArgument> args,
             bool isCallForHelp,
-            bool redirectDiagnosticsToStandardOutput)
+            bool traceToStandardOutput)
         {
             _args = args;
             IsCallForHelp = isCallForHelp;
-            RedirectDiagnosticsToStandardOutput = redirectDiagnosticsToStandardOutput;
+            TraceToStandardOutput = traceToStandardOutput;
         }
 
         public static CommandLineArgumentList Parse(string[] args)
@@ -49,7 +49,7 @@ namespace Richiban.CommandLine
         public int Count => _args.Count;
 
         public bool IsCallForHelp { get; }
-        public bool RedirectDiagnosticsToStandardOutput { get; }
+        public bool TraceToStandardOutput { get; }
 
         public CommandLineArgument this[int index] => _args[index];
         public IEnumerator<CommandLineArgument> GetEnumerator() => _args.GetEnumerator();
@@ -59,7 +59,7 @@ namespace Richiban.CommandLine
             new CommandLineArgumentList(
                 _args.Except(commandLineArguments).ToList(),
                 IsCallForHelp,
-                RedirectDiagnosticsToStandardOutput);
+                TraceToStandardOutput);
 
         public CommandLineArgumentList ExpandShortFormArgument(
             CommandLineArgument.BareNameOrFlag argumentToExpand)
@@ -70,13 +70,15 @@ namespace Richiban.CommandLine
 
             foreach (var c in argumentToExpand.Name.ToCharArray())
             {
-                newArgumentList.Add(new CommandLineArgument.BareNameOrFlag(c.ToString(), $"-{c}"));
+                newArgumentList.Add(new CommandLineArgument.BareNameOrFlag(
+                    c.ToString(),
+                    $"{CommandLineEnvironment.FlagGlyph}{c}"));
             }
 
             return new CommandLineArgumentList(
                 newArgumentList,
                 IsCallForHelp,
-                RedirectDiagnosticsToStandardOutput);
+                TraceToStandardOutput);
         }
 
         public override string ToString() => string.Join(" ", _args);

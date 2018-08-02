@@ -7,7 +7,7 @@ namespace Richiban.CommandLine
         public static string FlagGlyph { get; } = GetBestGuessAtFlagGlyph();
         public static string ShortFormFlagGlyph { get; } = GetBestGuessAtShortFormFlagGlyph();
 
-        internal static string GetBestGuessAtFlagGlyph()
+        private static string GetBestGuessAtFlagGlyph()
         {
             if (Path.PathSeparator == '/')
             {
@@ -19,7 +19,7 @@ namespace Richiban.CommandLine
             }
         }
 
-        internal static string GetBestGuessAtShortFormFlagGlyph()
+        private static string GetBestGuessAtShortFormFlagGlyph()
         {
             if (Path.PathSeparator == '/')
             {

@@ -66,7 +66,7 @@
                 case "-?":
                 case "--?":
                     return new HelpGlyph(raw);
-                case "/?diag":
+                case "/?trace":
                     return new DiagnosticSwitch(raw);
                 case var _ when raw.StartsWith("/"):
                     {
