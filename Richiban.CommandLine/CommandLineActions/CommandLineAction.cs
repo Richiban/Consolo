@@ -14,6 +14,7 @@ namespace Richiban.CommandLine
 
         public string Help { get; }
 
+        [TracerAttributes.TraceOn]
         public object Invoke() => _action();
     }
 }

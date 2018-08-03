@@ -1,5 +1,6 @@
 ﻿using NullGuard;
 using Richiban.CommandLine;
+using System;
 
 namespace Tracer
 {
@@ -7,12 +8,12 @@ namespace Tracer
     {
         public override void TraceEnter(string methodInfo, [AllowNull] string[] paramNames, [AllowNull] object[] paramValues)
         {
-            CommandLine.Trace($"[Trace]: In {GetType()}");
+            CommandLine.Trace($"[Trace]: Beginning CommandLine sequence {GetType()}");
         }
 
         public override void TraceLeave(string methodInfo, long startTicks, long endTicks, [AllowNull] string[] paramNames, [AllowNull] object[] paramValues)
         {
-            CommandLine.Trace($"[Trace]: Out {GetType()}");
+            CommandLine.Trace($"[Trace]: CommandLine sequence finished in {TimeSpan.FromTicks(endTicks - startTicks)}");
         }
     }
 }

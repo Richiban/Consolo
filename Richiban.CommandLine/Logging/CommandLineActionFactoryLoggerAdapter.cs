@@ -19,13 +19,15 @@ namespace Tracer
             [AllowNull]string[] paramNames,
             [AllowNull]object[] paramValues)
         {
-            if (methodInfo.Contains("Create"))
+            if (methodInfo.Contains("GetBestMatches"))
             {
                 if (paramValues != null && paramValues.Length >= 1 && paramValues[0] is IEnumerable e)
                 {
+                    CommandLine.Trace($"[Trace]: Selecting the best matches:");
+
                     foreach (var item in e)
                     {
-                        CommandLine.Trace($"[Trace]: Generated the following CommandLineActions: {item}");
+                        CommandLine.Trace($"{item}", indentationLevel: 2);
                     }
                 }
             } else if (methodInfo.Contains("GetMethodMappings"))
@@ -36,7 +38,6 @@ namespace Tracer
 
                     foreach (var item in e)
                     {
-
                         CommandLine.Trace($"{item}", indentationLevel: 2);
                     }
                 }

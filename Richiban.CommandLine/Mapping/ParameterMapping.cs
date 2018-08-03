@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using AutoLazy;
 
 namespace Richiban.CommandLine
@@ -28,8 +29,8 @@ namespace Richiban.CommandLine
             if (SuppliedValues.Count == 0)
                 return $"{Name} = <default>";
             if (SuppliedValues.Count == 1)
-                return $"{Name} = SuppliedValues.First().ToString()";
-            return $"{Name} = ({String.Join(" ", SuppliedValues)})";
+                return $"{Name} = {SuppliedValues.First()}";
+            return $"{Name}: ({String.Join(", ", SuppliedValues)})";
         }
     }
 }

@@ -22,9 +22,14 @@ namespace Tracer
             else if (type == typeof(AssemblyModel))
             {
                 return new AssemblyModelLoggerAdapter();
-            } else if (type == typeof(CommandLineActionFactory))
+            }
+            else if (type == typeof(CommandLineActionFactory))
             {
                 return new CommandLineActionFactoryLoggerAdapter();
+            }
+            else if (type == typeof(CommandLineAction))
+            {
+                return new CommandLineActionLoggerAdapter();
             }
             else
             {

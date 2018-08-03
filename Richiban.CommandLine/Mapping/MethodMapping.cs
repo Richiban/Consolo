@@ -34,7 +34,7 @@ namespace Richiban.CommandLine
         [Lazy]
         public override string ToString()
         {
-            return $"{MethodModel} {String.Join(" ", _parameterMappings.Select(p => p))}";
+            return $"{MethodModel}({String.Join(", ", _parameterMappings)})";
         }
     }
 }
