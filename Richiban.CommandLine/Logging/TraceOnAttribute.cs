@@ -9,7 +9,7 @@ namespace TracerAttributes
         | AttributeTargets.Constructor,
         AllowMultiple = true, 
         Inherited = true)]
-    public class TraceOn : Attribute
+    class TraceOn : Attribute
     {
         public TraceTarget Target { get; set; }
         public TraceOn() { }

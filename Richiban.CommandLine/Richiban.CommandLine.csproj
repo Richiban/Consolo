@@ -12,7 +12,12 @@
     <Optimize>false</Optimize>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <DebugType>pdbonly</DebugType>
+  </PropertyGroup>
+
   <ItemGroup>
+    <PackageReference Include="AutoLazy.Fody" Version="2.2.1" />
     <PackageReference Include="NullGuard.Fody" Version="1.8.0" />
     <PackageReference Include="Tracer.Fody" Version="2.2.0" />
   </ItemGroup>

@@ -43,7 +43,7 @@ namespace Richiban.CommandLine
             return default;
         }
 
-        internal bool IsSome(out T value)
+        public bool IsSome(out T value)
         {
             if(HasValue)
             {
@@ -69,5 +69,7 @@ namespace Richiban.CommandLine
                 if (item.HasValue)
                     yield return item._value;
         }
+
+        public override string ToString() => HasValue ? _value.ToString() : "<None>";
     }
 }

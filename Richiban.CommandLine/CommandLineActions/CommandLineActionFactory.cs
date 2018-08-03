@@ -23,6 +23,7 @@ namespace Richiban.CommandLine
             _methodMapper = methodMapper;
         }
 
+        [TracerAttributes.TraceOn]
         public IReadOnlyCollection<CommandLineAction> Create(CommandLineArgumentList commandLineArgs)
         {
             var matchGroups =
@@ -45,6 +46,7 @@ namespace Richiban.CommandLine
                 .ToList();
         }
 
+        [TracerAttributes.TraceOn]
         private IReadOnlyCollection<MethodMapping> GetMethodMappings(CommandLineArgumentList args) =>
             _assemblyModel
                 .Select(model => _methodMapper.GetMethodMapping(model, args))

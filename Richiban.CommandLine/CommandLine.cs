@@ -1,6 +1,7 @@
 ﻿using NullGuard;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -127,7 +128,7 @@ namespace Richiban.CommandLine
             var indentation = String.Concat(Enumerable.Repeat(0, indentationLevel).Select(_ => "\t"));
             var fullMessage = $"{indentation}{message}";
 
-            var output = CurrentConfiguration?.DebugOutput ?? Console.WriteLine;
+            var output = CurrentConfiguration?.DebugOutput ?? (s => Debug.WriteLine(s));
 
             output(fullMessage);
         }

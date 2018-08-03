@@ -6,16 +6,16 @@ using System.Linq;
 
 namespace Tracer
 {
-    public class LoggerAdapter
+    class DefaultLoggerAdapter : LoggerAdapterBase
     {
         private Type _type;
 
-        public LoggerAdapter(Type type)
+        public DefaultLoggerAdapter(Type type)
         {
             _type = type;
         }
 
-        public void TraceEnter(string methodInfo, [AllowNull]string[] paramNames, [AllowNull]object[] paramValues)
+        public override void TraceEnter(string methodInfo, [AllowNull]string[] paramNames, [AllowNull]object[] paramValues)
         {
             if (methodInfo.Contains(".ctor"))
             {
@@ -29,9 +29,9 @@ namespace Tracer
             TraceArguments(paramNames, paramValues);
         }
 
-        public void TraceLeave(string methodInfo, long startTicks, long endTicks, [AllowNull]string[] paramNames, [AllowNull]object[] paramValues)
+        public override void TraceLeave(string methodInfo, long startTicks, long endTicks, [AllowNull]string[] paramNames, [AllowNull]object[] paramValues)
         {
-            if(_type == typeof(CommandLine))
+            if (_type == typeof(CommandLine))
             {
                 CommandLine.Trace($"[Trace]: Execution completed in {TimeSpan.FromTicks(endTicks - startTicks)}");
             }
@@ -42,13 +42,6 @@ namespace Tracer
             CommandLine.Trace($"[Trace]: {GetMethodName(methodInfo)} returned");
 
             TraceArguments(paramNames, paramValues);
-        }
-
-        private static string GetMethodName(string methodInfo)
-        {
-            if (methodInfo == null) return null;
-
-            return methodInfo.Substring(0, methodInfo.IndexOf('('));
         }
 
         private static void TraceArguments(string[] paramNames, object[] paramValues)
