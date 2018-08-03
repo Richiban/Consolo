@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -18,8 +18,7 @@
 
   <ItemGroup>
     <PackageReference Include="AutoLazy.Fody" Version="2.2.1" />
-    <PackageReference Include="NullGuard.Fody" Version="1.8.0" />
-    <PackageReference Include="Tracer.Fody" Version="2.2.0" />
+    <PackageReference Include="NullGuard.Fody" Version="1.7.1" />
   </ItemGroup>
 
 </Project>

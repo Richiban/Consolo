@@ -2,11 +2,12 @@
 <Weavers>
   <NullGuard IncludeDebugAssert="false" />
   <AutoLazy />
+  <!--  
   <Tracer adapterAssembly="Richiban.CommandLine"
           logManager="Tracer.LogManagerAdapter"
           logger="Tracer.LoggerAdapterBase"
           traceConstructors="true"
           traceProperties="false">
     <NoTrace namespace="Tracer+" />
-  </Tracer>
+  </Tracer>-->
 </Weavers>
