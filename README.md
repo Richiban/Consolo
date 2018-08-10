@@ -43,8 +43,7 @@ using Richiban.CommandLine;
 
 public class Program
 {
-    public static void Main(string[] args) =>
-        CommandLine.Execute(args);
+    public static void Main(string[] args) => CommandLine.Execute(args);
 
     [CommandLine]
     public void ProcessItems(int batchSize, bool waitBetweenBatches = false)
@@ -67,8 +66,7 @@ Multiple methods can be tagged. All that matters is that the command line argume
 ```csharp
 public class Program
 {
-    public static void Main(string[] args) =>
-        CommandLine.Execute(args);
+    public static void Main(string[] args) => CommandLine.Execute(args);
 
     [CommandLine]
     public void ProcessItems(int batchSize, bool waitBetweenBatches = false)
@@ -203,7 +201,7 @@ Note that arguments do not have to be strings.
 The rule is that arguments must either:
  * Be of type `string`
  * implement `IConvertible` (the conversion is done by `Convert.ChangeType(...)`)
- * have a constructor that takes a string as argument
+ * have a constructor that takes a `string` or `string[]` as argument
  * be of an Enum type (then the conversion is done by `Enum.Parse(...)`)
 
 Some example types that work out of the box:
@@ -285,6 +283,45 @@ public static void Main(string[] args)
     CommandLine.Execute(config, args);
 }
 ```
+
+### Automatic help
+
+One of Richiban.CommandLine's best features is its ability to auto generate help for the users of your command line app.
+
+For example, let's assume we have the following application:
+
+```csharp
+[CommandLine("method1")]
+public void Method1(string someArgument, bool someFlag = false)
+{
+    //...
+}
+```
+
+But, when it comes time to use this app, our user can't quite remember the order of arguments or their exact names. Using the auto-help feature, they can enter:
+
+```bash
+> myapp method1 -?
+```
+
+or (coming soon)
+
+```
+> myapp help method1
+```
+
+and they will see the following:
+
+```
+Help for method1:
+    myapp method1 <someArgument> [--someFlag]
+```
+
+> Note the `--` prefix to `someFlag`. Since there isn't a 'correct' way of writing flags or named arguments in Richiban.CommandLine, a best guess is made when writing auto-help. Currently this is relies on the path separator for your system, so on Windows this would appear as: `myapp method1 <someArgument> [/someFlag]`.
+
+If the user calls `help` and the arguments they have supplied are ambiguous then auto-help will be displayed for all routes that even partially match what they did supply.
+
+> Coming soon: XML comments from your methods and classes will appear in auto-help
 
 -------
 That's about it for the readme. Please feel free to read the issues in this project to see what's coming further down the road or, if you dream up more features for Richiban.CommandLine, post an issue of your own. I also welcome (expected) PRs so contact me before starting any work.
