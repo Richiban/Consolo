@@ -1,94 +1,106 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-
-namespace Richiban.CommandLine
+﻿namespace Richiban.CommandLine
 {
-    [DebuggerDisplay("{ToString()}")]
-    public abstract class CommandLineArgument
+    abstract class CommandLineArgument
     {
-        private readonly string _raw;
+        public abstract override string ToString();
 
-        private CommandLineArgument(string raw)
-        {
-            _raw = raw;
-        }
-
-        [DebuggerDisplay("{Value}")]
         public class Free : CommandLineArgument
         {
+            public Free(string value) =>
+                Value = value;
+
             public string Value { get; }
 
-            public Free(string value, string raw) : base(raw) => 
-                Value = value;
+            public override string ToString() => Value;
         }
 
-        [DebuggerDisplay("/{Name}:{Value}")]
         public class NameValuePair : CommandLineArgument
         {
+            public NameValuePair(string name, string value, string markerSequence) =>
+                (Name, Value, MarkerSequence) = (name, value, markerSequence);
+
             public string Name { get; }
             public string Value { get; }
+            public string MarkerSequence { get; }
 
-            public NameValuePair(string name, string value, string raw) : base(raw) =>
-                (Name, Value) = (name, value);
+            public override string ToString() => $"{MarkerSequence}{Name}={Value}";
         }
 
-        [DebuggerDisplay("/{Name}")]
         public class BareNameOrFlag : CommandLineArgument
         {
-            public string Name { get; }
-
-            public BareNameOrFlag(string name, string raw) : base(raw) =>
+            public BareNameOrFlag(string name, string markerSequence)
+            {
                 Name = name;
+                MarkerSequence = markerSequence;
+            }
+
+            public string Name { get; }
+            public string MarkerSequence { get; }
+
+            public override string ToString() => $"{MarkerSequence}{Name}";
         }
 
-        [DebuggerDisplay("/?")]
         public class HelpGlyph : CommandLineArgument
         {
-            public HelpGlyph(string raw) : base(raw) {}
+            public HelpGlyph(string markerSequence) { }
+
+            public string MarkerSequence { get; }
+
+            public override string ToString() => $"{MarkerSequence}?";
+        }
+
+        public class DiagnosticSwitch : CommandLineArgument
+        {
+            public DiagnosticSwitch(string markerSequence) { }
+
+            public string MarkerSequence { get; }
+
+            public override string ToString() => $"{MarkerSequence}?";
         }
 
         public static CommandLineArgument Parse(string raw)
         {
-            if (raw == "/?" || raw == "-?" || raw == "--?")
-                return new HelpGlyph(raw);
+            switch (raw)
+            {
+                case "/?":
+                case "-?":
+                case "--?":
+                    return new HelpGlyph(raw);
+                case "/?trace":
+                    return new DiagnosticSwitch(raw);
+                case var _ when raw.StartsWith("/"):
+                    {
+                        var parts = raw.TrimStart('/').Split(':');
 
-            if (raw.StartsWith("/"))
-            {
-                var parts = raw.TrimStart('/').Split(':');
+                        if (parts.Length > 1)
+                        {
+                            return new NameValuePair(parts[0], parts[1], "/");
+                        }
+                        else
+                        {
+                            return new BareNameOrFlag(parts[0], "/");
+                        }
+                    }
+                case var _ when raw.StartsWith("--"):
+                    {
+                        var parts = raw.TrimStart('-').Split('=');
 
-                if (parts.Length > 1)
-                {
-                    return new NameValuePair(parts[0], parts[1], raw);
-                }
-                else
-                {
-                    return new BareNameOrFlag(parts[0], raw);
-                }
-            }
-            else if (raw.StartsWith("--"))
-            {
-                var parts = raw.TrimStart('-').Split('=');
-
-                if (parts.Length > 1)
-                {
-                    return new NameValuePair(parts[0], parts[1], raw);
-                }
-                else
-                {
-                    return new BareNameOrFlag(parts[0], raw);
-                }
-            }
-            else if (raw.StartsWith("-"))
-            {
-                return new BareNameOrFlag(raw.TrimStart('-'), raw);
-            }
-            else
-            {
-                return new Free(raw, raw);
+                        if (parts.Length > 1)
+                        {
+                            return new NameValuePair(parts[0], parts[1], "--");
+                        }
+                        else
+                        {
+                            return new BareNameOrFlag(parts[0], "--");
+                        }
+                    }
+                case var _ when raw.StartsWith("-"):
+                    {
+                        return new BareNameOrFlag(raw.TrimStart('-'), "-");
+                    }
+                default:
+                    return new Free(raw);
             }
         }
-
-        public override string ToString() => _raw;
     }
 }

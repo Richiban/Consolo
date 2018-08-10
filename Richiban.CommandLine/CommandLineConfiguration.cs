@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace Richiban.CommandLine
@@ -40,6 +41,11 @@ namespace Richiban.CommandLine
         public Stack<ITypeConverter> TypeConverters { get; set; }
 
         /// <summary>
+        /// Defaults to System.Diagnostics.Debug.WriteLine
+        /// </summary>
+        public Action<string> DebugOutput { get; set; }
+
+        /// <summary>
         /// Create a new instance of CommandLineConfiguration with properties set to the default values
         /// </summary>
         /// <returns>A new CommandLineConfiguration object</returns>
@@ -49,7 +55,8 @@ namespace Richiban.CommandLine
                 ObjectFactory = new SystemActivatorObjectFactory(),
                 HelpOutput = Console.WriteLine,
                 AssembliesToScan = new List<Assembly> { Assembly.GetEntryAssembly() },
-                TypeConverters = GetDefaultTypeConverters()
+                TypeConverters = GetDefaultTypeConverters(),
+                DebugOutput = s => Debug.WriteLine(s)
             };
 
         private static Stack<ITypeConverter> GetDefaultTypeConverters()

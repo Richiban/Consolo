@@ -23,28 +23,28 @@ namespace Richiban.CommandLine
             _methodMapper = methodMapper;
         }
 
-        public IReadOnlyCollection<CommandLineAction> Create(CommandLineArgumentList commandLineArgs)
+        [TracerAttributes.TraceOn]
+        public IReadOnlyCollection<CommandLineAction> Create(CommandLineArgumentList commandLineArgs) => 
+            GetBestMatches(commandLineArgs)
+                .Select(mapping => CreateAction(mapping, _objectFactory))
+                .ToList();
+
+        [TracerAttributes.TraceOn]
+        private IReadOnlyCollection<MethodMapping> GetBestMatches(CommandLineArgumentList commandLineArgs)
         {
             var matchGroups =
                 GetMethodMappings(commandLineArgs)
                 .ToLookup(mapping => mapping.MatchDisambiguation)
                 .OrderByDescending(group => group.Key);
 
-            var bestGroup =
-                matchGroups
-                .FirstOrDefault(group => group.Any());
-
-            if (bestGroup == null)
-            {
-                return new List<CommandLineAction>();
-            }
-
             return
-                bestGroup
-                .Select(mapping => CreateAction(mapping, _objectFactory))
-                .ToList();
+                matchGroups
+                .FirstOrDefault(group => group.Any())
+                ?.ToList()
+                ?? new List<MethodMapping>();
         }
 
+        [TracerAttributes.TraceOn]
         private IReadOnlyCollection<MethodMapping> GetMethodMappings(CommandLineArgumentList args) =>
             _assemblyModel
                 .Select(model => _methodMapper.GetMethodMapping(model, args))

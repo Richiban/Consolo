@@ -13,14 +13,17 @@ namespace Richiban.CommandLine
         {
             if (convertToType.IsEnum && rawValues.Count == 1)
             {
-                convertedValue = Enum.Parse(convertToType, rawValues[0], ignoreCase: true);
-                return true;
+                try
+                {
+                    convertedValue = Enum.Parse(convertToType, rawValues[0], ignoreCase: true);
+                    return true;
+                }
+                catch (Exception)
+                { }
             }
-            else
-            {
-                convertedValue = null;
-                return false;
-            }
+
+            convertedValue = null;
+            return false;
         }
     }
 }

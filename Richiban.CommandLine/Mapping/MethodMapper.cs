@@ -10,6 +10,7 @@ namespace Richiban.CommandLine
 
         public MethodMapper(ParameterMapper parameterMapper) => _parameterMapper = parameterMapper;
 
+        [TracerAttributes.TraceOn]
         public Option<MethodMapping> GetMethodMapping(
             MethodModel methodModel,
             CommandLineArgumentList args)

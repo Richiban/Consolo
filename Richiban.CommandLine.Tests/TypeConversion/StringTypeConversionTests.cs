@@ -1,0 +1,22 @@
+﻿using NUnit.Framework;
+using System.Collections.Generic;
+using System.Reflection;
+
+namespace Richiban.CommandLine.Tests.TypeConversion
+{
+    [TestFixture]
+    class StringTypeConversionTests : CommandLineTest
+    {
+        [Test]
+        public void StringTypeConversionTest()
+        {
+            var result = RunTest(
+                "type-conversion-tests",
+                "string",
+                "-param", "value");
+
+            Assert.That(result.ExecutedAction, Is.EqualTo("StringTypeConversionAction"));
+            Assert.That(result.Output, Is.EqualTo("{ param = value }"));
+        }
+    }
+}

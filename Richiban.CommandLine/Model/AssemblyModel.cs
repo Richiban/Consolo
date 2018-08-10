@@ -3,25 +3,28 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
+using TracerAttributes;
 
 namespace Richiban.CommandLine
 {
     class AssemblyModel : IReadOnlyCollection<MethodModel>
     {
-        private IReadOnlyCollection<MethodModel> _typeModels;
+        private readonly IReadOnlyCollection<MethodModel> _methodModels;
 
-        public AssemblyModel(IReadOnlyCollection<MethodModel> typeModels)
+        public AssemblyModel(IReadOnlyCollection<MethodModel> methodModels)
         {
-            _typeModels = typeModels;
+            _methodModels = methodModels;
         }
 
-        public int Count => _typeModels.Count;
-        public IEnumerator<MethodModel> GetEnumerator() => _typeModels.GetEnumerator();
+        public int Count => _methodModels.Count;
+        public IEnumerator<MethodModel> GetEnumerator() => _methodModels.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
+        [TraceOn]
         public static AssemblyModel Scan(IEnumerable<Assembly> assembliesToScan)
         {
-            var methodModels =
+            var methodModels = (
                 from assembly in assembliesToScan
                 from type in assembly.GetTypes()
                 from method in type.GetMethods()
@@ -29,9 +32,9 @@ namespace Richiban.CommandLine
                         .GetCustomAttributes(inherit: true)
                         .OfType<CommandLineAttribute>()
                         .Any()
-                select new MethodModel(method);
+                select new MethodModel(method)).ToArray();
 
-            return new AssemblyModel(methodModels.ToArray());
+            return new AssemblyModel(methodModels);
         }
     }
 }

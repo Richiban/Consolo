@@ -16,17 +16,17 @@
                     case CommandLineArgument.NameValuePair nvPair when parameterModel.NameMatches(nvPair.Name):
                         argumentsMatched = new[] { nvPair };
                         return new ParameterMapping(
-                            parameterModel.PropertyType,
-                            new[] { nvPair.Value },
-                            MatchDisambiguation.ExplicitMatch);
+                            parameterModel,
+                            MatchDisambiguation.ExplicitMatch,
+                            nvPair.Value);
 
                     case CommandLineArgument.BareNameOrFlag nameOrFlag
                         when parameterModel.NameMatches(nameOrFlag.Name) && parameterModel.IsFlag:
                         argumentsMatched = new[] { nameOrFlag };
                         return new ParameterMapping(
-                            parameterModel.PropertyType,
-                            new[] { $"{true}" },
-                            MatchDisambiguation.ExplicitMatch);
+                            parameterModel,
+                            MatchDisambiguation.ExplicitMatch,
+                            $"{true}");
 
                     case CommandLineArgument.BareNameOrFlag bnf when parameterModel.NameMatches(bnf.Name):
                         if (enumerator.MoveNext())
@@ -36,9 +36,9 @@
                                 argumentsMatched = new CommandLineArgument[] { bnf, free };
 
                                 return new ParameterMapping(
-                                    parameterModel.PropertyType,
-                                    new[] { free.Value },
-                                    MatchDisambiguation.ExplicitMatch);
+                                    parameterModel,
+                                    MatchDisambiguation.ExplicitMatch,
+                                    free.Value);
                             }
                         }
 
@@ -50,9 +50,9 @@
                     case CommandLineArgument.Free free:
                         argumentsMatched = new[] { free };
                         return new ParameterMapping(
-                            parameterModel.PropertyType,
-                            new[] { free.Value },
-                            MatchDisambiguation.ImplicitMatch);
+                            parameterModel,
+                            MatchDisambiguation.ImplicitMatch,
+                            free.Value);
 
                     default:
                         break;
@@ -64,8 +64,7 @@
             if (parameterModel.IsOptional)
             {
                 return new ParameterMapping(
-                    parameterModel.PropertyType,
-                    new string[0],
+                    parameterModel,
                     MatchDisambiguation.ExplicitWithOptionals);
             }
 

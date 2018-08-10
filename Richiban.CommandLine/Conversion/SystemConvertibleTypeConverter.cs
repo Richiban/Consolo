@@ -13,14 +13,16 @@ namespace Richiban.CommandLine
         {
             if (typeof(IConvertible).IsAssignableFrom(convertToType) && rawValues.Count == 1)
             {
-                convertedValue = Convert.ChangeType(rawValues[0], convertToType);
-                return true;
+                try
+                {
+                    convertedValue = Convert.ChangeType(rawValues[0], convertToType);
+                    return true;
+                }
+                catch (Exception) { }
             }
-            else
-            {
-                convertedValue = null;
-                return false;
-            }
+
+            convertedValue = null;
+            return false;
         }
     }
 }

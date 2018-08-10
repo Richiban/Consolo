@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using static Richiban.CommandLine.Prelude;
 
 namespace Richiban.CommandLine
 {
@@ -35,10 +34,12 @@ namespace Richiban.CommandLine
             
             HasShortForm = _shortForms.Any();
 
-            PropertyType = parameterInfo.ParameterType;
+            ParameterType = parameterInfo.ParameterType;
 
-            IsFlag = PropertyType == typeof(bool);
+            IsFlag = ParameterType == typeof(bool);
             var primaryName = _names.First();
+
+            Name = primaryName;
 
             var helpForm =
                 IsFlag
@@ -76,11 +77,12 @@ namespace Richiban.CommandLine
             return allNames;
         }
         
-        public Type PropertyType { get; }
+        public Type ParameterType { get; }
         public bool IsFlag { get; }
         public string Help { get; }
         public bool IsOptional { get; }
         public bool HasShortForm { get; }
+        public string Name { get; }
 
         public bool MatchesShortForm(char c) => _shortForms.Contains(c);
 
