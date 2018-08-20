@@ -40,13 +40,6 @@ namespace Richiban.CommandLine
             var primaryName = _names.First();
 
             Name = primaryName;
-
-            var helpForm =
-                IsFlag
-                ? $"{CommandLineEnvironment.FlagGlyph}{primaryName.ToLowerInvariant()}"
-                : $"<{primaryName.ToLowerInvariant()}>";
-
-            Help = IsOptional ? $"[{helpForm}]" : helpForm;
         }
 
         private static IReadOnlyList<string> BuildNamesList(
@@ -79,7 +72,6 @@ namespace Richiban.CommandLine
         
         public Type ParameterType { get; }
         public bool IsFlag { get; }
-        public string Help { get; }
         public bool IsOptional { get; }
         public bool HasShortForm { get; }
         public string Name { get; }

@@ -15,14 +15,10 @@ namespace Richiban.CommandLine
             _parameterModels = parameters
                 .Select(p => new ParameterModel(p))
                 .ToList();
-
-            Help = String.Join(" ", _parameterModels.Select(p => p.Help));
         }
 
         public ParameterModel this[int index] => _parameterModels[index];
-
-        public string Help { get; }
-
+        
         public int Count => _parameterModels.Count;
 
         public IEnumerator<ParameterModel> GetEnumerator() => _parameterModels.GetEnumerator();
