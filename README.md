@@ -291,7 +291,7 @@ One of Richiban.CommandLine's best features is its ability to auto generate help
 For example, let's assume we have the following application:
 
 ```csharp
-[CommandLine("method1")]
+[CommandLine, Route("method1")]
 public void Method1(string someArgument, bool someFlag = false)
 {
     //...
@@ -304,7 +304,7 @@ But, when it comes time to use this app, our user can't quite remember the order
 > myapp method1 -?
 ```
 
-or (coming soon)
+or
 
 ```
 > myapp help method1
