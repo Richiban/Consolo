@@ -34,6 +34,14 @@ namespace Richiban.CommandLine.Tests.Routes
         }
 
         [Test]
+        public void HelpPseudoRouteResultsInHelp()
+        {
+            RunTest("help");
+
+            Assert.That(outputHelp, Does.StartWith("Usage:"));
+        }
+
+        [Test]
         public void ExplicitHelpGlyphResultsInHelpForRoute()
         {
             RunTest("test-route-1", "/?");
@@ -41,7 +49,15 @@ namespace Richiban.CommandLine.Tests.Routes
             Assert.That(outputHelp, Does.StartWith("Help for test-route-1:"));
         }
 
-        [Test, Ignore("This feature doesn't quite work for now")]
+        [Test]
+        public void HelpPseudoRouteResultsInHelpForRoute()
+        {
+            RunTest("help", "test-route-1");
+
+            Assert.That(outputHelp, Does.StartWith("Help for test-route-1:"));
+        }
+
+        [Test]
         public void TooFewRoutePartsResultsInHelpForRoute()
         {
             RunTest("two-part-route-1");

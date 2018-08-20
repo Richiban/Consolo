@@ -40,9 +40,9 @@
             public override string ToString() => $"{MarkerSequence}{Name}";
         }
 
-        public class HelpGlyph : CommandLineArgument
+        public class HelpSwitch : CommandLineArgument
         {
-            public HelpGlyph(string markerSequence) { }
+            public HelpSwitch(string markerSequence) { }
 
             public string MarkerSequence { get; }
 
@@ -58,14 +58,15 @@
             public override string ToString() => $"{MarkerSequence}?";
         }
 
-        public static CommandLineArgument Parse(string raw)
+        public static CommandLineArgument Parse(string raw, int index)
         {
             switch (raw)
             {
                 case "/?":
                 case "-?":
                 case "--?":
-                    return new HelpGlyph(raw);
+                case "help" when index == 0:
+                    return new HelpSwitch(raw);
                 case "/?trace":
                     return new DiagnosticSwitch(raw);
                 case var _ when raw.StartsWith("/"):

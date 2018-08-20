@@ -6,7 +6,6 @@ using System;
 
 namespace Richiban.CommandLine
 {
-    [DebuggerDisplay("{ToString()}")]
     internal class CommandLineArgumentList : IReadOnlyList<CommandLineArgument>
     {
         private readonly IReadOnlyList<CommandLineArgument> _args;
@@ -25,25 +24,25 @@ namespace Richiban.CommandLine
         {
             var parsedArgs = args.Select(CommandLineArgument.Parse).ToList();
 
-            var helpGlyphs = parsedArgs.OfType<CommandLineArgument.HelpGlyph>().ToList();
+            var helpSwitches = parsedArgs.OfType<CommandLineArgument.HelpSwitch>().ToList();
 
-            foreach(var helpGlyph in helpGlyphs)
+            foreach (var helpSwitch in helpSwitches)
             {
-                parsedArgs.Remove(helpGlyph);
+                parsedArgs.Remove(helpSwitch);
             }
 
-            var diagnostics = 
+            var diagnosticSwitches =
                 parsedArgs.OfType<CommandLineArgument.DiagnosticSwitch>().ToList();
 
-            foreach (var x in diagnostics)
+            foreach (var diagnosticSwitch in diagnosticSwitches)
             {
-                parsedArgs.Remove(x);
+                parsedArgs.Remove(diagnosticSwitch);
             }
 
             return new CommandLineArgumentList(
-                parsedArgs, 
-                helpGlyphs.Any(),
-                diagnostics.Any());
+                parsedArgs,
+                helpSwitches.Any(),
+                diagnosticSwitches.Any());
         }
 
         public int Count => _args.Count;
