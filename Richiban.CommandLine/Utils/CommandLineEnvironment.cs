@@ -45,6 +45,6 @@ namespace Richiban.CommandLine
             }
         }
 
-        private static bool IsUnix() => true;// Path.PathSeparator == '/';
+        private static bool IsUnix() => Path.PathSeparator == '/';
     }
 }

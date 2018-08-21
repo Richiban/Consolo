@@ -1,9 +1,7 @@
 ﻿using NullGuard;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 
 namespace Richiban.CommandLine
 {
@@ -57,6 +55,8 @@ namespace Richiban.CommandLine
             if (commandLineArgs.IsCallForHelp)
             {
                 var help = helpBuilder.GenerateHelp(model, commandLineArgs);
+                config.HelpOutput("Usage:");
+                config.HelpOutput("");
                 config.HelpOutput(help);
 
                 return null;
