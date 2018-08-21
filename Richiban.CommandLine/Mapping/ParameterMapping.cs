@@ -15,22 +15,20 @@ namespace Richiban.CommandLine
             MatchDisambiguation = matchDisambiguation;
             SuppliedValues = suppliedValues;
             ConvertToType = parameterModel.ParameterType;
-            Name = parameterModel.Name;
         }
         
         public MatchDisambiguation MatchDisambiguation { get; }
         public IReadOnlyList<string> SuppliedValues { get; }
         public Type ConvertToType { get; }
-        public string Name { get; }
 
-        [Lazy]
-        public override string ToString()
-        {
-            if (SuppliedValues.Count == 0)
-                return $"{Name} = <default>";
-            if (SuppliedValues.Count == 1)
-                return $"{Name} = {SuppliedValues.First()}";
-            return $"{Name}: ({String.Join(", ", SuppliedValues)})";
-        }
+        //[Lazy]
+        //public override string ToString()
+        //{
+        //    if (SuppliedValues.Count == 0)
+        //        return $"{Name} = <default>";
+        //    if (SuppliedValues.Count == 1)
+        //        return $"{Name} = {SuppliedValues.First()}";
+        //    return $"{Name}: ({String.Join(", ", SuppliedValues)})";
+        //}
     }
 }

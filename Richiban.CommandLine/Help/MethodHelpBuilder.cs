@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 
 namespace Richiban.CommandLine
 {
@@ -17,27 +15,30 @@ namespace Richiban.CommandLine
 
         public MethodHelp BuildFor(MethodModel method)
         {
+            var xmlComments = _xmlComments[method];
+
             return new MethodHelp(
                 AppDomain.CurrentDomain.FriendlyName,
                 HelpForRoutes(method.Routes),
-                HelpForParameters(method.Parameters),
-                _xmlComments[method]);
+                xmlComments.Match(Some: x => x.MethodComments, None: () => ""),
+                method.Parameters.Select(p => new ParameterHelp(
+                    p.Names,
+                    p.IsOptional,
+                    p.IsFlag,
+                    p.ParameterType,
+                    GetCommentsForParameterOrEmpty(p.OriginalName, xmlComments))).ToList());
         }
 
-        private string HelpForParameters(ParameterModelList parameters)
+        private string GetCommentsForParameterOrEmpty(string parameterName, Option<XmlComments> xmlComments)
         {
-            return String.Join(" ", parameters.Select(buildHelpForParameter));
-
-            string buildHelpForParameter(ParameterModel p)
-            {
-                var helpForm =
-                    p.IsFlag
-                    ? $"{CommandLineEnvironment.FlagGlyph}{p.Name.ToLowerInvariant()}"
-                    : $"<{p.Name.ToLowerInvariant()}>";
-
-                return p.IsOptional ? $"[{helpForm}]" : helpForm;
-            }
+            return
+                xmlComments.Match(
+                    Some: x => x.ParameterComments.ContainsKey(parameterName)
+                        ? x.ParameterComments[parameterName]
+                        : "",
+                    None: () => "");
         }
+
 
         private string HelpForRoutes(RouteCollection routes)
         {
@@ -50,31 +51,5 @@ namespace Richiban.CommandLine
                 return String.Join(" ", verbSequence);
             }
         }
-
-        //private static string GenerateHelp(IEnumerable<MethodModel> model, CommandLineArgumentList commandLineArgs)
-        //{
-        //    var sb = new StringBuilder();
-
-        //    var modelsForHelp = model;
-
-        //    if (commandLineArgs.Count == 0)
-        //    {
-        //        sb.AppendLine($"Usage:");
-        //    }
-        //    else
-        //    {
-        //        sb.AppendLine($"Help for {commandLineArgs}:");
-
-        //        modelsForHelp = modelsForHelp
-        //            .AllByMax(m => m.GetPartialMatchAccuracy(commandLineArgs));
-        //    }
-
-        //    sb.Append(
-        //        string.Join($"{Environment.NewLine}{Environment.NewLine}",
-        //        modelsForHelp
-        //        .Select(t => $"\t{AppDomain.CurrentDomain.FriendlyName} {t.Help}")));
-
-        //    return sb.ToString();
-        //}
     }
 }

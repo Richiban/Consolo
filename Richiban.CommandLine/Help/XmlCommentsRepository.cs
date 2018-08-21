@@ -1,5 +1,6 @@
 ﻿using AutoLazy;
 using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
@@ -20,7 +21,10 @@ namespace Richiban.CommandLine
                 .Replace(".dll", ".xml")
                 .Replace(".exe", ".xml");
 
-            _xmlComments = XDocument.Load(xmlFilePath);
+            if (File.Exists(xmlFilePath))
+                _xmlComments = XDocument.Load(xmlFilePath);
+            else
+                _xmlComments = new XDocument();
         }
 
         [Lazy]

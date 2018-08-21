@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace Richiban.CommandLine
 {
@@ -6,10 +7,23 @@ namespace Richiban.CommandLine
     {
         public static string FlagGlyph { get; } = GetBestGuessAtFlagGlyph();
         public static string ShortFormFlagGlyph { get; } = GetBestGuessAtShortFormFlagGlyph();
+        public static string ParameterGlyph { get; } = GetBestGuessAtParameterGlyph();
+
+        private static string GetBestGuessAtParameterGlyph()
+        {
+            if (IsUnix())
+            {
+                return "--";
+            }
+            else
+            {
+                return "/";
+            }
+        }
 
         private static string GetBestGuessAtFlagGlyph()
         {
-            if (Path.PathSeparator == '/')
+            if (IsUnix())
             {
                 return "--";
             }
@@ -21,7 +35,7 @@ namespace Richiban.CommandLine
 
         private static string GetBestGuessAtShortFormFlagGlyph()
         {
-            if (Path.PathSeparator == '/')
+            if (IsUnix())
             {
                 return "-";
             }
@@ -30,5 +44,7 @@ namespace Richiban.CommandLine
                 return "/";
             }
         }
+
+        private static bool IsUnix() => true;// Path.PathSeparator == '/';
     }
 }

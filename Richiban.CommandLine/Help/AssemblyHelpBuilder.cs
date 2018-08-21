@@ -45,8 +45,7 @@ namespace Richiban.CommandLine
             var sb = new StringBuilder();
 
             sb.Append(
-                string.Join($"{Environment.NewLine}{Environment.NewLine}",
-                models.Select(t => _methodHelpBuilder.BuildFor(t))));
+                string.Join(Environment.NewLine, models.Select(t => _methodHelpBuilder.BuildFor(t))));
 
             return sb.ToString();
         }

@@ -1,4 +1,7 @@
 ﻿using AutoLazy;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Richiban.CommandLine
@@ -8,43 +11,89 @@ namespace Richiban.CommandLine
         public MethodHelp(
             string executableName,
             string routeHelp,
-            string parameterHelp,
-            Option<XmlComments> xmlComments)
+            string methodXmlComments,
+            IReadOnlyList<ParameterHelp> parameterHelp)
         {
             ExecutableName = executableName;
             RouteHelp = routeHelp;
+            MethodXmlComments = methodXmlComments;
             ParameterHelp = parameterHelp;
-            XmlComments = xmlComments;
         }
 
         public string ExecutableName { get; }
         public string RouteHelp { get; }
-        public string ParameterHelp { get; }
-        public Option<XmlComments> XmlComments { get; }
+        public string MethodXmlComments { get; }
+        public IReadOnlyList<ParameterHelp> ParameterHelp { get; }
 
         [Lazy]
         public override string ToString()
         {
-            var sb = new StringBuilder();
+            var builder = new HelpStringBuilder();
 
-            sb.AppendLine($@"{ExecutableName} {RouteHelp} {ParameterHelp}");
+            var parameterHeadings = String.Join(" ", ParameterHelp.Select(p => p.Heading));
 
-            XmlComments.IfSome(x => {
-                sb.Append("\t");
-                sb.AppendLine(x.MethodComments);
+            builder.AppendLine($@"{ExecutableName} {RouteHelp} {parameterHeadings}");
 
-                foreach(var kv in x.ParameterComments)
+            using (builder.Indent())
+            {
+                if (!String.IsNullOrEmpty(MethodXmlComments))
                 {
-                    sb.AppendLine();
-                    sb.Append("\t");
-                    sb.AppendLine(kv.Key);
-                    sb.Append("\t");
-                    sb.Append("\t");
-                    sb.AppendLine(kv.Value);
+                    builder.AppendLine(MethodXmlComments);
+                    builder.AppendLine();
                 }
-            });
+                else
+                {
+                    builder.AppendLine();
+                }
 
-            return sb.ToString();
+                var parameterHelpsToUse = ParameterHelp
+                    .Select(h => GetParameterHelp(h))
+                    .Where(h => !String.IsNullOrEmpty(h));
+
+                if (parameterHelpsToUse.Any())
+                {
+                    builder.AppendLine("Parameters:");
+                }
+
+                using (builder.Indent())
+                {
+                    foreach (var parameterHelp in parameterHelpsToUse)
+                    {
+                        builder.AppendLine(parameterHelp);
+                        builder.AppendLine();
+                    }
+                }
+            }
+
+            return builder.ToString();
+        }
+
+        private string GetParameterHelp(ParameterHelp parameterHelp)
+        {
+            var isInterestingType = parameterHelp.Type != typeof(string) && parameterHelp.Type != typeof(bool);
+            var hasXmlComment = !String.IsNullOrEmpty(parameterHelp.XmlComments);
+
+            if (isInterestingType == false && hasXmlComment == false)
+                return "";
+
+            var builder = new StringBuilder();
+            builder.Append(parameterHelp.Heading);
+
+            builder.Append(" ");
+            builder.Append(parameterHelp.XmlComments);
+
+            if (isInterestingType)
+            {
+                if (hasXmlComment)
+                {
+                    builder.Append(". ");
+                }
+
+                builder.Append("Type: ");
+                builder.Append(parameterHelp.Type.ToString());
+            }
+
+            return builder.ToString();
         }
     }
 }

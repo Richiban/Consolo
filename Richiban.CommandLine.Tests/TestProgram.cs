@@ -40,10 +40,10 @@
             };
         }
 
-        [CommandLine, Route("test-route-1")]
         /// <summary>
         /// This is the comment for test-route-1
         /// </summary>
+        [CommandLine, Route("test-route-1")]
         public object SingleLevelRoutedActionWithParameter(bool param1 = false)
         {
             return new
