@@ -33,11 +33,12 @@ namespace Richiban.CommandLine
 
             foreach (var prop in methodModel.Parameters)
             {
-                var maybePropertyMapping = _parameterMapper.Map(prop, remainingArgs, out var argumentsMatched);
+                var maybePropertyMapping = _parameterMapper.Map(prop, remainingArgs);
 
                 maybePropertyMapping.IfSome(s =>
                 {
-                    parameterMappings.Add(s);
+                    var (mapping, argumentsMatched) = s;
+                    parameterMappings.Add(mapping);
                     remainingArgs = remainingArgs.Without(argumentsMatched);
                 });
 

@@ -49,7 +49,31 @@ namespace Richiban.CommandLine
             IReadOnlyList<string> rawValues,
             out object result)
         {
-            return converter.TryConvertValue(convertToType, rawValues, out result);
+            if (convertToType.IsArray)
+            {
+                var elementType = convertToType.GetElementType();
+                var resultantArray = Array.CreateInstance(elementType, rawValues.Count);
+
+                for(var i = 0; i < rawValues.Count; i++)
+                {
+                    object convertedValue;
+
+                    if (!converter.TryConvertValue(elementType, new[] { rawValues[i] }, out convertedValue))
+                    {
+                        result = null;
+                        return false;
+                    }
+
+                    resultantArray.SetValue(convertedValue, i);
+                }
+
+                result = resultantArray;
+                return true;
+            }
+            else
+            {
+                return converter.TryConvertValue(convertToType, rawValues, out result);
+            }
         }
 
         [TracerAttributes.TraceOn]

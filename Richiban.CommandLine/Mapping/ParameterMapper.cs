@@ -1,12 +1,16 @@
-﻿namespace Richiban.CommandLine
+﻿using System.Collections.Generic;
+
+namespace Richiban.CommandLine
 {
     class ParameterMapper
     {
-        public Option<ParameterMapping> Map(
+        public Option<(ParameterMapping, IReadOnlyCollection<CommandLineArgument> argumentsMatched)> Map(
             ParameterModel parameterModel,
-            CommandLineArgumentList args,
-            out CommandLineArgument[] argumentsMatched)
+            CommandLineArgumentList args)
         {
+            var argumentsMatched = new List<CommandLineArgument>();
+            var suppliedValues = new List<string>();
+
             using (var enumerator = args.GetEnumerator())
             {
                 while (enumerator.MoveNext())
@@ -14,33 +18,42 @@
                     switch (enumerator.Current)
                     {
                         case CommandLineArgument.NameValuePair nvPair when parameterModel.NameMatches(nvPair.Name):
-                            argumentsMatched = new[] { nvPair };
+                            
+                            if(parameterModel.AllowMultipleValues)
+                            {
+                                suppliedValues.Add(nvPair.Value);
+                                argumentsMatched.Add(nvPair);
+                                continue;
+                            }
 
-                            return new ParameterMapping(
+                            argumentsMatched.Add(nvPair);
+
+                            return (new ParameterMapping(
                                 parameterModel,
                                 MatchDisambiguation.ExplicitMatch,
-                                nvPair.Value);
+                                nvPair.Value), argumentsMatched);
 
                         case CommandLineArgument.BareNameOrFlag nameOrFlag
                             when parameterModel.NameMatches(nameOrFlag.Name) && parameterModel.IsFlag:
-                            argumentsMatched = new[] { nameOrFlag };
+                            argumentsMatched.Add(nameOrFlag);
 
-                            return new ParameterMapping(
+                            return (new ParameterMapping(
                                 parameterModel,
                                 MatchDisambiguation.ExplicitMatch,
-                                $"{true}");
+                                $"{true}"), argumentsMatched);
 
                         case CommandLineArgument.BareNameOrFlag bnf when parameterModel.NameMatches(bnf.Name):
                             if (enumerator.MoveNext())
                             {
                                 if (enumerator.Current is CommandLineArgument.Free free)
                                 {
-                                    argumentsMatched = new CommandLineArgument[] { bnf, free };
+                                    argumentsMatched.Add(bnf);
+                                    argumentsMatched.Add(free);
 
-                                    return new ParameterMapping(
+                                    return (new ParameterMapping(
                                         parameterModel,
                                         MatchDisambiguation.ExplicitMatch,
-                                        free.Value);
+                                        free.Value), argumentsMatched);
                                 }
                             }
 
@@ -50,11 +63,12 @@
                             continue;
 
                         case CommandLineArgument.Free free:
-                            argumentsMatched = new[] { free };
-                            return new ParameterMapping(
+                            argumentsMatched.Add(free);
+
+                            return (new ParameterMapping(
                                 parameterModel,
                                 MatchDisambiguation.ImplicitMatch,
-                                free.Value);
+                                free.Value), argumentsMatched);
 
                         default:
                             break;
@@ -62,13 +76,19 @@
                 }
             }
 
-            argumentsMatched = new CommandLineArgument[0];
+            if (parameterModel.AllowMultipleValues)
+            {
+                return (new ParameterMapping(
+                    parameterModel,
+                    MatchDisambiguation.ExplicitWithOptionals,
+                    suppliedValues), argumentsMatched);
+            }
 
             if (parameterModel.IsOptional)
             {
-                return new ParameterMapping(
+                return (new ParameterMapping(
                     parameterModel,
-                    MatchDisambiguation.ExplicitWithOptionals);
+                    MatchDisambiguation.ExplicitWithOptionals), new List<CommandLineArgument>(0));
             }
 
             return default;

@@ -79,6 +79,16 @@
             };
         }
 
+        [CommandLine, Route("multi-value-param")]
+        public object MultiValueParameterAction(int[] param1)
+        {
+            return new
+            {
+                ExecutedAction = nameof(MultiValueParameterAction),
+                Output = $"[{string.Join(", ", param1)}]"
+            };
+        }
+
         [Route("class-test-route-1")]
         public class ClassRoutedActions
         {

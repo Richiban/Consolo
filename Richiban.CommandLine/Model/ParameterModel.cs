@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -24,6 +25,8 @@ namespace Richiban.CommandLine
             ParameterType = parameterInfo.ParameterType;
 
             IsFlag = ParameterType == typeof(bool);
+
+            AllowMultipleValues = ParameterType.IsArray;
 
             Names = _names;
         }
@@ -72,6 +75,7 @@ namespace Richiban.CommandLine
         public bool HasShortForm { get; }
         public IReadOnlyList<ParameterName> Names { get; }
         public string OriginalName { get; }
+        public bool AllowMultipleValues { get; }
 
         public bool MatchesShortForm(char c) => _names.Any(n => n.Matches(c.ToString()));
 
