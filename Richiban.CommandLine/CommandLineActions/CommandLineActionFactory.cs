@@ -12,7 +12,7 @@ namespace Richiban.CommandLine
         private readonly MethodMapper _methodMapper;
 
         public CommandLineActionFactory(
-            AssemblyModel model, 
+            AssemblyModel model,
             Func<Type, object> objectFactory,
             TypeConverterCollection typeConverterCollection,
             MethodMapper methodMapper)
@@ -24,7 +24,7 @@ namespace Richiban.CommandLine
         }
 
         [TracerAttributes.TraceOn]
-        public IReadOnlyCollection<CommandLineAction> Create(CommandLineArgumentList commandLineArgs) => 
+        public IReadOnlyCollection<CommandLineAction> Resolve(CommandLineArgumentList commandLineArgs) =>
             GetBestMatches(commandLineArgs)
                 .Select(mapping => CreateAction(mapping, _objectFactory))
                 .ToList();
@@ -55,21 +55,21 @@ namespace Richiban.CommandLine
             MethodMapping methodMapping,
             Func<Type, object> objectFactory) =>
             new CommandLineAction(() =>
-            {
-                var instance = CreateInstanceOfDeclaringType(methodMapping.MethodModel, objectFactory);
+                {
+                    var instance = CreateInstanceOfDeclaringType(methodMapping.MethodModel, objectFactory);
 
-                var methodArguments = methodMapping
-                    .Select(paramMapping =>
-                        _typeConverterCollection.ConvertValue(
-                            paramMapping.ConvertToType,
-                            paramMapping.SuppliedValues))
-                    .ToArray();
+                    var methodArguments = methodMapping
+                        .Select(paramMapping =>
+                            _typeConverterCollection.ConvertValue(
+                                paramMapping.ConvertToType,
+                                paramMapping.SuppliedValues))
+                        .ToArray();
 
-                return methodMapping.MethodModel.InvokeFunc(
-                    instance,
-                    methodArguments);
-            },
-            methodMapping.MethodModel.Help);
+                    return methodMapping.MethodModel.InvokeFunc(
+                        instance,
+                        methodArguments);
+                },
+                methodMapping.MethodModel);
 
         private static object CreateInstanceOfDeclaringType(
             MethodModel methodModel, Func<Type, object> objectFactory)

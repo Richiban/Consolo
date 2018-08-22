@@ -5,20 +5,12 @@ using System.Reflection;
 
 namespace Richiban.CommandLine.Tests
 {
-    [TestFixture]
-    public class SingleParameterTests
+    class SingleParameterTests : CommandLineTest
     {
-        private dynamic RunTest(params string[] args)
-        {
-            var config = CommandLineConfiguration.GetDefault();
-            config.AssembliesToScan = new List<Assembly> { GetType().Assembly };
-            return CommandLine.Execute(config, args);
-        }
-
         [Test]
         public void SingleStringParameterPowerShellStyleTest()
         {
-            var result = RunTest("-paramA", "valueOfA1");
+            var result = RunTest("-paramA", "valueOfA1").ProgramOutput;
 
             Assert.That(result.ExecutedAction, Is.EqualTo(nameof(TestProgram.SingleStringParameterTestAction)));
             Assert.That(result.Output, Is.EqualTo("valueOfA1"));
@@ -27,7 +19,7 @@ namespace Richiban.CommandLine.Tests
         [Test]
         public void SingleStringParameterUnixStyleTest()
         {
-            var result = RunTest("--paramA=valueOfA2");
+            var result = RunTest("--paramA=valueOfA2").ProgramOutput;
 
             Assert.That(result.ExecutedAction, Is.EqualTo(nameof(TestProgram.SingleStringParameterTestAction)));
             Assert.That(result.Output, Is.EqualTo("valueOfA2"));
@@ -36,7 +28,7 @@ namespace Richiban.CommandLine.Tests
         [Test]
         public void SingleStringParameterWindowsStyleTest()
         {
-            var result = RunTest("/paramA:valueOfA3");
+            var result = RunTest("/paramA:valueOfA3").ProgramOutput;
 
             Assert.That(result.ExecutedAction, Is.EqualTo(nameof(TestProgram.SingleStringParameterTestAction)));
             Assert.That(result.Output, Is.EqualTo("valueOfA3"));

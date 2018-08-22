@@ -40,6 +40,9 @@
             };
         }
 
+        /// <summary>
+        /// This is the comment for test-route-1
+        /// </summary>
         [CommandLine, Route("test-route-1")]
         public object SingleLevelRoutedActionWithParameter(bool param1 = false)
         {
@@ -50,6 +53,9 @@
             };
         }
 
+        /// <summary>
+        /// This is the comment for two-part-route-1
+        /// </summary>
         [CommandLine, Route("two-part-route-1", "two-part-route-2")]
         public object TwoPartRouteOnly(bool param1 = false)
         {

@@ -32,9 +32,12 @@ namespace Richiban.CommandLine
                         .GetCustomAttributes(inherit: true)
                         .OfType<CommandLineAttribute>()
                         .Any()
-                select new MethodModel(method)).ToArray();
+                select BuildMethodModel(method)).ToArray();
 
             return new AssemblyModel(methodModels);
         }
+
+        private static MethodModel BuildMethodModel(MethodInfo method) =>
+            new MethodModel(method);
     }
 }

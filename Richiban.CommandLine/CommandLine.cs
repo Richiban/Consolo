@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 
 namespace Richiban.CommandLine
 {
@@ -37,90 +36,58 @@ namespace Richiban.CommandLine
 
             var commandLineArgs = CommandLineArgumentList.Parse(args);
 
-            if(commandLineArgs.TraceToStandardOutput)
+            if (commandLineArgs.TraceToStandardOutput)
             {
-                config.DebugOutput = config.HelpOutput;
+                config.TraceOutput = config.HelpOutput;
             }
 
             var model = AssemblyModel.Scan(config.AssembliesToScan);
+            var resolvedCommandLineActions = ResolveActions(config, commandLineArgs, model);
 
-            var typeConverterCollection = new TypeConverterCollection(config.TypeConverters);
-            var methodMapper = new MethodMapper(new ParameterMapper());
-
-            var commandLineActions = 
-                new CommandLineActionFactory(
-                    model, config.ObjectFactory, typeConverterCollection, methodMapper)
-                .Create(commandLineArgs);
-
-            if (commandLineArgs.IsCallForHelp)
+            if (IsReadyForExecution(commandLineArgs, resolvedCommandLineActions))
             {
-                var help = GenerateHelp(model, commandLineArgs);
-                config.HelpOutput(help);
+                var commandLineAction = resolvedCommandLineActions.Single();
 
-                return null;
-            }
+                try
+                {
+                    return commandLineAction.Invoke();
+                }
+                catch (TypeConversionException e)
+                {
+                    config.HelpOutput(e.Message);
+                    config.TraceOutput(e.ToString());
 
-            if (commandLineActions.Count == 0)
-            {
-                config.HelpOutput("Could not match the given arguments to a command");
-
-                var help = GenerateHelp(model, commandLineArgs);
-                config.HelpOutput(help);
-
-                return null;
-            }
-
-            if (commandLineActions.Count > 1)
-            {
-                config.HelpOutput("The given arguments are ambiguous between the following:");
-
-                var help = GenerateHelp(commandLineActions);
-                config.HelpOutput(help);
-
-                return null;
-            }
-
-            var commandLineAction = commandLineActions.Single();
-
-            return commandLineAction.Invoke();
-        }
-
-        private static string GenerateHelp(IEnumerable<MethodModel> model, CommandLineArgumentList commandLineArgs)
-        {
-            var sb = new StringBuilder();
-
-            var modelsForHelp = model;
-
-            if (commandLineArgs.Count == 0)
-            {
-                sb.AppendLine($"Usage:");
+                    return null;
+                }
             }
             else
             {
-                sb.AppendLine($"Help for {commandLineArgs}:");
+                var helpBuilder = new HelpBuilder(XmlCommentsRepository.LoadFor(config.AssembliesToScan));
 
-                modelsForHelp = modelsForHelp
-                    .MaxByAll(m => m.GetPartialMatchAccuracy(commandLineArgs));
+                config.HelpOutput(
+                    helpBuilder.GenerateHelp(commandLineArgs, model, resolvedCommandLineActions));
+
+                return null;
             }
-
-            sb.Append(
-                string.Join($"{Environment.NewLine}{Environment.NewLine}",
-                modelsForHelp
-                .Select(t => $"\t{AppDomain.CurrentDomain.FriendlyName} {t.Help}")));
-
-            return sb.ToString();
         }
 
-        private static string GenerateHelp(IEnumerable<CommandLineAction> actions)
+        private static IReadOnlyCollection<CommandLineAction> ResolveActions(CommandLineConfiguration config, CommandLineArgumentList commandLineArgs, AssemblyModel model)
         {
-            var sb = new StringBuilder();
+            var typeConverterCollection = new TypeConverterCollection(config.TypeConverters);
+            var methodMapper = new MethodMapper(new ParameterMapper());
 
-            sb.Append(
-                string.Join($"{Environment.NewLine}{Environment.NewLine}",
-                actions
-                .Select(act => $"\t{AppDomain.CurrentDomain.FriendlyName} {act.Help}")));
+            var resolvedCommandLineActions =
+                new CommandLineActionFactory(
+                    model, config.ObjectFactory, typeConverterCollection, methodMapper)
+                .Resolve(commandLineArgs);
+            return resolvedCommandLineActions;
+        }
 
-            return sb.ToString();
+        private static bool IsReadyForExecution(
+            CommandLineArgumentList commandLineArgs,
+            IReadOnlyCollection<CommandLineAction> resolvedCommandLineActions)
+        {
+            return !(commandLineArgs.IsCallForHelp || resolvedCommandLineActions.Count != 1);
         }
 
         internal static void Trace(object message, int indentationLevel = 0)
@@ -128,7 +95,7 @@ namespace Richiban.CommandLine
             var indentation = String.Concat(Enumerable.Repeat(0, indentationLevel).Select(_ => "\t"));
             var fullMessage = $"{indentation}{message}";
 
-            var output = CurrentConfiguration?.DebugOutput ?? (s => Debug.WriteLine(s));
+            var output = CurrentConfiguration?.TraceOutput ?? (s => Debug.WriteLine(s));
 
             output(fullMessage);
         }

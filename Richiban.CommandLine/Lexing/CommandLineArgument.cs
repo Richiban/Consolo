@@ -2,60 +2,44 @@
 {
     abstract class CommandLineArgument
     {
-        public abstract override string ToString();
+        private readonly string _raw;
+
+        private CommandLineArgument(string raw) => _raw = raw;
+
+        public override string ToString() => _raw;
 
         public class Free : CommandLineArgument
         {
-            public Free(string value) =>
+            public Free(string value) : base(value) =>
                 Value = value;
 
             public string Value { get; }
-
-            public override string ToString() => Value;
         }
 
         public class NameValuePair : CommandLineArgument
         {
-            public NameValuePair(string name, string value, string markerSequence) =>
-                (Name, Value, MarkerSequence) = (name, value, markerSequence);
+            public NameValuePair(string name, string value, string raw) : base(raw) =>
+                (Name, Value) = (name, value);
 
             public string Name { get; }
             public string Value { get; }
-            public string MarkerSequence { get; }
-
-            public override string ToString() => $"{MarkerSequence}{Name}={Value}";
         }
 
         public class BareNameOrFlag : CommandLineArgument
         {
-            public BareNameOrFlag(string name, string markerSequence)
-            {
-                Name = name;
-                MarkerSequence = markerSequence;
-            }
+            public BareNameOrFlag(string name, string raw) : base(raw) => Name = name;
 
             public string Name { get; }
-            public string MarkerSequence { get; }
-
-            public override string ToString() => $"{MarkerSequence}{Name}";
         }
 
         public class HelpSwitch : CommandLineArgument
         {
-            public HelpSwitch(string markerSequence) { }
-
-            public string MarkerSequence { get; }
-
-            public override string ToString() => $"{MarkerSequence}?";
+            public HelpSwitch(string raw) : base(raw) { }
         }
 
         public class DiagnosticSwitch : CommandLineArgument
         {
-            public DiagnosticSwitch(string markerSequence) { }
-
-            public string MarkerSequence { get; }
-
-            public override string ToString() => $"{MarkerSequence}?";
+            public DiagnosticSwitch(string raw) : base(raw) { }
         }
 
         public static CommandLineArgument Parse(string raw, int index)
@@ -75,11 +59,11 @@
 
                         if (parts.Length > 1)
                         {
-                            return new NameValuePair(parts[0], parts[1], "/");
+                            return new NameValuePair(parts[0], parts[1], raw);
                         }
                         else
                         {
-                            return new BareNameOrFlag(parts[0], "/");
+                            return new BareNameOrFlag(parts[0], raw);
                         }
                     }
                 case var _ when raw.StartsWith("--"):
@@ -88,16 +72,16 @@
 
                         if (parts.Length > 1)
                         {
-                            return new NameValuePair(parts[0], parts[1], "--");
+                            return new NameValuePair(parts[0], parts[1], raw);
                         }
                         else
                         {
-                            return new BareNameOrFlag(parts[0], "--");
+                            return new BareNameOrFlag(parts[0], raw);
                         }
                     }
                 case var _ when raw.StartsWith("-"):
                     {
-                        return new BareNameOrFlag(raw.TrimStart('-'), "-");
+                        return new BareNameOrFlag(raw.TrimStart('-'), raw);
                     }
                 default:
                     return new Free(raw);

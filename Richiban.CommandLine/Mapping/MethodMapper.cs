@@ -19,7 +19,7 @@ namespace Richiban.CommandLine
             var parameterMappings = new List<ParameterMapping>();
 
             {
-                if (methodModel.Verbs.Matches(remainingArgs, out var argumentsMatched))
+                if (methodModel.Routes.Matches(remainingArgs, out var argumentsMatched))
                 {
                     remainingArgs = remainingArgs.Without(argumentsMatched);
                 }

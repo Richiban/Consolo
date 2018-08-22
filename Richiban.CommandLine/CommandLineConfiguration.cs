@@ -43,7 +43,7 @@ namespace Richiban.CommandLine
         /// <summary>
         /// Defaults to System.Diagnostics.Debug.WriteLine
         /// </summary>
-        public Action<string> DebugOutput { get; set; }
+        public Action<string> TraceOutput { get; set; }
 
         /// <summary>
         /// Create a new instance of CommandLineConfiguration with properties set to the default values
@@ -56,7 +56,7 @@ namespace Richiban.CommandLine
                 HelpOutput = Console.WriteLine,
                 AssembliesToScan = new List<Assembly> { Assembly.GetEntryAssembly() },
                 TypeConverters = GetDefaultTypeConverters(),
-                DebugOutput = s => Debug.WriteLine(s)
+                TraceOutput = s => Debug.WriteLine(s)
             };
 
         private static Stack<ITypeConverter> GetDefaultTypeConverters()

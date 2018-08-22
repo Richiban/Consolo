@@ -6,12 +6,17 @@ namespace Richiban.CommandLine.Samples
     [Route("remote")]
     class RemoteActions
     {
-        [CommandLine, Route("")]
+        [CommandLine, Route("list")]
         public void ListRemotes()
         {
             $"Listing remotes".Dump();
         }
 
+        /// <summary>
+        /// Add a new remote
+        /// </summary>
+        /// <param name="name">The name to give the new remote</param>
+        /// <param name="remoteUri">The URI of the new remote</param>
         [CommandLine, Route("add")]
         public void AddRemote(string name, Uri remoteUri)
         {
@@ -32,22 +37,22 @@ namespace Richiban.CommandLine.Samples
 
         [CommandLine, Route("set-head")]
         public void SetHeadToBranch(
-            string name,
+            [ParameterName("name")] string remoteName,
             string branch = null, 
-            [ShortForm('d')] bool delete = false,
-            [ShortForm('a')] bool auto = false)
+            [ShortForm('d'), ParameterName("delete")] bool deleteRemote = false,
+            [ShortForm('a'), ParameterName("auto")] bool automaticallySetHead = false)
         {
             if (branch != null)
             {
-                $"Setting head for remote {name} to branch {branch}".Dump();
+                $"Setting head for remote {remoteName} to branch {branch}".Dump();
             }
-            else if (delete)
+            else if (deleteRemote)
             {
-                $"Deleting head for remote {name}".Dump();
+                $"Deleting head for remote {remoteName}".Dump();
             }
-            else if(auto)
+            else if(automaticallySetHead)
             {
-                $"Auto-setting head for remote {name}".Dump();
+                $"Auto-setting head for remote {remoteName}".Dump();
             }
             else
             {

@@ -6,13 +6,13 @@ namespace Richiban.CommandLine
     {
         private readonly Func<object> _action;
 
-        public CommandLineAction(Func<object> action, string help)
+        public CommandLineAction(Func<object> action, MethodModel model)
         {
             _action = action;
-            Help = help;
+            Model = model;
         }
 
-        public string Help { get; }
+        public MethodModel Model { get; }
 
         [TracerAttributes.TraceOn]
         public object Invoke() => _action();

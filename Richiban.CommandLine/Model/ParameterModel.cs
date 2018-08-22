@@ -6,58 +6,47 @@ using System.Reflection;
 
 namespace Richiban.CommandLine
 {
-    [DebuggerDisplay("{Help}")]
     internal class ParameterModel
     {
-        private readonly IReadOnlyCollection<string> _names;
-        private ParameterInfo _parameterInfo;
-        public readonly IReadOnlyCollection<char> _shortForms;
+        private readonly IReadOnlyList<ParameterName> _names;
+        private readonly ParameterInfo _parameterInfo;
 
         public ParameterModel(ParameterInfo parameterInfo)
         {
             _parameterInfo = parameterInfo;
 
+            OriginalName = parameterInfo.Name;
+
             IsOptional = parameterInfo.IsOptional;
 
+            _names = BuildNamesList(parameterInfo);
+
+            ParameterType = parameterInfo.ParameterType;
+
+            IsFlag = ParameterType == typeof(bool);
+
+            Names = _names;
+        }
+
+        private static IReadOnlyList<ParameterName> BuildNamesList(ParameterInfo parameterInfo)
+        {
             var shortFormAttributes =
                 parameterInfo
                     .GetCustomAttributes(inherit: true)
                     .OfType<ShortFormAttribute>();
 
-            _shortForms =
-                shortFormAttributes.SelectMany(a => a.ShortForms).ToArray();
+            var allNames = new List<ParameterName>();
 
-            _names = BuildNamesList(parameterInfo, _shortForms);
+            allNames.AddRange(
+                shortFormAttributes
+                    .SelectMany(a => a.ShortForms)
+                    .Select(c => new ParameterName.ShortForm(c)));
 
-            if (shortFormAttributes.SingleOrDefault()?.DisallowLongForm == true)
-                _names = _shortForms.Select(c => c.ToString()).ToList();
-            
-            HasShortForm = _shortForms.Any();
+            if (shortFormAttributes.Any(a => a.DisallowLongForm))
+                return allNames;
 
-            ParameterType = parameterInfo.ParameterType;
-
-            IsFlag = ParameterType == typeof(bool);
-            var primaryName = _names.First();
-
-            Name = primaryName;
-
-            var helpForm =
-                IsFlag
-                ? $"{CommandLineEnvironment.FlagGlyph}{primaryName.ToLowerInvariant()}"
-                : $"<{primaryName.ToLowerInvariant()}>";
-
-            Help = IsOptional ? $"[{helpForm}]" : helpForm;
-        }
-
-        private static IReadOnlyList<string> BuildNamesList(
-            ParameterInfo parameterInfo, IReadOnlyCollection<char> shortForms)
-        {
-            var allNames = new List<string>
-            {
-                parameterInfo.Name
-            };
-
-            allNames.AddRange(shortForms.Select(c => c.ToString()));
+            var originalName = new ParameterName.LongForm(parameterInfo.Name);
+            allNames.Add(originalName);
 
             var parameterNameAttribute = parameterInfo
                 .GetCustomAttributes(inherit: true)
@@ -66,11 +55,11 @@ namespace Richiban.CommandLine
 
             if(parameterNameAttribute != null)
             {
-                allNames.AddRange(parameterNameAttribute.Names);
+                allNames.AddRange(parameterNameAttribute.Names.Select(n => new ParameterName.LongForm(n)));
 
                 if(parameterNameAttribute.IncludeOriginal == false)
                 {
-                    allNames.Remove(parameterInfo.Name);
+                    allNames.Remove(originalName);
                 }
             }
 
@@ -79,14 +68,14 @@ namespace Richiban.CommandLine
         
         public Type ParameterType { get; }
         public bool IsFlag { get; }
-        public string Help { get; }
         public bool IsOptional { get; }
         public bool HasShortForm { get; }
-        public string Name { get; }
+        public IReadOnlyList<ParameterName> Names { get; }
+        public string OriginalName { get; }
 
-        public bool MatchesShortForm(char c) => _shortForms.Contains(c);
+        public bool MatchesShortForm(char c) => _names.Any(n => n.Matches(c));
 
         public bool NameMatches(string argumentName) =>
-            _names.Any(n => n.StartsWith(argumentName, StringComparison.CurrentCultureIgnoreCase));
+            _names.Any(n => n.Matches(argumentName));
     }
 }

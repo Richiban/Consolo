@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections;
 using System.Linq;
-using System.Diagnostics;
-using System;
+using AutoLazy;
 
 namespace Richiban.CommandLine
 {
@@ -80,6 +79,7 @@ namespace Richiban.CommandLine
                 TraceToStandardOutput);
         }
 
+        [Lazy]
         public override string ToString() => string.Join(" ", _args);
     }
 }

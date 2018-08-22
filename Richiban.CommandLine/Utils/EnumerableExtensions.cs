@@ -8,7 +8,7 @@ namespace Richiban.CommandLine
         public static IEnumerable<T> Choose<T>(this IEnumerable<Option<T>> source) =>
             Option<T>.Choose(source);
 
-        public static IEnumerable<T> MaxByAll<T, TProp>(
+        public static IEnumerable<T> AllByMax<T, TProp>(
             this IEnumerable<T> source,
             Func<T, TProp> propertySelector)
             where TProp : IComparable<TProp>
