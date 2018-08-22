@@ -76,11 +76,10 @@ namespace Richiban.CommandLine
             var typeConverterCollection = new TypeConverterCollection(config.TypeConverters);
             var methodMapper = new MethodMapper(new ParameterMapper());
 
-            var resolvedCommandLineActions =
+            return
                 new CommandLineActionFactory(
                     model, config.ObjectFactory, typeConverterCollection, methodMapper)
                 .Resolve(commandLineArgs);
-            return resolvedCommandLineActions;
         }
 
         private static bool IsReadyForExecution(

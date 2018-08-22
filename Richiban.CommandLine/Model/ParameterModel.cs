@@ -73,7 +73,7 @@ namespace Richiban.CommandLine
         public IReadOnlyList<ParameterName> Names { get; }
         public string OriginalName { get; }
 
-        public bool MatchesShortForm(char c) => _names.Any(n => n.Matches(c));
+        public bool MatchesShortForm(char c) => _names.Any(n => n.Matches(c.ToString()));
 
         public bool NameMatches(string argumentName) =>
             _names.Any(n => n.Matches(argumentName));

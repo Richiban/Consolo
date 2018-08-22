@@ -15,9 +15,9 @@ namespace Richiban.CommandLine
 
             public string Value { get; }
 
-            public override bool Matches(char c) => false;
+            public override bool Matches(string s) => 
+                Value.Equals(s, StringComparison.InvariantCultureIgnoreCase);
 
-            public override bool Matches(string s) => Value.Equals(s, StringComparison.InvariantCultureIgnoreCase);
             public override string ToString() => Value;
         }
 
@@ -30,13 +30,12 @@ namespace Richiban.CommandLine
 
             public char Value { get; }
 
-            public override bool Matches(char c) => Value.Equals(c);
+            public override bool Matches(string s) => 
+                Value.ToString().Equals(s, StringComparison.InvariantCultureIgnoreCase);
 
-            public override bool Matches(string s) => false;
             public override string ToString() => Value.ToString();
         }
 
-        public abstract bool Matches(char c);
         public abstract bool Matches(string s);
         public abstract override string ToString();
     }

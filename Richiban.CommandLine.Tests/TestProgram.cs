@@ -66,6 +66,19 @@
             };
         }
 
+        [CommandLine, Route("short-form-tests")]
+        public object ShortFormTestAction(
+            [ShortForm('a')] bool paramA = false,
+            [ShortForm('b', 'z')] bool paramB = false,
+            [ShortForm('c', DisallowLongForm = true)] bool paramC = false)
+        {
+            return new
+            {
+                ExecutedAction = nameof(ShortFormTestAction),
+                Output = $"{new { paramA, paramB, paramC }}"
+            };
+        }
+
         [Route("class-test-route-1")]
         public class ClassRoutedActions
         {
