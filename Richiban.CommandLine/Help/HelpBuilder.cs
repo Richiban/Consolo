@@ -19,7 +19,7 @@ namespace Richiban.CommandLine
             IEnumerable<MethodModel> models,
             IReadOnlyCollection<CommandLineAction> resolvedCommandLineActions)
         {
-            var modelsForHelp = models.AllByMax(m => m.GetPartialMatchAccuracy(commandLineArgs));
+            var (maxAccuracy, modelsForHelp) = models.AllByMax(m => m.GetPartialMatchAccuracy(commandLineArgs));
 
             var sb = new StringBuilder();
 
@@ -34,7 +34,7 @@ namespace Richiban.CommandLine
                 {
                     sb.AppendLine("The given arguments are ambiguous between the following:");
 
-                    modelsForHelp = resolvedCommandLineActions.Select(a => a.Model);
+                    modelsForHelp = resolvedCommandLineActions.Select(a => a.Model).ToList();
                 }
             }
 
@@ -44,7 +44,7 @@ namespace Richiban.CommandLine
             }
             else
             {
-                sb.AppendLine($"Help for {commandLineArgs}:");
+                sb.AppendLine($"Help for {String.Join(" ", commandLineArgs.Take(maxAccuracy))}:");
             }
 
             sb.AppendLine("");
