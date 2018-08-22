@@ -321,7 +321,42 @@ Help for method1:
 
 If the user calls `help` and the arguments they have supplied are ambiguous then auto-help will be displayed for all routes that even partially match what they did supply.
 
-> Coming soon: XML comments from your methods and classes will appear in auto-help
+#### XML comments from your methods and classes will appear in auto-help
+
+Auto help can even pick out your XML comments! (Don't forget to enable the export of your XML comments in your project file).
+
+Let's say we have the following method:
+
+```csharp
+/// <summary>
+/// This is a comment for my method.
+/// </summary>
+/// <param name="param1">The first parameter</param>
+/// <param name="param2">The second parameter</param>
+/// <param name="someFlag">A flag that does something interesting</param>
+[CommandLine, Route("method")]
+public void MyMethod(string param1, FileInfo param2, [ShortForm('f')] bool someFlag = false)
+{
+	//...
+}
+```
+
+This method will then appear in help as follows:
+
+```
+Richiban.CommandLine.Samples.exe method <param1> <param2> [-f|--someFlag]
+    This is a comment for my method.
+
+    Parameters:
+        <param1> The first parameter
+
+        <param2> The second parameter. Type: System.IO.FileInfo
+
+        [-f|--someFlag] A flag that does something interesting
+```
+
+Note that because the type for parameter `param2` is 'interesting' (i.e. it isn't a `string` or `bool`) 
+auto help has automatically noted the type here in the comments.
 
 -------
 That's about it for the readme. Please feel free to read the issues in this project to see what's coming further down the road or, if you dream up more features for Richiban.CommandLine, post an issue of your own. I also welcome (expected) PRs so contact me before starting any work.

@@ -19,11 +19,5 @@ namespace Richiban.CommandLine.Samples
         {
             $"Cleaning working directory ({new { removeDirectories, force, ignoreIgnore }})".Dump();
         }
-
-        [CommandLine, Route]
-        public void AAA(Guid value)
-        {
-            $"AAA ({value})".Dump();
-        }
     }
 }
