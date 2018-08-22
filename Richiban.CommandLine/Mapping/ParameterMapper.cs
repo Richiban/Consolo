@@ -7,55 +7,58 @@
             CommandLineArgumentList args,
             out CommandLineArgument[] argumentsMatched)
         {
-            var enumerator = args.GetEnumerator();
-
-            while (enumerator.MoveNext())
+            using (var enumerator = args.GetEnumerator())
             {
-                switch (enumerator.Current)
+                while (enumerator.MoveNext())
                 {
-                    case CommandLineArgument.NameValuePair nvPair when parameterModel.NameMatches(nvPair.Name):
-                        argumentsMatched = new[] { nvPair };
-                        return new ParameterMapping(
-                            parameterModel,
-                            MatchDisambiguation.ExplicitMatch,
-                            nvPair.Value);
+                    switch (enumerator.Current)
+                    {
+                        case CommandLineArgument.NameValuePair nvPair when parameterModel.NameMatches(nvPair.Name):
+                            argumentsMatched = new[] { nvPair };
 
-                    case CommandLineArgument.BareNameOrFlag nameOrFlag
-                        when parameterModel.NameMatches(nameOrFlag.Name) && parameterModel.IsFlag:
-                        argumentsMatched = new[] { nameOrFlag };
-                        return new ParameterMapping(
-                            parameterModel,
-                            MatchDisambiguation.ExplicitMatch,
-                            $"{true}");
+                            return new ParameterMapping(
+                                parameterModel,
+                                MatchDisambiguation.ExplicitMatch,
+                                nvPair.Value);
 
-                    case CommandLineArgument.BareNameOrFlag bnf when parameterModel.NameMatches(bnf.Name):
-                        if (enumerator.MoveNext())
-                        {
-                            if (enumerator.Current is CommandLineArgument.Free free)
+                        case CommandLineArgument.BareNameOrFlag nameOrFlag
+                            when parameterModel.NameMatches(nameOrFlag.Name) && parameterModel.IsFlag:
+                            argumentsMatched = new[] { nameOrFlag };
+
+                            return new ParameterMapping(
+                                parameterModel,
+                                MatchDisambiguation.ExplicitMatch,
+                                $"{true}");
+
+                        case CommandLineArgument.BareNameOrFlag bnf when parameterModel.NameMatches(bnf.Name):
+                            if (enumerator.MoveNext())
                             {
-                                argumentsMatched = new CommandLineArgument[] { bnf, free };
+                                if (enumerator.Current is CommandLineArgument.Free free)
+                                {
+                                    argumentsMatched = new CommandLineArgument[] { bnf, free };
 
-                                return new ParameterMapping(
-                                    parameterModel,
-                                    MatchDisambiguation.ExplicitMatch,
-                                    free.Value);
+                                    return new ParameterMapping(
+                                        parameterModel,
+                                        MatchDisambiguation.ExplicitMatch,
+                                        free.Value);
+                                }
                             }
-                        }
 
-                        break;
+                            break;
 
-                    case CommandLineArgument.Free free when parameterModel.IsFlag:
-                        continue;
+                        case CommandLineArgument.Free free when parameterModel.IsFlag:
+                            continue;
 
-                    case CommandLineArgument.Free free:
-                        argumentsMatched = new[] { free };
-                        return new ParameterMapping(
-                            parameterModel,
-                            MatchDisambiguation.ImplicitMatch,
-                            free.Value);
+                        case CommandLineArgument.Free free:
+                            argumentsMatched = new[] { free };
+                            return new ParameterMapping(
+                                parameterModel,
+                                MatchDisambiguation.ImplicitMatch,
+                                free.Value);
 
-                    default:
-                        break;
+                        default:
+                            break;
+                    }
                 }
             }
 

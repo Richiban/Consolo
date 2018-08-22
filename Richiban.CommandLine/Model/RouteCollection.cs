@@ -37,11 +37,11 @@ namespace Richiban.CommandLine
                 _routes = classRoutes;
             }
             else
-            _routes =
-                (from c in classRoutes
-                 from m in methodRoutes
-                 select c.Concat(m))
-                    .ToList();
+                _routes =
+                    (from c in classRoutes
+                     from m in methodRoutes
+                     select c.Concat(m))
+                        .ToList();
         }
 
         public int Count => _routes.Count;
@@ -84,6 +84,12 @@ namespace Richiban.CommandLine
             CommandLineArgumentList commandLineArguments,
             out IReadOnlyCollection<CommandLineArgument> argumentsMatched)
         {
+            if (_routes.Count == 0)
+            {
+                argumentsMatched = new CommandLineArgument[0];
+                return true;
+            }
+
             foreach (var route in _routes)
             {
                 if (route.MatchesVerbSequence(commandLineArguments, out argumentsMatched))

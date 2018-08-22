@@ -1,58 +1,46 @@
 ﻿using NUnit.Framework;
-using System.Collections.Generic;
-using System.Reflection;
 
 namespace Richiban.CommandLine.Tests.Routes
 {
-    class HelpTests
+    class HelpTests : CommandLineTest
     {
-        private string outputHelp;
-
-        private dynamic RunTest(params string[] args)
-        {
-            var config = CommandLineConfiguration.GetDefault();
-            config.AssembliesToScan = new List<Assembly> { GetType().Assembly };
-            config.HelpOutput = s => outputHelp = s;
-
-            return CommandLine.Execute(config, args);
-        }
-
         [Test]
         public void NoArgumentsResultsInHelp()
         {
-            RunTest();
+            var outputHelp = RunTest().OutputHelp;
 
-            Assert.That(outputHelp.StartsWith("Usage:"));
+            Assert.That(outputHelp, Is.Not.Empty);
         }
 
         [Test]
         public void ExplicitCallToHelpResultsInHelp()
         {
-            RunTest("/?");
+            var outputHelp = RunTest("/?").OutputHelp;
 
-            Assert.That(outputHelp, Does.StartWith("Usage:"));
+            Assert.That(outputHelp, Is.Not.Empty);
         }
 
         [Test]
         public void HelpPseudoRouteResultsInHelp()
         {
-            RunTest("help");
+            var outputHelp = RunTest("help").OutputHelp;
 
-            Assert.That(outputHelp, Does.StartWith("Usage:"));
+            Assert.That(outputHelp, Is.Not.Empty);
         }
 
         [Test]
         public void ExplicitHelpGlyphResultsInHelpForRoute()
         {
-            RunTest("test-route-1", "/?");
+            var outputHelp = RunTest("test-route-1", "/?").OutputHelp;
 
-            Assert.That(outputHelp, Does.StartWith("Help for test-route-1:"));
+            Assert.That(outputHelp, Does.Contain("testhost test-route-1 test-route-2"));
+            Assert.That(outputHelp, Does.Contain("testhost test-route-1 [/param1]"));
         }
 
         [Test]
         public void HelpPseudoRouteResultsInHelpForRoute()
         {
-            RunTest("help", "test-route-1");
+            var outputHelp = RunTest("help", "test-route-1").OutputHelp;
 
             Assert.That(outputHelp, Does.StartWith("Help for test-route-1:"));
         }
@@ -60,9 +48,9 @@ namespace Richiban.CommandLine.Tests.Routes
         [Test]
         public void TooFewRoutePartsResultsInHelpForRoute()
         {
-            RunTest("two-part-route-1");
+            var outputHelp = RunTest("two-part-route-1").OutputHelp;
 
-            Assert.That(outputHelp, Does.StartWith("Help for two-part-route-1:"));
+            Assert.That(outputHelp, Does.Contain("Help for two-part-route-1:"));
         }
     }
 }

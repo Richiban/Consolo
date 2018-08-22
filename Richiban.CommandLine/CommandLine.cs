@@ -1,5 +1,6 @@
 ﻿using NullGuard;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
@@ -35,56 +36,58 @@ namespace Richiban.CommandLine
 
             var commandLineArgs = CommandLineArgumentList.Parse(args);
 
-            if(commandLineArgs.TraceToStandardOutput)
+            if (commandLineArgs.TraceToStandardOutput)
             {
-                config.DebugOutput = config.HelpOutput;
+                config.TraceOutput = config.HelpOutput;
             }
 
             var model = AssemblyModel.Scan(config.AssembliesToScan);
+            var resolvedCommandLineActions = ResolveActions(config, commandLineArgs, model);
 
+            if (IsReadyForExecution(commandLineArgs, resolvedCommandLineActions))
+            {
+                var commandLineAction = resolvedCommandLineActions.Single();
+
+                try
+                {
+                    return commandLineAction.Invoke();
+                }
+                catch (TypeConversionException e)
+                {
+                    config.HelpOutput(e.Message);
+                    config.TraceOutput(e.ToString());
+
+                    return null;
+                }
+            }
+            else
+            {
+                var helpBuilder = new HelpBuilder(XmlCommentsRepository.LoadFor(config.AssembliesToScan));
+
+                config.HelpOutput(
+                    helpBuilder.GenerateHelp(commandLineArgs, model, resolvedCommandLineActions));
+
+                return null;
+            }
+        }
+
+        private static IReadOnlyCollection<CommandLineAction> ResolveActions(CommandLineConfiguration config, CommandLineArgumentList commandLineArgs, AssemblyModel model)
+        {
             var typeConverterCollection = new TypeConverterCollection(config.TypeConverters);
             var methodMapper = new MethodMapper(new ParameterMapper());
 
-            var commandLineActions = 
+            var resolvedCommandLineActions =
                 new CommandLineActionFactory(
                     model, config.ObjectFactory, typeConverterCollection, methodMapper)
-                .Create(commandLineArgs);
+                .Resolve(commandLineArgs);
+            return resolvedCommandLineActions;
+        }
 
-            var helpBuilder = new AssemblyHelpBuilder(new MethodHelpBuilder(new XmlCommentsRepository(config.AssembliesToScan.First())));
-
-            if (commandLineArgs.IsCallForHelp)
-            {
-                var help = helpBuilder.GenerateHelp(model, commandLineArgs);
-                config.HelpOutput("Usage:");
-                config.HelpOutput("");
-                config.HelpOutput(help);
-
-                return null;
-            }
-
-            if (commandLineActions.Count == 0)
-            {
-                config.HelpOutput("Could not match the given arguments to a command");
-
-                var help = helpBuilder.GenerateHelp(model, commandLineArgs);
-                config.HelpOutput(help);
-
-                return null;
-            }
-
-            if (commandLineActions.Count > 1)
-            {
-                config.HelpOutput("The given arguments are ambiguous between the following:");
-
-                var help = helpBuilder.GenerateHelp(commandLineActions);
-                config.HelpOutput(help);
-
-                return null;
-            }
-
-            var commandLineAction = commandLineActions.Single();
-
-            return commandLineAction.Invoke();
+        private static bool IsReadyForExecution(
+            CommandLineArgumentList commandLineArgs,
+            IReadOnlyCollection<CommandLineAction> resolvedCommandLineActions)
+        {
+            return !(commandLineArgs.IsCallForHelp || resolvedCommandLineActions.Count != 1);
         }
 
         internal static void Trace(object message, int indentationLevel = 0)
@@ -92,7 +95,7 @@ namespace Richiban.CommandLine
             var indentation = String.Concat(Enumerable.Repeat(0, indentationLevel).Select(_ => "\t"));
             var fullMessage = $"{indentation}{message}";
 
-            var output = CurrentConfiguration?.DebugOutput ?? (s => Debug.WriteLine(s));
+            var output = CurrentConfiguration?.TraceOutput ?? (s => Debug.WriteLine(s));
 
             output(fullMessage);
         }

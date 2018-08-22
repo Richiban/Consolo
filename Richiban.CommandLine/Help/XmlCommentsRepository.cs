@@ -1,5 +1,6 @@
 ﻿using AutoLazy;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -10,11 +11,21 @@ namespace Richiban.CommandLine
 {
     internal class XmlCommentsRepository
     {
-        private readonly XDocument _xmlComments;
+        private readonly IReadOnlyCollection<XDocument> _xmlComments;
 
-        public XmlCommentsRepository(Assembly assembly)
+        private XmlCommentsRepository(IReadOnlyCollection<XDocument> xDocuments)
         {
-            var codeBase = Assembly.GetEntryAssembly().CodeBase;
+            _xmlComments = xDocuments;
+        }
+
+        public static XmlCommentsRepository LoadFor(IReadOnlyCollection<Assembly> assemblies)
+        {
+            return new XmlCommentsRepository(assemblies.Select(LoadForAssembly).ToList());
+        }
+
+        private static XDocument LoadForAssembly(Assembly assembly)
+        {
+            var codeBase = assembly.CodeBase;
             var uri = new UriBuilder(codeBase);
 
             var xmlFilePath = Uri.UnescapeDataString(uri.Path)
@@ -22,9 +33,9 @@ namespace Richiban.CommandLine
                 .Replace(".exe", ".xml");
 
             if (File.Exists(xmlFilePath))
-                _xmlComments = XDocument.Load(xmlFilePath);
+                return XDocument.Load(xmlFilePath);
             else
-                _xmlComments = new XDocument();
+                return new XDocument();
         }
 
         [Lazy]
@@ -33,8 +44,10 @@ namespace Richiban.CommandLine
             get
             {
                 var declaringTypeName = method.DeclaringType.FullName;
-                var methodElement = _xmlComments.XPathSelectElement(
-                        $"//member[starts-with(@name, \"M:{declaringTypeName}.{method.Name}(\")]");
+                var methodElement = _xmlComments
+                    .Select(xdoc => xdoc.XPathSelectElement(
+                        $"//member[starts-with(@name, \"M:{declaringTypeName}.{method.Name}(\")]"))
+                    .FirstOrDefault(elem => elem != null);
 
                 if (methodElement == null)
                     return null;

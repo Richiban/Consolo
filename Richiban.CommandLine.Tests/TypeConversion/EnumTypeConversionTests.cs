@@ -15,7 +15,7 @@ namespace Richiban.CommandLine.Tests.TypeConversion
                 "type-conversion-tests",
                 "enum",
                 "-param",
-                testParam);
+                testParam).ProgramOutput;
 
             Assert.That(result.ExecutedAction, Is.EqualTo("EnumTypeConversionAction"));
             StringAssert.AreEqualIgnoringCase(result.Output, $"{{ param = {testParam} }}");
@@ -25,17 +25,18 @@ namespace Richiban.CommandLine.Tests.TypeConversion
         [TestCase("")]
         public void EnumTypeConversionFailureTest(string testValue)
         {
-            var ex = Assert.Throws<TypeConversionException>(() =>
+            var result =
                 RunTest(
                     "type-conversion-tests",
                     "enum",
                     "-param",
-                    testValue));
+                    testValue);
 
             var expectedMessage =
                 $"No ITypeConverter could be found that could convert '{testValue}' to type 'TestEnum'";
 
-            Assert.That(ex.Message, Is.EqualTo(expectedMessage));
+            Assert.That(result.ProgramOutput, Is.Null);
+            Assert.That(result.OutputHelp, Does.Contain(expectedMessage));
         }
     }
 }

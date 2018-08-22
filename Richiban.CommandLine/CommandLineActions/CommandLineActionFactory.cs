@@ -24,7 +24,7 @@ namespace Richiban.CommandLine
         }
 
         [TracerAttributes.TraceOn]
-        public IReadOnlyCollection<CommandLineAction> Create(CommandLineArgumentList commandLineArgs) =>
+        public IReadOnlyCollection<CommandLineAction> Resolve(CommandLineArgumentList commandLineArgs) =>
             GetBestMatches(commandLineArgs)
                 .Select(mapping => CreateAction(mapping, _objectFactory))
                 .ToList();

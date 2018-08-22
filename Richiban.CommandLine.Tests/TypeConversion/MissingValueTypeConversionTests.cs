@@ -10,7 +10,7 @@ namespace Richiban.CommandLine.Tests.TypeConversion
         {
             var result = RunTest(
                 "type-conversion-tests",
-                "missing");
+                "missing").ProgramOutput;
 
             Assert.That(result.ExecutedAction, Is.EqualTo("MissingTypeConversionAction"));
             StringAssert.AreEqualIgnoringCase(result.Output, $"{{ param = 1 }}");

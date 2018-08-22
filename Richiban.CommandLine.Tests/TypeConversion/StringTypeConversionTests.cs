@@ -13,7 +13,7 @@ namespace Richiban.CommandLine.Tests.TypeConversion
             var result = RunTest(
                 "type-conversion-tests",
                 "string",
-                "-param", "value");
+                "-param", "value").ProgramOutput;
 
             Assert.That(result.ExecutedAction, Is.EqualTo("StringTypeConversionAction"));
             Assert.That(result.Output, Is.EqualTo("{ param = value }"));

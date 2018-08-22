@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Richiban.CommandLine
 {
-    class HelpStringBuilder
+    class HelpStyleStringBuilder
     {
         private readonly StringBuilder _stringBuilder;
 
@@ -12,7 +12,7 @@ namespace Richiban.CommandLine
         private string _indentation;
         private bool _isAtStartOfLine = true;
 
-        public HelpStringBuilder()
+        public HelpStyleStringBuilder()
         {
             _stringBuilder = new StringBuilder();
         }
@@ -47,9 +47,9 @@ namespace Richiban.CommandLine
 
         private class HelpStringBuilderIndenter : IDisposable
         {
-            private readonly HelpStringBuilder _helpStringBuilder;
+            private readonly HelpStyleStringBuilder _helpStringBuilder;
 
-            public HelpStringBuilderIndenter(HelpStringBuilder helpStringBuilder)
+            public HelpStringBuilderIndenter(HelpStyleStringBuilder helpStringBuilder)
             {
                 _helpStringBuilder = helpStringBuilder;
                 _helpStringBuilder._indentationLevel++;

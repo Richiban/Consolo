@@ -14,7 +14,7 @@ namespace Richiban.CommandLine.Tests.TypeConversion
                 "type-conversion-tests",
                 "uri",
                 "-param",
-                testParam);
+                testParam).ProgramOutput;
 
             Assert.That(result.ExecutedAction, Is.EqualTo("UriTypeConversionAction"));
             StringAssert.AreEqualIgnoringCase(result.Output, $"{{ param = {testParam} }}");
@@ -24,17 +24,18 @@ namespace Richiban.CommandLine.Tests.TypeConversion
         [TestCase("")]
         public void UriTypeConversionFailureTest(string testValue)
         {
-            var ex = Assert.Throws<TypeConversionException>(() =>
+            var result =
                 RunTest(
                     "type-conversion-tests",
                     "uri",
                     "-param",
-                    testValue));
+                    testValue);
 
             var expectedMessage =
                 $"The constructor for type System.Uri threw an exception when given '{testValue}'";
 
-            Assert.That(ex.Message, Is.EqualTo(expectedMessage));
+            Assert.That(result.ProgramOutput, Is.Null);
+            Assert.That(result.OutputHelp, Does.Contain(expectedMessage));
         }
     }
 }

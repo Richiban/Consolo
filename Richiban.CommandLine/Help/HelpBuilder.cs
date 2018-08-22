@@ -1,19 +1,63 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Richiban.CommandLine
 {
-    class MethodHelpBuilder
+    class HelpBuilder
     {
         private readonly XmlCommentsRepository _xmlComments;
 
-        public MethodHelpBuilder(XmlCommentsRepository xmlComments)
+        public HelpBuilder(XmlCommentsRepository xmlComments)
         {
             _xmlComments = xmlComments;
         }
 
-        public MethodHelp BuildFor(MethodModel method)
+        public string GenerateHelp(
+            CommandLineArgumentList commandLineArgs,
+            IEnumerable<MethodModel> models,
+            IReadOnlyCollection<CommandLineAction> resolvedCommandLineActions)
+        {
+            var modelsForHelp = models.AllByMax(m => m.GetPartialMatchAccuracy(commandLineArgs));
+
+            var sb = new StringBuilder();
+
+            if (!commandLineArgs.IsCallForHelp)
+            {
+                if (resolvedCommandLineActions.Count == 0)
+                {
+                    sb.AppendLine("Could not match the given arguments to a command");
+                    sb.AppendLine("");
+                }
+                else if (resolvedCommandLineActions.Count > 1)
+                {
+                    sb.AppendLine("The given arguments are ambiguous between the following:");
+
+                    modelsForHelp = resolvedCommandLineActions.Select(a => a.Model);
+                }
+            }
+
+            if (commandLineArgs.Count == 0)
+            {
+                sb.AppendLine("Usage:");
+            }
+            else
+            {
+                sb.AppendLine($"Help for {commandLineArgs}:");
+            }
+
+            sb.AppendLine("");
+
+            foreach(var model in modelsForHelp)
+            {
+                sb.AppendLine(BuildForMethod(model).ToString());
+            }
+
+            return sb.ToString();
+        }
+
+        private MethodHelp BuildForMethod(MethodModel method)
         {
             var xmlComments = _xmlComments[method];
 
@@ -38,7 +82,6 @@ namespace Richiban.CommandLine
                         : "",
                     None: () => "");
         }
-
 
         private string HelpForRoutes(RouteCollection routes)
         {

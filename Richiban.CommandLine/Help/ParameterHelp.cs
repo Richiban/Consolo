@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AutoLazy;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,10 +8,10 @@ namespace Richiban.CommandLine
     class ParameterHelp
     {
         public ParameterHelp(
-            IReadOnlyList<ParameterName> parameterNames, 
+            IReadOnlyList<ParameterName> parameterNames,
             bool isOptional,
             bool isFlag,
-            Type type, 
+            Type type,
             string xmlComments)
         {
             ParameterNames = parameterNames;
@@ -26,23 +27,21 @@ namespace Richiban.CommandLine
         public Type Type { get; }
         public string XmlComments { get; }
 
-        public string Heading
+        [Lazy]
+        public override string ToString()
         {
-            get
+            string parameterName(ParameterName pName)
             {
-                string parameterName(ParameterName pName)
-                {
-                    return pName is ParameterName.ShortForm s 
-                        ? $"{CommandLineEnvironment.ShortFormFlagGlyph}{pName}"
-                        : IsFlag
-                            ? $"{CommandLineEnvironment.FlagGlyph}{pName}"
-                            : $"<{pName}>";
-                }
-
-                var namesString = String.Join("|", ParameterNames.Select(parameterName));
-
-                return IsOptional ? $"[{namesString}]" : namesString;
+                return pName is ParameterName.ShortForm s
+                    ? $"{CommandLineEnvironment.ShortFormFlagGlyph}{pName}"
+                    : IsFlag
+                        ? $"{CommandLineEnvironment.FlagGlyph}{pName}"
+                        : $"<{pName}>";
             }
+
+            var namesString = String.Join("|", ParameterNames.Select(parameterName));
+
+            return IsOptional ? $"[{namesString}]" : namesString;
         }
     }
 }

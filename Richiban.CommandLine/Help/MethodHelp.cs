@@ -28,9 +28,9 @@ namespace Richiban.CommandLine
         [Lazy]
         public override string ToString()
         {
-            var builder = new HelpStringBuilder();
+            var builder = new HelpStyleStringBuilder();
 
-            var parameterHeadings = String.Join(" ", ParameterHelp.Select(p => p.Heading));
+            var parameterHeadings = String.Join(" ", ParameterHelp);
 
             builder.AppendLine($@"{ExecutableName} {RouteHelp} {parameterHeadings}");
 
@@ -77,7 +77,7 @@ namespace Richiban.CommandLine
                 return "";
 
             var builder = new StringBuilder();
-            builder.Append(parameterHelp.Heading);
+            builder.Append(parameterHelp);
 
             builder.Append(" ");
             builder.Append(parameterHelp.XmlComments);

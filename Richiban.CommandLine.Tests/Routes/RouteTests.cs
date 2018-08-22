@@ -4,19 +4,12 @@ using System.Reflection;
 
 namespace Richiban.CommandLine.Tests.Routes
 {
-    class RouteTests
+    class RouteTests : CommandLineTest
     {
-        private dynamic RunTest(params string[] args)
-        {
-            var config = CommandLineConfiguration.GetDefault();
-            config.AssembliesToScan = new List<Assembly> { GetType().Assembly };
-            return CommandLine.Execute(config, args);
-        }
-
         [Test]
         public void SingleLevelRouteTest()
         {
-            var result = RunTest("test-route");
+            var result = RunTest("test-route").ProgramOutput;
 
             Assert.That(result.ExecutedAction, Is.EqualTo(nameof(TestProgram.RoutedAction)));
         }
@@ -24,7 +17,7 @@ namespace Richiban.CommandLine.Tests.Routes
         [Test]
         public void MultiLevelRouteTest()
         {
-            var result = RunTest("test-route-1", "test-route-2");
+            var result = RunTest("test-route-1", "test-route-2").ProgramOutput;
 
             Assert.That(result.ExecutedAction, Is.EqualTo(nameof(TestProgram.MultiLevelRoutedAction)));
         }
@@ -32,7 +25,7 @@ namespace Richiban.CommandLine.Tests.Routes
         [Test]
         public void ZeroLevelClassAndMethodRouteTest()
         {
-            var result = RunTest("class-test-route-1");
+            var result = RunTest("class-test-route-1").ProgramOutput;
 
             Assert.That(result.ExecutedAction, Is.EqualTo(nameof(TestProgram.ClassRoutedActions.ZeroLevelRoutedAction)));
         }
@@ -40,7 +33,7 @@ namespace Richiban.CommandLine.Tests.Routes
         [Test]
         public void SingleLevelClassAndMethodRouteTest()
         {
-            var result = RunTest("class-test-route-1", "class-test-route-2");
+            var result = RunTest("class-test-route-1", "class-test-route-2").ProgramOutput;
 
             Assert.That(result.ExecutedAction, Is.EqualTo(nameof(TestProgram.ClassRoutedActions.SingleLevelClassRoutedActionWithParameter)));
         }
@@ -48,7 +41,7 @@ namespace Richiban.CommandLine.Tests.Routes
         [Test]
         public void MultiLevelClassAndMethodRouteTest()
         {
-            var result = RunTest("class-test-route-1", "class-test-route-2", "class-test-route-3");
+            var result = RunTest("class-test-route-1", "class-test-route-2", "class-test-route-3").ProgramOutput;
 
             Assert.That(result.ExecutedAction, Is.EqualTo(nameof(TestProgram.ClassRoutedActions.MultiLevelClassRoutedAction)));
         }

@@ -6,7 +6,7 @@ namespace Richiban.CommandLine.Samples
     [Route("remote")]
     class RemoteActions
     {
-        [CommandLine, Route("")]
+        [CommandLine, Route("list")]
         public void ListRemotes()
         {
             $"Listing remotes".Dump();
