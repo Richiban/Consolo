@@ -423,5 +423,28 @@ myapp [-a|--paramA] [-b|--paramB] [-c|--paramC]
 
 > NB A short form can only be used on a _flag_ parameter, i.e. one of `boolean` type.
 
+### Array and `params` array parameters
+
+Parameters can also be array types, and can also be marked with the `params` keyword.
+
+```csharp
+public void MyAction(string firstParam, string secondParam, params string[] everythingElse)
+{
+	//...
+}
+```
+
+For any array parameter you can specify a name more than once at the command line:
+
+```bash
+> myapp 1 2 -everythingElse 3 -everythingElse 3 -everythingElse 3
+```
+
+If using `params` then this parameter will hoover up all remaining (unnamed) arguments:
+
+```bash
+> myapp 1 2 3 4 5 6 # firstParam = 1, secondParam = 2, everythingElse = [3, 4, 5, 6, 7]
+```
+
 -------
 That's about it for the readme. Please feel free to read the issues in this project to see what's coming further down the road or, if you dream up more features for Richiban.CommandLine, post an issue of your own. I also welcome (expected) PRs so contact me before starting any work.

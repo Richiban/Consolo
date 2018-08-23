@@ -4,6 +4,6 @@ namespace Richiban.CommandLine.Samples
 {
     public static class Extensions
     {
-        public static void Dump(this string arg) => Console.WriteLine(arg);
+        public static void Dump(this object arg) => Console.WriteLine(arg);
     }
 }

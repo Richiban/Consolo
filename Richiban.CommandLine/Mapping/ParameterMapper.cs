@@ -17,16 +17,16 @@ namespace Richiban.CommandLine
                 {
                     switch (enumerator.Current)
                     {
-                        case CommandLineArgument.NameValuePair nvPair when parameterModel.NameMatches(nvPair.Name):
+                        case CommandLineArgument.NameValuePair nvPair 
+                        when parameterModel.MatchesName(nvPair.Name):
                             
+                            argumentsMatched.Add(nvPair);
+
                             if(parameterModel.AllowMultipleValues)
                             {
                                 suppliedValues.Add(nvPair.Value);
-                                argumentsMatched.Add(nvPair);
                                 continue;
                             }
-
-                            argumentsMatched.Add(nvPair);
 
                             return (new ParameterMapping(
                                 parameterModel,
@@ -34,21 +34,34 @@ namespace Richiban.CommandLine
                                 nvPair.Value), argumentsMatched);
 
                         case CommandLineArgument.BareNameOrFlag nameOrFlag
-                            when parameterModel.NameMatches(nameOrFlag.Name) && parameterModel.IsFlag:
+                        when parameterModel.MatchesName(nameOrFlag.Name) && parameterModel.IsFlag:
                             argumentsMatched.Add(nameOrFlag);
+
+                            if (parameterModel.AllowMultipleValues)
+                            {
+                                suppliedValues.Add($"{true}");
+                                continue;
+                            }
 
                             return (new ParameterMapping(
                                 parameterModel,
                                 MatchDisambiguation.ExplicitMatch,
                                 $"{true}"), argumentsMatched);
 
-                        case CommandLineArgument.BareNameOrFlag bnf when parameterModel.NameMatches(bnf.Name):
+                        case CommandLineArgument.BareNameOrFlag bnf
+                        when parameterModel.MatchesName(bnf.Name):
                             if (enumerator.MoveNext())
                             {
                                 if (enumerator.Current is CommandLineArgument.Free free)
                                 {
                                     argumentsMatched.Add(bnf);
                                     argumentsMatched.Add(free);
+
+                                    if (parameterModel.AllowMultipleValues)
+                                    {
+                                        suppliedValues.Add(free.Value);
+                                        continue;
+                                    }
 
                                     return (new ParameterMapping(
                                         parameterModel,
@@ -63,6 +76,14 @@ namespace Richiban.CommandLine
                             continue;
 
                         case CommandLineArgument.Free free:
+
+                            if (parameterModel.AllowMultipleValues && parameterModel.GreedilyGrabFreeValues)
+                            {
+                                suppliedValues.Add(free.Value);
+                                argumentsMatched.Add(free);
+                                continue;
+                            }
+
                             argumentsMatched.Add(free);
 
                             return (new ParameterMapping(

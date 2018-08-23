@@ -5,7 +5,7 @@ namespace Richiban.CommandLine.Tests
     class MultiValueParameterTests : CommandLineTest
     {
         [Test]
-        public void MultipleStringParametersAreMappedToArray()
+        public void MultipleIntParametersAreMappedToArray()
         {
             var result = RunTest("multi-value-param", "--param1=1", "--param1=2", "--param1=3");
 
@@ -22,6 +22,44 @@ namespace Richiban.CommandLine.Tests
             Assert.That(result.ProgramOutput, Is.Not.Null);
             Assert.That(result.ProgramOutput.ExecutedAction, Is.EqualTo(nameof(TestProgram.MultiValueParameterAction)));
             Assert.That(result.ProgramOutput.Output, Is.EqualTo("[]"));
+        }
+
+        [Test]
+        public void ZeroStringParametersAreMappedToParamsArray()
+        {
+            var result = RunTest("multi-value-params-param", "/nonParamsParam:zero");
+
+            Assert.That(result.ProgramOutput, Is.Not.Null);
+            Assert.That(result.ProgramOutput.ExecutedAction, Is.EqualTo(nameof(TestProgram.MultiValueParamsParameterAction)));
+            Assert.That(result.ProgramOutput.Output, Is.EqualTo("{ nonParamsParam = zero, remainingParams = [] }"));
+        }
+
+        [Test]
+        public void MultipleStringParametersAreMappedToParamsArray()
+        {
+            var result = RunTest(
+                "multi-value-params-param", "zero", "one", "two", "three");
+
+            Assert.That(result.ProgramOutput, Is.Not.Null);
+            Assert.That(result.ProgramOutput.ExecutedAction, Is.EqualTo(nameof(TestProgram.MultiValueParamsParameterAction)));
+            Assert.That(result.ProgramOutput.Output, Is.EqualTo(
+                "{ nonParamsParam = zero, remainingParams = [one, two, three] }"));
+        }
+
+        [Test]
+        public void MultipleNamedStringParametersAreMappedToParamsArray()
+        {
+            var result = RunTest(
+                "multi-value-params-param",
+                "-nonParamsParam", "z",
+                "-remainingParams", "a",
+                "/remainingParams:b",
+                "---remainingParams=c");
+
+            Assert.That(result.ProgramOutput, Is.Not.Null);
+            Assert.That(result.ProgramOutput.ExecutedAction, Is.EqualTo(nameof(TestProgram.MultiValueParamsParameterAction)));
+            Assert.That(result.ProgramOutput.Output, Is.EqualTo(
+                "{ nonParamsParam = z, remainingParams = [a, b, c] }"));
         }
     }
 }
