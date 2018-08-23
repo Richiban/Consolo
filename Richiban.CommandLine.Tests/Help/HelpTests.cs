@@ -48,9 +48,15 @@ namespace Richiban.CommandLine.Tests.Routes
         [Test]
         public void TooFewRoutePartsResultsInHelpForRoute()
         {
-            var outputHelp = RunTest("two-part-route-1").OutputHelp;
+            var outputHelp = 
+                RunTest(
+                    "five-part-route-1",
+                    "five-part-route-2",
+                    "five-part-route-2",
+                    "five-part-route-4")
+                .OutputHelp;
 
-            Assert.That(outputHelp, Does.Contain("Help for two-part-route-1:"));
+            Assert.That(outputHelp, Does.Contain("Help for five-part-route-1 five-part-route-2 five-part-route-2 five-part-route-4"));
         }
     }
 }

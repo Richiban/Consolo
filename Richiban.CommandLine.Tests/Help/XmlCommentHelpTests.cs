@@ -23,9 +23,13 @@ namespace Richiban.CommandLine.Tests.Routes
         [Test]
         public void TooFewRoutePartsResultsInHelpWithXmlCommentsForRoute()
         {
-            var outputHelp = RunTest("two-part-route-1").OutputHelp;
+            var outputHelp = RunTest(
+                "five-part-route-1",
+                "five-part-route-2",
+                "five-part-route-2",
+                "five-part-route-4").OutputHelp;
 
-            Assert.That(outputHelp, Does.Contain("This is the comment for two-part-route-1"));
+            Assert.That(outputHelp, Does.Contain("Comments for five-part-route"));
         }
     }
 }

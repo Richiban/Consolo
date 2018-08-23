@@ -66,6 +66,24 @@
             };
         }
 
+        /// <summary>
+        /// Comments for five-part-route
+        /// </summary>
+        [CommandLine, Route(
+            "five-part-route-1",
+            "five-part-route-2",
+            "five-part-route-2",
+            "five-part-route-4", 
+            "five-part-route-5")]
+        public object FivePartRoute()
+        {
+            return new
+            {
+                ExecutedAction = nameof(FivePartRoute),
+                Output = ""
+            };
+        }
+
         [CommandLine, Route("short-form-tests")]
         public object ShortFormTestAction(
             [ShortForm('a')] bool paramA = false,

@@ -91,7 +91,7 @@ namespace Richiban.CommandLine
 
         internal static void Trace(object message, int indentationLevel = 0)
         {
-            var indentation = String.Concat(Enumerable.Repeat(0, indentationLevel).Select(_ => "\t"));
+            var indentation = String.Concat(Enumerable.Repeat(0, indentationLevel * 4).Select(_ => " "));
             var fullMessage = $"{indentation}{message}";
 
             var output = CurrentConfiguration?.TraceOutput ?? (s => Debug.WriteLine(s));

@@ -10,7 +10,7 @@ namespace Richiban.CommandLine.Tests
         {
             var traceOutput = RunTest().TraceOutput;
 
-            var expectedContent = @"[Trace]: Scanning assemblies:
+            var expectedContent = @"[Trace]: Scanning assemblies: 
         Richiban.CommandLine.Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null";
 
             Assert.That(traceOutput, Does.Contain(expectedContent));
@@ -19,16 +19,20 @@ namespace Richiban.CommandLine.Tests
         [Test]
         public void RegisteredTypeConverterInstancesAreTraced()
         {
-            var traceOutput = RunTest("/?trace").TraceOutput;
+            var traceOutput = RunTest().TraceOutput;
 
-            var expectedContent = @"[Trace]: Registered ITypeConverter instances:
-                Richiban.CommandLine.MissingValueTypeConverter
-                Richiban.CommandLine.StringPassthroughTypeConverter
-                Richiban.CommandLine.EnumTypeConverter
-                Richiban.CommandLine.SystemConvertibleTypeConverter
-                Richiban.CommandLine.ConstructFromStringTypeConverter";
+            var expectedContent = new[] {
+                @"[Trace]: Registered ITypeConverter instances:",
+                "        Richiban.CommandLine.MissingValueTypeConverter",
+                "        Richiban.CommandLine.StringPassthroughTypeConverter",
+                "        Richiban.CommandLine.EnumTypeConverter",
+                "        Richiban.CommandLine.SystemConvertibleTypeConverter",
+                "        Richiban.CommandLine.ConstructFromStringTypeConverter"};
 
-            Assert.That(traceOutput, Does.Contain(expectedContent));
+            foreach(var expectedContent1 in expectedContent)
+            {
+                Assert.That(traceOutput, Does.Contain(expectedContent1));
+            }
         }
 
         [Test]

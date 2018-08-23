@@ -44,14 +44,23 @@ namespace Richiban.CommandLine
             get
             {
                 var declaringTypeName = method.DeclaringType.FullName;
+
                 var methodElement = _xmlComments
                     .Select(xdoc => xdoc.XPathSelectElement(
                         $"//member[starts-with(@name, \"M:{declaringTypeName}.{method.Name}(\")]"))
                     .FirstOrDefault(elem => elem != null);
 
                 if (methodElement == null)
+                {
+                    methodElement = _xmlComments
+                       .Select(xdoc => xdoc.XPathSelectElement(
+                           $"//member[@name=\"M:{declaringTypeName}.{method.Name}\"]"))
+                       .FirstOrDefault(elem => elem != null);
+                }
+
+                if (methodElement == null)
                     return null;
-                
+
                 var methodComment = methodElement.Element("summary")?.Value?.Trim();
                 var paramComments = methodElement.Descendants("param")
                     .Where(e => !String.IsNullOrEmpty(e.Value))
