@@ -415,6 +415,12 @@ This works even with Windows- (and Powershell-) style parameters:
 > myapp /abc
 ```
 
+Note that, since short forms are additional names by default, you will see that in the auto-help for your application:
+
+```bash
+myapp [-a|--paramA] [-b|--paramB] [-c|--paramC] 
+```
+
 > NB A short form can only be used on a _flag_ parameter, i.e. one of `boolean` type.
 
 -------
