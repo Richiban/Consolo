@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 
@@ -16,9 +14,11 @@ namespace Richiban.CommandLine
         {
             _parameterInfo = parameterInfo;
 
+            var isParams = parameterInfo.IsDefined(typeof(ParamArrayAttribute), inherit: false);
+
             OriginalName = parameterInfo.Name;
 
-            IsOptional = parameterInfo.IsOptional;
+            IsOptional = parameterInfo.IsOptional || isParams;
 
             _names = BuildNamesList(parameterInfo);
 
@@ -27,6 +27,8 @@ namespace Richiban.CommandLine
             IsFlag = ParameterType == typeof(bool);
 
             AllowMultipleValues = ParameterType.IsArray;
+
+            GreedilyGrabFreeValues = isParams;
 
             Names = _names;
         }
@@ -76,10 +78,12 @@ namespace Richiban.CommandLine
         public IReadOnlyList<ParameterName> Names { get; }
         public string OriginalName { get; }
         public bool AllowMultipleValues { get; }
+        public bool GreedilyGrabFreeValues { get; }
 
-        public bool MatchesShortForm(char c) => _names.Any(n => n.Matches(c.ToString()));
+        public bool MatchesShortForm(char c) =>
+            _names.Any(n => n.Matches(c.ToString()));
 
-        public bool NameMatches(string argumentName) =>
+        public bool MatchesName(string argumentName) =>
             _names.Any(n => n.Matches(argumentName));
     }
 }

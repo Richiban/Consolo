@@ -107,6 +107,16 @@
             };
         }
 
+        [CommandLine, Route("multi-value-params-param")]
+        public object MultiValueParamsParameterAction(string nonParamsParam, params string[] remainingParams)
+        {
+            return new
+            {
+                ExecutedAction = nameof(MultiValueParamsParameterAction),
+                Output = $"{{ nonParamsParam = {nonParamsParam}, remainingParams = [{string.Join(", ", remainingParams)}] }}"
+            };
+        }
+
         [Route("class-test-route-1")]
         public class ClassRoutedActions
         {

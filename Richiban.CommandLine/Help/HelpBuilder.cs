@@ -69,6 +69,7 @@ namespace Richiban.CommandLine
                     p.Names,
                     p.IsOptional,
                     p.IsFlag,
+                    p.AllowMultipleValues,
                     p.ParameterType,
                     GetCommentsForParameterOrEmpty(p.OriginalName, xmlComments))).ToList());
         }
