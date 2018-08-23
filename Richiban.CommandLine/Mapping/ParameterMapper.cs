@@ -17,7 +17,8 @@ namespace Richiban.CommandLine
                 {
                     switch (enumerator.Current)
                     {
-                        case CommandLineArgument.NameValuePair nvPair when parameterModel.MatchesName(nvPair.Name):
+                        case CommandLineArgument.NameValuePair nvPair 
+                        when parameterModel.MatchesName(nvPair.Name):
                             
                             argumentsMatched.Add(nvPair);
 
@@ -33,7 +34,7 @@ namespace Richiban.CommandLine
                                 nvPair.Value), argumentsMatched);
 
                         case CommandLineArgument.BareNameOrFlag nameOrFlag
-                            when parameterModel.MatchesName(nameOrFlag.Name) && parameterModel.IsFlag:
+                        when parameterModel.MatchesName(nameOrFlag.Name) && parameterModel.IsFlag:
                             argumentsMatched.Add(nameOrFlag);
 
                             if (parameterModel.AllowMultipleValues)
@@ -47,7 +48,8 @@ namespace Richiban.CommandLine
                                 MatchDisambiguation.ExplicitMatch,
                                 $"{true}"), argumentsMatched);
 
-                        case CommandLineArgument.BareNameOrFlag bnf when parameterModel.MatchesName(bnf.Name):
+                        case CommandLineArgument.BareNameOrFlag bnf
+                        when parameterModel.MatchesName(bnf.Name):
                             if (enumerator.MoveNext())
                             {
                                 if (enumerator.Current is CommandLineArgument.Free free)
