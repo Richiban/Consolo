@@ -157,13 +157,16 @@ on the containing class. So, instead of having to write:
 class MyRemoteActions
 {
 	[CommandLine, Route("remote", "add")]
-	public void AddRemote(...) => ... 
+	public void AddRemote(...) 
+	{ ... }
 
 	[CommandLine, Route("remote", "remove")]
-	public void RemoveRemote(...) => ... 
+	public void RemoveRemote(...)
+	{ ... }
 
 	[CommandLine, Route("remote", "rename")]
-	public void RemoveRemote(...) => ... 
+	public void RemoveRemote(...)
+	{ ... }
 }
 ```
 
@@ -174,13 +177,16 @@ you can instead write:
 class MyRemoteActions
 {
 	[CommandLine, Route("add")]
-	public void AddRemote(...) => ... 
+	public void AddRemote(...)
+	{ ... }
 
 	[CommandLine, Route("remove")]
-	public void RemoveRemote(...) => ... 
+	public void RemoveRemote(...)
+	{ ... }
 
 	[CommandLine, Route("rename")]
-	public void RenameRemote(...) => ... 
+	public void RenameRemote(...) =>
+	{ ... }
 }
 ```
 
