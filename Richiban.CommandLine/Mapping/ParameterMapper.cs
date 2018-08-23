@@ -19,14 +19,13 @@ namespace Richiban.CommandLine
                     {
                         case CommandLineArgument.NameValuePair nvPair when parameterModel.MatchesName(nvPair.Name):
                             
+                            argumentsMatched.Add(nvPair);
+
                             if(parameterModel.AllowMultipleValues)
                             {
                                 suppliedValues.Add(nvPair.Value);
-                                argumentsMatched.Add(nvPair);
                                 continue;
                             }
-
-                            argumentsMatched.Add(nvPair);
 
                             return (new ParameterMapping(
                                 parameterModel,
@@ -36,6 +35,12 @@ namespace Richiban.CommandLine
                         case CommandLineArgument.BareNameOrFlag nameOrFlag
                             when parameterModel.MatchesName(nameOrFlag.Name) && parameterModel.IsFlag:
                             argumentsMatched.Add(nameOrFlag);
+
+                            if (parameterModel.AllowMultipleValues)
+                            {
+                                suppliedValues.Add($"{true}");
+                                continue;
+                            }
 
                             return (new ParameterMapping(
                                 parameterModel,
@@ -49,6 +54,12 @@ namespace Richiban.CommandLine
                                 {
                                     argumentsMatched.Add(bnf);
                                     argumentsMatched.Add(free);
+
+                                    if (parameterModel.AllowMultipleValues)
+                                    {
+                                        suppliedValues.Add(free.Value);
+                                        continue;
+                                    }
 
                                     return (new ParameterMapping(
                                         parameterModel,
