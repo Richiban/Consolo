@@ -364,5 +364,58 @@ Richiban.CommandLine.Samples.exe method <param1> <param2> [-f|--someFlag]
 Note that because the type for parameter `param2` is 'interesting' (i.e. it isn't a `string` or `bool`) 
 auto help has automatically noted the type here in the comments.
 
+### Alternative names and short forms
+
+Parameters on the command line, by default, get the name they have in the method definition. If you would like to
+override this, use the `ParameterName` attribute. This attribute has a convenient `IncludeOriginal` property that
+you can set if you want to include the original name in addition to the one provided.
+
+```csharp
+[CommandLine]
+public void MyMethod([ParameterName("my-param")] string param1)
+{
+	//...
+}
+```
+
+A related (but slightly deeper) topic is that of _short forms_. A short form looks like a single-character 
+parameter name but it behaves slightly differently:
+
+```csharp
+[CommandLine]
+public void MyMethod(
+	[ShortForm('a')] bool paramA = false,
+	[ShortForm('b')] bool paramB = false,
+	[ShortForm('c')] bool paramC = false
+)
+{
+	//...
+}
+```
+
+Firstly, a shortform does not replace the original parameter name; it is usable in addition (to flip this behaviour
+set the `DisallowLongForm` property on the `ShortForm` attribute in question).
+
+Secondly, shortforms can be _collapsed_. So, as well as providing them as if they were just single-character 
+names:
+
+```bash
+> myapp -a -b -c
+```
+
+you can also supply them in collapsed form:
+
+```bash
+> myapp -abc
+```
+
+This works even with Windows- (and Powershell-) style parameters:
+
+```bash
+> myapp /abc
+```
+
+> NB A short form can only be used on a _flag_ parameter, i.e. one of `boolean` type.
+
 -------
 That's about it for the readme. Please feel free to read the issues in this project to see what's coming further down the road or, if you dream up more features for Richiban.CommandLine, post an issue of your own. I also welcome (expected) PRs so contact me before starting any work.
