@@ -1,14 +1,14 @@
 ﻿using Richiban.CommandLine;
+using System;
 
 namespace Richiban.CommandLine.Samples
 {
     public static class DisplayVersionAction
     {
-        //[CommandLine]
-        public static void Execute(
-            [ParameterName("version")] bool displayVersion = false)
+        [CommandLine, Route("version")]
+        public static void Execute()
         {
-            $"Displaying version".Dump();
+            Console.WriteLine($"Displaying version");
         }
     }
 }

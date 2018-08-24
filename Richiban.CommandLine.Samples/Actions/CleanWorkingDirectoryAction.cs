@@ -17,7 +17,7 @@ namespace Richiban.CommandLine.Samples
             [ShortForm('f', DisallowLongForm = true)] bool force = false,
             [ShortForm('x', DisallowLongForm = true)] bool ignoreIgnore = false)
         {
-            $"Cleaning working directory ({new { removeDirectories, force, ignoreIgnore }})".Dump();
+            Console.WriteLine($"Cleaning working directory ({new { removeDirectories, force, ignoreIgnore }})");
         }
     }
 }

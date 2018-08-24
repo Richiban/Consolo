@@ -7,6 +7,6 @@ namespace Richiban.CommandLine.Samples.Actions
     {
         [CommandLine, Route]
         public void Add(params FileInfo[] files) =>
-            $"Adding files: {String.Join(", ", (object[]) files)}".Dump();
+            Console.WriteLine($"Adding files: {String.Join(", ", (object[]) files)}");
     }
 }

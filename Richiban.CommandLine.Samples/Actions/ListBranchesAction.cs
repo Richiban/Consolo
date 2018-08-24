@@ -1,13 +1,21 @@
 ﻿using Richiban.CommandLine;
+using System;
 
 namespace Richiban.CommandLine.Samples
 {
-    public sealed class ListBranchesAction
+    [Route("branch")]
+    public sealed class BranchActions
     {
-        [CommandLine, Route("branch")]
+        [CommandLine, Route("")]
         public void Execute()
         {
-            $"Listing branches".Dump();
+            Console.WriteLine($"Listing branches");
+        }
+
+        [CommandLine, Route("")]
+        public void Execute(string branchName)
+        {
+            Console.WriteLine($"Creating branch {branchName}");
         }
     }
 }

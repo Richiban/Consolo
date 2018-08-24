@@ -9,7 +9,7 @@ namespace Richiban.CommandLine.Samples
         [CommandLine, Route("")]
         public void ListRemotes()
         {
-            $"Listing remotes".Dump();
+            Console.WriteLine($"Listing remotes");
         }
 
         /// <summary>
@@ -20,19 +20,19 @@ namespace Richiban.CommandLine.Samples
         [CommandLine, Route("add")]
         public void AddRemote(string name, Uri remoteUri)
         {
-            $"Adding remote with {new { name, remoteUri }}".Dump();
+            Console.WriteLine($"Adding remote with {new { name, remoteUri }}");
         }
 
         [CommandLine, Route("remove")]
         public void RemoveRemote(string name)
         {
-            $"Removing remote {name}".Dump();
+            Console.WriteLine($"Removing remote {name}");
         }
 
         [CommandLine, Route("prune")]
         public void PruneRemote(string name)
         {
-            $"Pruning remote {name}".Dump();
+            Console.WriteLine($"Pruning remote {name}");
         }
 
         [CommandLine, Route("set-head")]
@@ -44,15 +44,15 @@ namespace Richiban.CommandLine.Samples
         {
             if (branch != null)
             {
-                $"Setting head for remote {remoteName} to branch {branch}".Dump();
+                Console.WriteLine($"Setting head for remote {remoteName} to branch {branch}");
             }
             else if (deleteRemote)
             {
-                $"Deleting head for remote {remoteName}".Dump();
+                Console.WriteLine($"Deleting head for remote {remoteName}");
             }
             else if(automaticallySetHead)
             {
-                $"Auto-setting head for remote {remoteName}".Dump();
+                Console.WriteLine($"Auto-setting head for remote {remoteName}");
             }
             else
             {

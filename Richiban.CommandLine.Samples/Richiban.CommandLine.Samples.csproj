@@ -48,10 +48,8 @@
     <Compile Include="Actions\ConfigActions.cs" />
     <Compile Include="Actions\DisplayVersionAction.cs" />
     <Compile Include="Actions\ListBranchesAction.cs" />
-    <Compile Include="Actions\NewBranchAction.cs" />
     <Compile Include="Actions\PushAction.cs" />
     <Compile Include="Actions\RemoteActions.cs" />
-    <Compile Include="Extensions.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -1,4 +1,5 @@
 ﻿using Richiban.CommandLine;
+using System;
 
 namespace Richiban.CommandLine.Samples
 {
@@ -7,13 +8,13 @@ namespace Richiban.CommandLine.Samples
         [CommandLine, Route("config")]
         public void GetConfigValue(string settingName, bool global = false)
         {
-            $"Getting {(global ? " (global)" : "")} {settingName}".Dump();
+            Console.WriteLine($"Getting {(global ? " (global)" : "")} {settingName}");
         }
 
         [CommandLine, Route("config")]
         public void SetConfigValue(string settingName, string settingValue, bool global = false)
         {
-            $"Setting{(global ? " (global)" : "")} {settingName} = {settingValue}".Dump();
+            Console.WriteLine($"Setting{(global ? " (global)" : "")} {settingName} = {settingValue}");
         }
     }
 }

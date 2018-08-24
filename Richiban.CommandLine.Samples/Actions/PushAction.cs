@@ -1,4 +1,5 @@
 ﻿using Richiban.CommandLine;
+using System;
 
 namespace Richiban.CommandLine.Samples
 {
@@ -16,7 +17,7 @@ namespace Richiban.CommandLine.Samples
             [ShortForm('u')] bool setUpstreamBranch = false,
             string setUpstreamBranchTo = null)
         {
-            $"Pushing branch {new { branchName, setUpstreamBranch, setUpstreamBranchTo }}".Dump();
+            Console.WriteLine($"Pushing branch {new { branchName, setUpstreamBranch, setUpstreamBranchTo }}");
         }
     }
 }
