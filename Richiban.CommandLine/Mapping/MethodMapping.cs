@@ -12,19 +12,20 @@ namespace Richiban.CommandLine
 
         public MethodMapping(
             MethodModel methodModel,
-            IReadOnlyList<ParameterMapping> propertyMappings)
+            IReadOnlyList<ParameterMapping> parameterMappings,
+            bool explicitRouteMatch)
         {
-            _parameterMappings = propertyMappings;
+            _parameterMappings = parameterMappings;
             MethodModel = methodModel;
 
-            MatchDisambiguation = propertyMappings
-                .Any(prop => prop.MatchDisambiguation == MatchDisambiguation.ImplicitMatch)
-                ? MatchDisambiguation.ImplicitMatch
-                : MatchDisambiguation.ExplicitMatch;
+            MatchPriority = new MethodMatchPriority(
+                usesOptionalParameters: parameterMappings.OfType<ParameterMapping.NoValue>().Any(),
+                usesPositionalParameters: parameterMappings.OfType<ParameterMapping.PositionalValue>().Any(),
+                explicitRouteMatch: explicitRouteMatch);
         }
         
         public MethodModel MethodModel { get; }
-        public MatchDisambiguation MatchDisambiguation { get; }
+        public MethodMatchPriority MatchPriority { get; }
 
         public int Count => _parameterMappings.Count;
         public ParameterMapping this[int index] => _parameterMappings[index];

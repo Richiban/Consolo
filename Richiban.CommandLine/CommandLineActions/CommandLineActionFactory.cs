@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using TracerAttributes;
 
 namespace Richiban.CommandLine
 {
@@ -23,18 +24,18 @@ namespace Richiban.CommandLine
             _methodMapper = methodMapper;
         }
 
-        [TracerAttributes.TraceOn]
+        [TraceOn]
         public IReadOnlyCollection<CommandLineAction> Resolve(CommandLineArgumentList commandLineArgs) =>
             GetBestMatches(commandLineArgs)
                 .Select(mapping => CreateAction(mapping, _objectFactory))
                 .ToList();
 
-        [TracerAttributes.TraceOn]
+        [TraceOn]
         private IReadOnlyCollection<MethodMapping> GetBestMatches(CommandLineArgumentList commandLineArgs)
         {
             var matchGroups =
                 GetMethodMappings(commandLineArgs)
-                .ToLookup(mapping => mapping.MatchDisambiguation)
+                .ToLookup(mapping => mapping.MatchPriority)
                 .OrderByDescending(group => group.Key);
 
             return
@@ -44,7 +45,7 @@ namespace Richiban.CommandLine
                 ?? new List<MethodMapping>();
         }
 
-        [TracerAttributes.TraceOn]
+        [TraceOn]
         private IReadOnlyCollection<MethodMapping> GetMethodMappings(CommandLineArgumentList args) =>
             _assemblyModel
                 .Select(model => _methodMapper.GetMethodMapping(model, args))

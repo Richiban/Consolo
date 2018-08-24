@@ -67,7 +67,7 @@ namespace Richiban.CommandLine
                 xmlComments.Match(Some: x => x.MethodComments, None: () => ""),
                 method.Parameters.Select(p => new ParameterHelp(
                     p.Names,
-                    p.IsOptional,
+                    p.AllowNoValues,
                     p.IsFlag,
                     p.AllowMultipleValues,
                     p.ParameterType,

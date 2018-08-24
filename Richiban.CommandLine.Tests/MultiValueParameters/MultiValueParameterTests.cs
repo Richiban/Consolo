@@ -61,5 +61,21 @@ namespace Richiban.CommandLine.Tests
             Assert.That(result.ProgramOutput.Output, Is.EqualTo(
                 "{ nonParamsParam = z, remainingParams = [a, b, c] }"));
         }
+
+        [Test]
+        public void MultipleNamedStringParametersAreMappedToParamsArrayEvenWhenOutOfOrder()
+        {
+            var result = RunTest(
+                "multi-value-params-param",
+                "/remainingParams:a",
+                "--remainingParams=b",
+                "-nonParamsParam", "z",
+                "-remainingParams", "c");
+
+            Assert.That(result.ProgramOutput, Is.Not.Null);
+            Assert.That(result.ProgramOutput.ExecutedAction, Is.EqualTo(nameof(TestProgram.MultiValueParamsParameterAction)));
+            Assert.That(result.ProgramOutput.Output, Is.EqualTo(
+                "{ nonParamsParam = z, remainingParams = [a, b, c] }"));
+        }
     }
 }

@@ -80,26 +80,27 @@ namespace Richiban.CommandLine
             return bestAccuracy;
         }
 
-        public bool Matches(
-            CommandLineArgumentList commandLineArguments,
-            out IReadOnlyCollection<CommandLineArgument> argumentsMatched)
+        public (bool isMatch, CommandLineArgumentList remainingArgs) Matches(
+            CommandLineArgumentList commandLineArguments)
         {
             if (_routes.Count == 0)
             {
-                argumentsMatched = new CommandLineArgument[0];
-                return true;
+                return (true, commandLineArguments);
             }
+
+            var argumentsMatched = new List<CommandLineArgument>();
 
             foreach (var route in _routes)
             {
-                if (route.MatchesVerbSequence(commandLineArguments, out argumentsMatched))
+                var (isRouteMatch, remainingArgs) = route.MatchesVerbSequence(commandLineArguments);
+
+                if (isRouteMatch)
                 {
-                    return true;
+                    return (true, remainingArgs);
                 }
             }
 
-            argumentsMatched = new CommandLineArgument[0];
-            return false;
+            return (false, commandLineArguments);
         }
     }
 }

@@ -32,9 +32,8 @@ namespace Richiban.CommandLine
         public IEnumerator<Verb> GetEnumerator() => _verbs.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        public bool MatchesVerbSequence(
-            CommandLineArgumentList commandLineArguments,
-            out IReadOnlyCollection<CommandLineArgument> argumentsMatched)
+        public (bool isMatch, CommandLineArgumentList remainingArguments) MatchesVerbSequence(
+            CommandLineArgumentList commandLineArguments)
         {
             var argsMatched = new List<CommandLineArgument>();
 
@@ -51,14 +50,12 @@ namespace Richiban.CommandLine
                     }
                     else
                     {
-                        argumentsMatched = new CommandLineArgument[0];
-                        return false;
+                        return (false, commandLineArguments);
                     }
                 }
             }
-
-            argumentsMatched = argsMatched;
-            return true;
+            
+            return (true, commandLineArguments.Without(argsMatched));
         }
 
         public Route Concat(Route otherRoute)

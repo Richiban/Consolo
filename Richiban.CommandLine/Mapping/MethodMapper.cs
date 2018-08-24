@@ -15,19 +15,16 @@ namespace Richiban.CommandLine
             MethodModel methodModel,
             CommandLineArgumentList args)
         {
-            var remainingArgs = args;
             var parameterMappings = new List<ParameterMapping>();
 
+            var (routeMatches, remainingArgs) = methodModel.Routes.Matches(args);
+
+            if (routeMatches == false)
             {
-                if (methodModel.Routes.Matches(remainingArgs, out var argumentsMatched))
-                {
-                    remainingArgs = remainingArgs.Without(argumentsMatched);
-                }
-                else
-                {
-                    return None;
-                }
+                return None;
             }
+
+            var explicitRouteMatch = args.Count != remainingArgs.Count;
 
             remainingArgs = methodModel.Parameters.ExpandShortForms(remainingArgs);
 
@@ -37,9 +34,9 @@ namespace Richiban.CommandLine
 
                 maybePropertyMapping.IfSome(s =>
                 {
-                    var (mapping, argumentsMatched) = s;
+                    var (mapping, _) = s;
+                    remainingArgs = s.remainingArguments;
                     parameterMappings.Add(mapping);
-                    remainingArgs = remainingArgs.Without(argumentsMatched);
                 });
 
                 if (maybePropertyMapping.HasValue == false)
@@ -51,7 +48,7 @@ namespace Richiban.CommandLine
             if (remainingArgs.Any())
                 return None;
 
-            return new MethodMapping(methodModel, parameterMappings);
+            return new MethodMapping(methodModel, parameterMappings, explicitRouteMatch);
         }
     }
 }

@@ -18,7 +18,7 @@ namespace Richiban.CommandLine
 
             OriginalName = parameterInfo.Name;
 
-            IsOptional = parameterInfo.IsOptional || isParams;
+            AllowNoValues = parameterInfo.IsOptional || parameterInfo.ParameterType.IsArray;
 
             _names = BuildNamesList(parameterInfo);
 
@@ -73,7 +73,7 @@ namespace Richiban.CommandLine
         
         public Type ParameterType { get; }
         public bool IsFlag { get; }
-        public bool IsOptional { get; }
+        public bool AllowNoValues { get; }
         public bool HasShortForm { get; }
         public IReadOnlyList<ParameterName> Names { get; }
         public string OriginalName { get; }
