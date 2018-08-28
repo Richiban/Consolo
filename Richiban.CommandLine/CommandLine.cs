@@ -11,7 +11,7 @@ namespace Richiban.CommandLine
     /// </summary>
     public static class CommandLine
     {
-        internal static CommandLineConfiguration CurrentConfiguration { get; private set; }
+        private static Action<string> _traceOutput = (s => Debug.WriteLine(s));
 
         /// <summary>
         /// The default entrypoint for Richiban.CommandLine
@@ -32,17 +32,23 @@ namespace Richiban.CommandLine
         [TracerAttributes.TraceOn]
         public static object Execute(CommandLineConfiguration config, params string[] args)
         {
-            CurrentConfiguration = config;
+            // Defensively copy the configuration into local variables
+            var helpOutput = config.HelpOutput;
+            _traceOutput = config.TraceOutput;
+            var assembliesToScan = config.AssembliesToScan.ToList();
+            var typeConverters = new TypeConverterCollection(config.TypeConverters);
+            var objectFactory = config.ObjectFactory;
 
             var commandLineArgs = CommandLineArgumentList.Parse(args);
 
             if (commandLineArgs.TraceToStandardOutput)
             {
-                config.TraceOutput = config.HelpOutput;
+                _traceOutput = helpOutput;
             }
 
-            var model = AssemblyModel.Scan(config.AssembliesToScan);
-            var resolvedCommandLineActions = ResolveActions(config, commandLineArgs, model);
+            var model = AssemblyModel.Scan(assembliesToScan);
+            var resolvedCommandLineActions = ResolveActions(
+                objectFactory, typeConverters, commandLineArgs, model);
 
             if (IsReadyForExecution(commandLineArgs, resolvedCommandLineActions))
             {
@@ -54,31 +60,34 @@ namespace Richiban.CommandLine
                 }
                 catch (TypeConversionException e)
                 {
-                    config.HelpOutput(e.Message);
-                    config.TraceOutput(e.ToString());
+                    helpOutput(e.Message);
+                    _traceOutput(e.ToString());
 
                     return null;
                 }
             }
             else
             {
-                var helpBuilder = new HelpBuilder(XmlCommentsRepository.LoadFor(config.AssembliesToScan));
+                var helpBuilder = new HelpBuilder(XmlCommentsRepository.LoadFor(assembliesToScan));
 
-                config.HelpOutput(
+                helpOutput(
                     helpBuilder.GenerateHelp(commandLineArgs, model, resolvedCommandLineActions));
 
                 return null;
             }
         }
 
-        private static IReadOnlyCollection<CommandLineAction> ResolveActions(CommandLineConfiguration config, CommandLineArgumentList commandLineArgs, AssemblyModel model)
+        private static IReadOnlyCollection<CommandLineAction> ResolveActions(
+            Func<Type, object> objectFactory,
+            TypeConverterCollection typeConverters,
+            CommandLineArgumentList commandLineArgs, 
+            AssemblyModel model)
         {
-            var typeConverterCollection = new TypeConverterCollection(config.TypeConverters);
             var methodMapper = new MethodMapper(new ParameterMapper());
 
             return
                 new CommandLineActionFactory(
-                    model, config.ObjectFactory, typeConverterCollection, methodMapper)
+                    model, objectFactory, typeConverters, methodMapper)
                 .Resolve(commandLineArgs);
         }
 
@@ -92,11 +101,8 @@ namespace Richiban.CommandLine
         internal static void Trace(object message, int indentationLevel = 0)
         {
             var indentation = String.Concat(Enumerable.Repeat(0, indentationLevel * 4).Select(_ => " "));
-            var fullMessage = $"{indentation}{message}";
 
-            var output = CurrentConfiguration?.TraceOutput ?? (s => Debug.WriteLine(s));
-
-            output(fullMessage);
+            _traceOutput($"{indentation}{message}");
         }
     }
 }
