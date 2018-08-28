@@ -19,12 +19,13 @@ namespace Richiban.CommandLine
                 .Select(m => new Route(methodInfo.Name, m.RouteParts))
                 .ToArray();
 
+            var containingClass = methodInfo.DeclaringType;
+
             var classRoutes =
-                methodInfo
-                .DeclaringType
+                containingClass
                 .GetCustomAttributes(inherit: true)
                 .OfType<RouteAttribute>()
-                .Select(m => new Route(methodInfo.Name, m.RouteParts))
+                .Select(m => new Route(containingClass.Name, m.RouteParts))
                 .ToArray();
 
             if (classRoutes.Length == 0)

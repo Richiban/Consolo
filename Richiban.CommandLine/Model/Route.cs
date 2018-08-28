@@ -7,21 +7,21 @@ namespace Richiban.CommandLine
     internal class Route : IReadOnlyList<Verb>
     {
         private readonly IReadOnlyList<Verb> _verbs;
-        private readonly string _methodName;
+        private readonly string _methodOrClassName;
         
-        public Route(string methodName, IReadOnlyList<string> routeParts)
+        public Route(string methodOrClassName, IReadOnlyList<string> routeParts)
         {
             if (routeParts.Count == 0)
-                _verbs = new [] { new Verb(methodName) };
+                _verbs = new [] { new Verb(methodOrClassName) };
             else
                 _verbs = routeParts.Where(v => v != "").Select(s => new Verb(s)).ToList();
 
-            _methodName = methodName;
+            _methodOrClassName = methodOrClassName;
         }
 
         private Route(string methodName, IReadOnlyList<Verb> verbs)
         {
-            _methodName = methodName;
+            _methodOrClassName = methodName;
             _verbs = verbs;
         }
 
@@ -60,7 +60,7 @@ namespace Richiban.CommandLine
 
         public Route Concat(Route otherRoute)
         {
-            return new Route(_methodName, _verbs.Concat(otherRoute._verbs).ToList());
+            return new Route(_methodOrClassName, _verbs.Concat(otherRoute._verbs).ToList());
         }
     }
 }
