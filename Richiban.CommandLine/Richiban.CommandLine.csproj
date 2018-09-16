@@ -6,9 +6,12 @@
     <RootNamespace>Richiban.CommandLine</RootNamespace>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+  <PropertyGroup>
     <LangVersion>latest</LangVersion>
     <DocumentationFile>bin\Debug\netstandard2.0\Richiban.CommandLine.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <Optimize>false</Optimize>
   </PropertyGroup>
 
