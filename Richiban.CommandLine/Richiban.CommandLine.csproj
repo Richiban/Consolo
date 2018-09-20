@@ -20,9 +20,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoLazy.Fody" Version="2.2.1" />
-    <PackageReference Include="NullGuard.Fody" Version="1.7.1" />
-    <PackageReference Include="Tracer.Fody" Version="2.0.0" />
+    <PackageReference Include="AutoLazy.Fody" Version="2.2.1">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="NullGuard.Fody" Version="1.7.1">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Tracer.Fody" Version="2.0.0">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 
 </Project>
