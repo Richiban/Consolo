@@ -1,4 +1,5 @@
-﻿using Richiban.CommandLine;
+﻿using NullGuard;
+using Richiban.CommandLine;
 using System;
 using System.Collections;
 using System.Text;
@@ -9,8 +10,8 @@ namespace Tracer
     {
         public override void TraceEnter(
             string methodInfo,
-            string[] paramNames,
-            object[] paramValues)
+            [AllowNull]string[] paramNames,
+            [AllowNull]object[] paramValues)
         {
             if (paramValues?.Length >= 1 && paramValues[0] is IEnumerable e)
             {
@@ -29,7 +30,7 @@ namespace Tracer
             string methodInfo,
             long startTicks,
             long endTicks,
-            string[] paramNames,
+            [AllowNull]string[] paramNames,
             object[] paramValues)
         {
         }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NullGuard;
+using System;
 using System.Collections.Generic;
 
 namespace Richiban.CommandLine
@@ -8,7 +9,7 @@ namespace Richiban.CommandLine
         public bool TryConvertValue(
             Type convertToType,
             IReadOnlyList<string> rawValues,
-            out object convertedValue)
+            [AllowNull] out object convertedValue)
         {
             if (typeof(IConvertible).IsAssignableFrom(convertToType) && rawValues.Count == 1)
             {

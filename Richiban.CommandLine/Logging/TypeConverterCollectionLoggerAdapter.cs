@@ -1,4 +1,4 @@
-﻿
+﻿using NullGuard;
 using Richiban.CommandLine;
 using System.Linq;
 
@@ -6,7 +6,7 @@ namespace Tracer
 {
     class TypeConverterCollectionLoggerAdapter : LoggerAdapterBase
     {
-        public override void TraceEnter(string methodInfo, string[] paramNames, object[] paramValues)
+        public override void TraceEnter(string methodInfo, [AllowNull]string[] paramNames, [AllowNull]object[] paramValues)
         {
             if (methodInfo.Contains(".ctor"))
             {
@@ -19,7 +19,7 @@ namespace Tracer
             }
         }
 
-        public override void TraceLeave(string methodInfo, long startTicks, long endTicks, string[] paramNames, object[] paramValues)
+        public override void TraceLeave(string methodInfo, long startTicks, long endTicks, [AllowNull]string[] paramNames, [AllowNull]object[] paramValues)
         {
         }
     }

@@ -78,7 +78,7 @@ namespace Richiban.CommandLine
                 TraceToStandardOutput);
         }
 
-        
+        //[Lazy]
         public override string ToString() => string.Join(" ", _args);
     }
 }

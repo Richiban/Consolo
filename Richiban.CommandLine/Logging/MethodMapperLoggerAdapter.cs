@@ -1,11 +1,11 @@
-﻿
+﻿using NullGuard;
 using Richiban.CommandLine;
 
 namespace Tracer
 {
     class MethodMapperLoggerAdapter : LoggerAdapterBase
     {
-        public override void TraceEnter(string methodInfo, string[] paramNames, object[] paramValues)
+        public override void TraceEnter(string methodInfo, [AllowNull]string[] paramNames, [AllowNull]object[] paramValues)
         {
             if (paramValues?.Length >= 2)
             {
@@ -13,7 +13,7 @@ namespace Tracer
             }
         }
 
-        public override void TraceLeave(string methodInfo, long startTicks, long endTicks, string[] paramNames, object[] paramValues)
+        public override void TraceLeave(string methodInfo, long startTicks, long endTicks, [AllowNull]string[] paramNames, [AllowNull]object[] paramValues)
         {
             if (paramValues?.Length >= 1 && paramValues[0] is Option<MethodMapping> opt)
             {

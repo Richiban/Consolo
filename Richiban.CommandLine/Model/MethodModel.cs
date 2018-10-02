@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Reflection;
 
 namespace Richiban.CommandLine
@@ -31,7 +30,7 @@ namespace Richiban.CommandLine
         public int GetPartialMatchAccuracy(CommandLineArgumentList commandLineArgs) =>
             Routes.GetPartialMatchAccuracy(commandLineArgs);
 
-        
+        //[Lazy]
         public override string ToString() => $"{_methodInfo.DeclaringType}.{_methodInfo.Name}";
     }
 }
