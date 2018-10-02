@@ -1,6 +1,4 @@
-﻿using NullGuard;
-using Richiban.CommandLine;
-using System;
+﻿using Richiban.CommandLine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -9,15 +7,15 @@ namespace Tracer
     internal class CommandLineActionFactoryLoggerAdapter : LoggerAdapterBase
     {
         public override void TraceEnter(
-            string methodInfo, [AllowNull]string[] paramNames, [AllowNull]object[] paramValues)
+            string methodInfo, string[] paramNames, object[] paramValues)
         {
         }
 
         public override void TraceLeave(
             string methodInfo, long startTicks,
             long endTicks,
-            [AllowNull]string[] paramNames,
-            [AllowNull]object[] paramValues)
+            string[] paramNames,
+            object[] paramValues)
         {
             if (methodInfo.Contains("GetBestMatches"))
             {

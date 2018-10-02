@@ -1,5 +1,4 @@
-﻿using NullGuard;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -12,7 +11,7 @@ namespace Richiban.CommandLine
         public bool TryConvertValue(
             Type convertToType,
             IReadOnlyList<string> rawValues,
-            [AllowNull] out object convertedValue)
+            out object convertedValue)
         {
             if (TryGetCompatibleConstructor(convertToType, rawValues.Count).IsSome(out var constructor))
             {

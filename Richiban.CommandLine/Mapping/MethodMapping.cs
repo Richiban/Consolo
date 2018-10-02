@@ -1,4 +1,4 @@
-﻿using AutoLazy;
+﻿
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -32,7 +32,7 @@ namespace Richiban.CommandLine
         public IEnumerator<ParameterMapping> GetEnumerator() => _parameterMappings.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        [Lazy]
+        
         public override string ToString()
         {
             return $"{MethodModel}({String.Join(", ", _parameterMappings)})";

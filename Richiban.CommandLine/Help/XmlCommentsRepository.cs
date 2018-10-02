@@ -1,5 +1,4 @@
-﻿using AutoLazy;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -37,8 +36,7 @@ namespace Richiban.CommandLine
             else
                 return new XDocument();
         }
-
-        [Lazy]
+        
         public Option<XmlComments> this[MethodModel method]
         {
             get

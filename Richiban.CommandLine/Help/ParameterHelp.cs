@@ -1,5 +1,4 @@
-﻿using AutoLazy;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -29,8 +28,7 @@ namespace Richiban.CommandLine
         public bool AllowMultipleValues { get; }
         public Type Type { get; }
         public string XmlComments { get; }
-
-        [Lazy]
+        
         public override string ToString()
         {
             string parameterName(ParameterName pName)

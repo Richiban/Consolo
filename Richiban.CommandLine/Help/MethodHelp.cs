@@ -1,5 +1,4 @@
-﻿using AutoLazy;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,8 +23,7 @@ namespace Richiban.CommandLine
         public string RouteHelp { get; }
         public string MethodXmlComments { get; }
         public IReadOnlyList<ParameterHelp> ParameterHelp { get; }
-
-        [Lazy]
+        
         public override string ToString()
         {
             var builder = new HelpStyleStringBuilder();

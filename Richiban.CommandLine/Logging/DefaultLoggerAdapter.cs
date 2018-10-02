@@ -1,4 +1,4 @@
-﻿using NullGuard;
+﻿
 using Richiban.CommandLine;
 using System;
 using System.Collections;
@@ -15,7 +15,7 @@ namespace Tracer
             _type = type;
         }
 
-        public override void TraceEnter(string methodInfo, [AllowNull]string[] paramNames, [AllowNull]object[] paramValues)
+        public override void TraceEnter(string methodInfo, string[] paramNames, object[] paramValues)
         {
             if (methodInfo.Contains(".ctor"))
             {
@@ -29,7 +29,7 @@ namespace Tracer
             TraceArguments(paramNames, paramValues);
         }
 
-        public override void TraceLeave(string methodInfo, long startTicks, long endTicks, [AllowNull]string[] paramNames, [AllowNull]object[] paramValues)
+        public override void TraceLeave(string methodInfo, long startTicks, long endTicks, string[] paramNames, object[] paramValues)
         {
             if (_type == typeof(CommandLine))
             {
