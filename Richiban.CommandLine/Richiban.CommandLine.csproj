@@ -17,7 +17,22 @@
 
   <PropertyGroup>
     <DebugType>pdbonly</DebugType>
+    <Authors>Richard Gibson</Authors>
+    <Company>Richibansoft</Company>
+    <Version>0.0.1-rc.1</Version>
+    <Description>A library for not just parsing command line arguments, but for making your standard C# methods callable from the command line</Description>
+    <PackageProjectUrl>https://github.com/Richiban/CommandLine</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Richiban/CommandLine</RepositoryUrl>
+    <RepositoryType>Git</RepositoryType>
+    <PackageTags>command line shell</PackageTags>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/Richiban/CommandLine/master/LICENSE</PackageLicenseUrl>
+    <PackageReleaseNotes>Very first version. Not recommended for production use.</PackageReleaseNotes>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE" Pack="true" PackagePath="$(PackageLicenseFile)" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AutoLazy.Fody" Version="2.2.1">
