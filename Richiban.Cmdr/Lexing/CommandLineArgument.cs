@@ -17,24 +17,12 @@ namespace Richiban.Cmdr
         {
             switch (raw)
             {
-                case "/?":
                 case "-?":
                 case "--?":
                 case "help" when index == 0:
                     return new HelpSwitch(raw);
-                case "/?trace":
+                case "-?trace":
                     return new DiagnosticSwitch(raw);
-                case var _ when raw.StartsWith("/"):
-                {
-                    var parts = raw.TrimStart(trimChar: '/').Split(separator: ':');
-
-                    if (parts.Length > 1)
-                    {
-                        return new NameValuePair(parts[0], parts[1], raw);
-                    }
-
-                    return new BareNameOrFlag(parts[0], raw);
-                }
                 case var _ when raw.StartsWith("--"):
                 {
                     var parts = raw.TrimStart(trimChar: '-').Split(separator: '=');
@@ -51,13 +39,13 @@ namespace Richiban.Cmdr
                     return new BareNameOrFlag(raw.TrimStart(trimChar: '-'), raw);
                 }
                 default:
-                    return new Free(raw);
+                    return new Positional(raw);
             }
         }
 
-        public class Free : CommandLineArgument
+        public class Positional : CommandLineArgument
         {
-            public Free(string value) : base(value)
+            public Positional(string value) : base(value)
             {
                 Value = value;
             }

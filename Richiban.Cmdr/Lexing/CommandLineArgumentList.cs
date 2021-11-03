@@ -72,7 +72,7 @@ namespace Richiban.Cmdr
                 newArgumentList.Add(
                     new CommandLineArgument.BareNameOrFlag(
                         c.ToString(),
-                        $"{CommandLineEnvironment.FlagGlyph}{c}"));
+                        $"-{c}"));
             }
 
             return new CommandLineArgumentList(

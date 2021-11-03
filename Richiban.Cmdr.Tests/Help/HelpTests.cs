@@ -31,10 +31,10 @@ namespace Richiban.Cmdr.Tests.Routes
         [Test]
         public void ExplicitHelpGlyphResultsInHelpForRoute()
         {
-            var outputHelp = RunTest("test-route-1", "/?").OutputHelp;
+            var outputHelp = RunTest("test-route-1", "-?").OutputHelp;
 
-            Assert.That(outputHelp, Does.Contain("testhost test-route-1 test-route-2"));
-            Assert.That(outputHelp, Does.Contain("testhost test-route-1 [/param1]"));
+            Assert.That(outputHelp, Does.Contain("test-route-1 test-route-2"));
+            Assert.That(outputHelp, Does.Contain("test-route-1 [/param1]"));
         }
 
         [Test]

@@ -49,7 +49,7 @@ namespace Richiban.Cmdr
                 {
                     if (inputArgumentEnumerator.MoveNext() &&
                         inputArgumentEnumerator
-                            .Current is CommandLineArgument.Free free &&
+                            .Current is CommandLineArgument.Positional free &&
                         verbEnumerator.Current.Matches(free.Value))
                     {
                         argsMatched.Add(free);

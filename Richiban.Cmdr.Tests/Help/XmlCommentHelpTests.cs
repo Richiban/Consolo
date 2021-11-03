@@ -7,7 +7,7 @@ namespace Richiban.Cmdr.Tests.Routes
         [Test]
         public void ExplicitHelpGlyphResultsInHelpWithXmlCommentsForRoute()
         {
-            var outputHelp = RunTest("test-route-1", "/?").OutputHelp;
+            var outputHelp = RunTest("test-route-1", "-?").OutputHelp;
 
             Assert.That(outputHelp, Does.Contain("This is the comment for test-route-1"));
         }

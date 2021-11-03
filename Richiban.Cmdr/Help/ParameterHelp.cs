@@ -36,9 +36,9 @@ namespace Richiban.Cmdr
             string parameterName(ParameterName pName) =>
                 pName is ParameterName.ShortForm s
                     ?
-                    $"{CommandLineEnvironment.ShortFormFlagGlyph}{pName}"
+                    $"-{pName}"
                     : IsFlag
-                        ? $"{CommandLineEnvironment.FlagGlyph}{pName}"
+                        ? $"-{pName}"
                         : $"<{pName}>";
 
             var namesString = string.Join("|", ParameterNames.Select(parameterName));

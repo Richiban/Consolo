@@ -75,7 +75,7 @@ namespace Richiban.Cmdr
                             when parameterModel.MatchesName(bnf.Name):
                             if (enumerator.MoveNext())
                             {
-                                if (enumerator.Current is CommandLineArgument.Free free)
+                                if (enumerator.Current is CommandLineArgument.Positional free)
                                 {
                                     argumentsMatched.Add(bnf);
                                     argumentsMatched.Add(free);
@@ -120,7 +120,7 @@ namespace Richiban.Cmdr
             var argumentsMatched = new List<CommandLineArgument>();
             var suppliedValues = new List<string>();
 
-            foreach (var free in args.OfType<CommandLineArgument.Free>())
+            foreach (var free in args.OfType<CommandLineArgument.Positional>())
             {
                 suppliedValues.Add(free.Value);
                 argumentsMatched.Add(free);
