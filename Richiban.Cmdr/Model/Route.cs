@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Richiban.CommandLine
+namespace Richiban.Cmdr
 {
     internal class Route : IReadOnlyList<Verb>
     {

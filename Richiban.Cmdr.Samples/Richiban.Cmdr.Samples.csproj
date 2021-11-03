@@ -57,7 +57,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Richiban.CommandLine\Richiban.CommandLine.csproj">
+    <ProjectReference Include="..\Richiban.Cmdr\Richiban.Cmdr.csproj">
       <Project>{13AB2751-5319-4591-9FFF-75F2C0089845}</Project>
       <Name>Richiban.CommandLine</Name>
     </ProjectReference>

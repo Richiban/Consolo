@@ -1,7 +1,7 @@
-﻿using Richiban.CommandLine;
+﻿using Richiban.Cmdr;
 using System;
 
-namespace Richiban.CommandLine.Samples
+namespace Richiban.Cmdr.Samples
 {
     public class PushAction
     {

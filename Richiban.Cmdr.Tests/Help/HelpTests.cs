@@ -1,6 +1,6 @@
 ﻿using NUnit.Framework;
 
-namespace Richiban.CommandLine.Tests.Routes
+namespace Richiban.Cmdr.Tests.Routes
 {
     class HelpTests : CommandLineTest
     {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Richiban.CommandLine
+namespace Richiban.Cmdr
 {
     /// <summary>
     /// Define a short form for your flag parameter.

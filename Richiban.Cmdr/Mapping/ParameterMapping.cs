@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using static Richiban.CommandLine.Prelude;
+using static Richiban.Cmdr.Prelude;
 
-namespace Richiban.CommandLine
+namespace Richiban.Cmdr
 {
     abstract class ParameterMapping
     {

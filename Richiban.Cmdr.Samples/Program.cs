@@ -1,8 +1,8 @@
-﻿using Richiban.CommandLine;
+﻿using Richiban.Cmdr;
 using System;
 using System.Diagnostics;
 
-namespace Richiban.CommandLine.Samples
+namespace Richiban.Cmdr.Samples
 {
     /// <summary>
     /// This program is intended to be a copy of the git command line.

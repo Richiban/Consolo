@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using TracerAttributes;
 
-namespace Richiban.CommandLine
+namespace Richiban.Cmdr
 {
     class AssemblyModel : IReadOnlyCollection<MethodModel>
     {

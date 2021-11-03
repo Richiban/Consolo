@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TracerAttributes;
 
-namespace Richiban.CommandLine
+namespace Richiban.Cmdr
 {
     internal class CommandLineActionFactory
     {

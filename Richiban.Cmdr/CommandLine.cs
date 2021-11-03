@@ -4,17 +4,17 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace Richiban.CommandLine
+namespace Richiban.Cmdr
 {
     /// <summary>
-    /// The entrypoints for Richiban.CommandLine
+    /// The entrypoints for Richiban.Cmdr
     /// </summary>
     public static class CommandLine
     {
         private static Action<string> _traceOutput = (s => Debug.WriteLine(s));
 
         /// <summary>
-        /// The default entrypoint for Richiban.CommandLine
+        /// The default entrypoint for Richiban.Cmdr
         /// </summary>
         /// <param name="args">The command line arguments</param>
         /// <returns>The object returned by the target method (or null if the method was void)</returns>
@@ -23,7 +23,7 @@ namespace Richiban.CommandLine
             Execute(CommandLineConfiguration.GetDefault(), args);
 
         /// <summary>
-        /// The entrypoint for Richiban.CommandLine that supports custom configuration
+        /// The entrypoint for Richiban.Cmdr that supports custom configuration
         /// </summary>
         /// <param name="config">The CommandLine configuration</param>
         /// <param name="args">The command line arguments</param>

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Richiban.CommandLine.Tests.TypeConversion
+namespace Richiban.Cmdr.Tests.TypeConversion
 {
     [TestFixture]
     class EnumTypeConversionTests : CommandLineTest

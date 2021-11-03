@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Richiban.CommandLine.Tests.DependencyInjection
+namespace Richiban.Cmdr.Tests.DependencyInjection
 {
     [Route]
     class DependencyInjectionTestProgram

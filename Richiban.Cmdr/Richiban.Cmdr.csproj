@@ -2,13 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyName>Richiban.CommandLine</AssemblyName>
-    <RootNamespace>Richiban.CommandLine</RootNamespace>
+    <AssemblyName>Richiban.Cmdr</AssemblyName>
+    <RootNamespace>Richiban.Cmdr</RootNamespace>
   </PropertyGroup>
 
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
-    <DocumentationFile>bin\Debug\netstandard2.0\Richiban.CommandLine.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\netstandard2.0\Richiban.Cmdr.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

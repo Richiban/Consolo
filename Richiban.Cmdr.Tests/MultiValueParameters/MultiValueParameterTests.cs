@@ -1,6 +1,6 @@
 ﻿using NUnit.Framework;
 
-namespace Richiban.CommandLine.Tests
+namespace Richiban.Cmdr.Tests
 {
     class MultiValueParameterTests : CommandLineTest
     {

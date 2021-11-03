@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using static Richiban.CommandLine.Prelude;
+using static Richiban.Cmdr.Prelude;
 
-namespace Richiban.CommandLine
+namespace Richiban.Cmdr
 {
     class ConstructFromStringTypeConverter : ITypeConverter
     {

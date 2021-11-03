@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Richiban.CommandLine.Tests.Routes
+namespace Richiban.Cmdr.Tests.Routes
 {
     class RouteTests : CommandLineTest
     {

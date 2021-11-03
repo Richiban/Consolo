@@ -1,6 +1,6 @@
 ﻿using NUnit.Framework;
 
-namespace Richiban.CommandLine.Tests.TypeConversion
+namespace Richiban.Cmdr.Tests.TypeConversion
 {
     [TestFixture]
     class UriTypeConversionTests : CommandLineTest

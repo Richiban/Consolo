@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Richiban.CommandLine
+namespace Richiban.Cmdr
 {
     class HelpBuilder
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Richiban.CommandLine.Samples.Actions
+namespace Richiban.Cmdr.Samples.Actions
 {
     class AddAction
     {

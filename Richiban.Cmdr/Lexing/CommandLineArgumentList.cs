@@ -3,7 +3,7 @@ using System.Collections;
 using System.Linq;
 using AutoLazy;
 
-namespace Richiban.CommandLine
+namespace Richiban.Cmdr
 {
     internal class CommandLineArgumentList : IReadOnlyList<CommandLineArgument>
     {

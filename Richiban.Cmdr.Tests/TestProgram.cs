@@ -1,4 +1,4 @@
-﻿namespace Richiban.CommandLine.Tests
+﻿namespace Richiban.Cmdr.Tests
 {
     class TestProgram
     {

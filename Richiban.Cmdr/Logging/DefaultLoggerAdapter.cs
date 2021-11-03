@@ -1,5 +1,5 @@
 ﻿using NullGuard;
-using Richiban.CommandLine;
+using Richiban.Cmdr;
 using System;
 using System.Collections;
 using System.Linq;
@@ -61,18 +61,18 @@ namespace Tracer
 
             if (!(paramValue is string) && paramValue is IEnumerable e)
             {
-                Richiban.CommandLine.CommandLine.Trace($"{paramName} => ", indentationLevel: 1);
+                Richiban.Cmdr.CommandLine.Trace($"{paramName} => ", indentationLevel: 1);
 
                 foreach (var item in e)
                 {
-                    Richiban.CommandLine.CommandLine.Trace(
+                    Richiban.Cmdr.CommandLine.Trace(
                         $"{item}", indentationLevel: 2);
                 }
 
                 return;
             }
 
-            Richiban.CommandLine.CommandLine.Trace($"{paramName} => {paramValue}", indentationLevel: 1);
+            Richiban.Cmdr.CommandLine.Trace($"{paramName} => {paramValue}", indentationLevel: 1);
         }
     }
 }

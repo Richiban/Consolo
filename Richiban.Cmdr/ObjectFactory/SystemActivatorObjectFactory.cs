@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace Richiban.CommandLine
+namespace Richiban.Cmdr
 {
     internal class SystemActivatorObjectFactory
     {

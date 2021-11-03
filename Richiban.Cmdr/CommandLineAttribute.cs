@@ -1,9 +1,9 @@
 ﻿using System;
 
-namespace Richiban.CommandLine
+namespace Richiban.Cmdr
 {
     /// <summary>
-    /// Tag your methods with this attribute and they will be scanned by Richiban.CommandLine,
+    /// Tag your methods with this attribute and they will be scanned by Richiban.Cmdr,
     /// ready to be called.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]

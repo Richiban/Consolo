@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Richiban.CommandLine.Tests.DependencyInjection
+namespace Richiban.Cmdr.Tests.DependencyInjection
 {
     internal class TestDependencyContainer
     {

@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Richiban.CommandLine.Tests.Validation
+namespace Richiban.Cmdr.Tests.Validation
 {
     class NullArgumentTests
     {

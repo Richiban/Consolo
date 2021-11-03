@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Richiban.CommandLine
+namespace Richiban.Cmdr
 {
     /// <summary>
     /// Use the RouteAttribute to have your command line action respond to a verb. This attribute can be placed 

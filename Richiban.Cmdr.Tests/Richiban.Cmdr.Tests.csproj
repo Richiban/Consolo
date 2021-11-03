@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\Debug\netcoreapp2.0\Richiban.CommandLine.Tests.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\netcoreapp2.0\Richiban.Cmdr.Tests.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Richiban.CommandLine\Richiban.CommandLine.csproj" />
+    <ProjectReference Include="..\Richiban.Cmdr\Richiban.Cmdr.csproj" />
   </ItemGroup>
 
 </Project>

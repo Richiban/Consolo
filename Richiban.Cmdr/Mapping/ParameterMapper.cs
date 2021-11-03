@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using static Richiban.CommandLine.Prelude;
+using static Richiban.Cmdr.Prelude;
 
-namespace Richiban.CommandLine
+namespace Richiban.Cmdr
 {
     class ParameterMapper
     {

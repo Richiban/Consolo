@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Richiban.CommandLine
+namespace Richiban.Cmdr
 {
     /// <summary>
     /// Define alternative names for a parameter. Primarily used if you want your parameter to have

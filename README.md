@@ -11,7 +11,7 @@ var options = SomeLibrary.Parse<MyOptions>();
 The problem with this is twofold: first, you must then write the branching logic yourself to execute whatever logic you want based on what was set on your options object and second, 
 this has no support for _verbs_ at the command line (more on that later).
 
-My goal with Richiban.CommandLine was to create a library that felt--as much as possible--as if you could simple call your C# methods directly from the command line. For example, if
+My goal with Richiban.Cmdr was to create a library that felt--as much as possible--as if you could simple call your C# methods directly from the command line. For example, if
 I have a method called `ProcessItems` that takes two arguments: an `int batchSize` and a `bool waitBetweenBatches` then I want to write absolutely as little code as I possibly can
 apart from:
 
@@ -36,10 +36,10 @@ I should then be able to call it like this:
 myApp.exe 1000 /waitBetweenBatches
 ```
 
-Well, I feel that this has been achieved with Richiban.CommandLine; this example would be implemented like this:
+Well, I feel that this has been achieved with Richiban.Cmdr; this example would be implemented like this:
 
 ```csharp
-using Richiban.CommandLine;
+using Richiban.Cmdr;
 
 public class Program
 {
@@ -59,7 +59,7 @@ which can, indeed, be called like this:
 myApp.exe 1000 /waitBetweenBatches
 ```
 
-As you can, once I've installed the Richiban.CommandLine NuGet package I've had to write almost no code to make the method callable from the command line.
+As you can, once I've installed the Richiban.Cmdr NuGet package I've had to write almost no code to make the method callable from the command line.
 
 Multiple methods can be tagged. All that matters is that the command line arguments have unique names‡.
 
@@ -84,7 +84,7 @@ public class Program
 
 > ‡For more complicated scenarios (i.e. when you have a lot of methods) see the section on _verbs_ below.
 
-## What are some of the features of Richiban.CommandLine?
+## What are some of the features of Richiban.Cmdr?
 
 ### It supports Unix-style, Windows-style and Powershell-style argument passing
 
@@ -138,7 +138,7 @@ We're getting into more advanced terratory now. Let's look at an example from th
 git remote add origin http://example.com/project.git
 ```
 
-In the example above, the tokens `remote` and `add` are _verbs_, and `origin` and `http://example.com/project.git` are the arguments. Richiban.CommandLine supports verbs! Since, technically, only the last of these tokens is really a verb we call them _routes_. This example with two route parts and two arguments would look like this:
+In the example above, the tokens `remote` and `add` are _verbs_, and `origin` and `http://example.com/project.git` are the arguments. Richiban.Cmdr supports verbs! Since, technically, only the last of these tokens is really a verb we call them _routes_. This example with two route parts and two arguments would look like this:
 
 ```csharp
 [CommandLine, Route("remote", "add")]
@@ -257,7 +257,7 @@ public class SomeClass
 }
 ```
 
-Well, it is easy with Richiban.CommandLine! First, we note that there is an overload of `CommandLine.Execute` that takes a `CommandLineConfiguration` object. Let's look at the
+Well, it is easy with Richiban.Cmdr! First, we note that there is an overload of `CommandLine.Execute` that takes a `CommandLineConfiguration` object. Let's look at the
 `CommandLineConfiguration` type:
 
 ```csharp
@@ -292,7 +292,7 @@ public static void Main(string[] args)
 
 ### Automatic help
 
-One of Richiban.CommandLine's best features is its ability to auto generate help for the users of your command line app.
+One of Richiban.Cmdr's best features is its ability to auto generate help for the users of your command line app.
 
 For example, let's assume we have the following application:
 
@@ -323,7 +323,7 @@ Help for method1:
     myapp method1 <someArgument> [--someFlag]
 ```
 
-> Note the `--` prefix to `someFlag`. Since there isn't a 'correct' way of writing flags or named arguments in Richiban.CommandLine, a best guess is made when writing auto-help. Currently this is relies on the path separator for your system, so on Windows this would appear as: `myapp method1 <someArgument> [/someFlag]`.
+> Note the `--` prefix to `someFlag`. Since there isn't a 'correct' way of writing flags or named arguments in Richiban.Cmdr, a best guess is made when writing auto-help. Currently this is relies on the path separator for your system, so on Windows this would appear as: `myapp method1 <someArgument> [/someFlag]`.
 
 If the user calls `help` and the arguments they have supplied are ambiguous then auto-help will be displayed for all routes that even partially match what they did supply.
 
@@ -350,7 +350,7 @@ public void MyMethod(string param1, FileInfo param2, [ShortForm('f')] bool someF
 This method will then appear in help as follows:
 
 ```
-Richiban.CommandLine.Samples.exe method <param1> <param2> [-f|--someFlag]
+Richiban.Cmdr.Samples.exe method <param1> <param2> [-f|--someFlag]
     This is a comment for my method.
 
     Parameters:
@@ -447,4 +447,4 @@ If using `params` then this parameter will hoover up all remaining (unnamed) arg
 ```
 
 -------
-That's about it for the readme. Please feel free to read the issues in this project to see what's coming further down the road or, if you dream up more features for Richiban.CommandLine, post an issue of your own. I also welcome (expected) PRs so contact me before starting any work.
+That's about it for the readme. Please feel free to read the issues in this project to see what's coming further down the road or, if you dream up more features for Richiban.Cmdr, post an issue of your own. I also welcome (expected) PRs so contact me before starting any work.

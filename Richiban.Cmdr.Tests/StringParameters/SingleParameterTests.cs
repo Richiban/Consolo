@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Richiban.CommandLine.Tests
+namespace Richiban.Cmdr.Tests
 {
     class SingleParameterTests : CommandLineTest
     {

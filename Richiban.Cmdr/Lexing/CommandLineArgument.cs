@@ -1,4 +1,4 @@
-﻿namespace Richiban.CommandLine
+﻿namespace Richiban.Cmdr
 {
     abstract class CommandLineArgument
     {

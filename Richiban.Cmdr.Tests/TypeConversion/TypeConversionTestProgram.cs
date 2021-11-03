@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Richiban.CommandLine.Tests.TypeConversion
+namespace Richiban.Cmdr.Tests.TypeConversion
 {
     [Route("type-conversion-tests")]
     class TypeConversionTestProgram

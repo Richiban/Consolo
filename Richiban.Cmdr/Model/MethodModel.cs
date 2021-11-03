@@ -2,7 +2,7 @@
 using System;
 using System.Reflection;
 
-namespace Richiban.CommandLine
+namespace Richiban.Cmdr
 {
     internal class MethodModel
     {

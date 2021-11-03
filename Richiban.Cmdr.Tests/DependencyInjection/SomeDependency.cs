@@ -1,4 +1,4 @@
-﻿namespace Richiban.CommandLine.Tests.DependencyInjection
+﻿namespace Richiban.Cmdr.Tests.DependencyInjection
 {
     class SomeDependency : ISomeDependency
     {

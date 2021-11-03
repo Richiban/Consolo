@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Xml.Linq;
 using System.Xml.XPath;
 
-namespace Richiban.CommandLine
+namespace Richiban.Cmdr
 {
     internal class XmlCommentsRepository
     {

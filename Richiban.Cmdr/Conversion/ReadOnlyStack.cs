@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace Richiban.CommandLine
+namespace Richiban.Cmdr
 {
     abstract class ImmutableStack<T>
     {

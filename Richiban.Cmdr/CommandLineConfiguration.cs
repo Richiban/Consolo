@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 
-namespace Richiban.CommandLine
+namespace Richiban.Cmdr
 {
     /// <summary>
-    /// The class through which the behaviour and functionality of Richiban.CommandLine can be customised
+    /// The class through which the behaviour and functionality of Richiban.Cmdr can be customised
     /// </summary>
     public class CommandLineConfiguration
     {

@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Richiban.CommandLine
+namespace Richiban.Cmdr
 {
     class SystemConvertibleTypeConverter : ITypeConverter
     {

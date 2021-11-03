@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Richiban.CommandLine
+namespace Richiban.Cmdr
 {
     abstract class ParameterName
     {

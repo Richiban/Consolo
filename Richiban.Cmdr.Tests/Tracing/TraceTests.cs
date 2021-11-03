@@ -1,7 +1,7 @@
 ﻿using NUnit.Framework;
 using System;
 
-namespace Richiban.CommandLine.Tests
+namespace Richiban.Cmdr.Tests
 {
     class TraceTests : CommandLineTest
     {
@@ -11,7 +11,7 @@ namespace Richiban.CommandLine.Tests
             var traceOutput = RunTest().TraceOutput;
 
             var expectedContent = @"[Trace]: Scanning assemblies: 
-        Richiban.CommandLine.Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null";
+        Richiban.Cmdr.Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null";
 
             Assert.That(traceOutput, Does.Contain(expectedContent));
         }
@@ -23,11 +23,11 @@ namespace Richiban.CommandLine.Tests
 
             var expectedContent = new[] {
                 @"[Trace]: Registered ITypeConverter instances:",
-                "        Richiban.CommandLine.MissingValueTypeConverter",
-                "        Richiban.CommandLine.StringPassthroughTypeConverter",
-                "        Richiban.CommandLine.EnumTypeConverter",
-                "        Richiban.CommandLine.SystemConvertibleTypeConverter",
-                "        Richiban.CommandLine.ConstructFromStringTypeConverter"};
+                "        Richiban.Cmdr.MissingValueTypeConverter",
+                "        Richiban.Cmdr.StringPassthroughTypeConverter",
+                "        Richiban.Cmdr.EnumTypeConverter",
+                "        Richiban.Cmdr.SystemConvertibleTypeConverter",
+                "        Richiban.Cmdr.ConstructFromStringTypeConverter"};
 
             foreach(var expectedContent1 in expectedContent)
             {
@@ -40,7 +40,7 @@ namespace Richiban.CommandLine.Tests
         {
             var traceOutput = RunTest().TraceOutput;
 
-            var expectedContent = "[Trace]: Attempting to map method Richiban.CommandLine.Tests.TestProgram.SingleStringParameterTestAction from arguments \"\"";
+            var expectedContent = "[Trace]: Attempting to map method Richiban.Cmdr.Tests.TestProgram.SingleStringParameterTestAction from arguments \"\"";
 
             Assert.That(traceOutput, Does.Contain(expectedContent));
         }
