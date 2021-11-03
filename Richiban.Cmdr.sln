@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Richiban.Cmdr.Samples", "Ri
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Richiban.Cmdr.Tests", "Richiban.Cmdr.Tests\Richiban.Cmdr.Tests.csproj", "{35E4E333-074E-4DD2-99E5-C2F31F049CF5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Richiban.Cmdr.Samples2", "Richiban.Cmdr.Samples2\Richiban.Cmdr.Samples2.csproj", "{B5EAA108-BD2C-40ED-93CE-7DA6211FD367}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,10 @@ Global
 		{35E4E333-074E-4DD2-99E5-C2F31F049CF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{35E4E333-074E-4DD2-99E5-C2F31F049CF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{35E4E333-074E-4DD2-99E5-C2F31F049CF5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B5EAA108-BD2C-40ED-93CE-7DA6211FD367}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5EAA108-BD2C-40ED-93CE-7DA6211FD367}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5EAA108-BD2C-40ED-93CE-7DA6211FD367}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5EAA108-BD2C-40ED-93CE-7DA6211FD367}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
