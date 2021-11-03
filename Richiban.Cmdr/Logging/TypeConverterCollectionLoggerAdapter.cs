@@ -1,16 +1,21 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Richiban.Cmdr;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Richiban.Cmdr;
 
 namespace Tracer
 {
-    class TypeConverterCollectionLoggerAdapter : LoggerAdapterBase
+    internal class TypeConverterCollectionLoggerAdapter : LoggerAdapterBase
     {
-        public override void TraceEnter(string methodInfo, [AllowNull]string[] paramNames, [AllowNull]object[] paramValues)
+        public override void TraceEnter(
+            string methodInfo,
+            [AllowNull] string[] paramNames,
+            [AllowNull] object[] paramValues)
         {
             if (methodInfo.Contains(".ctor"))
             {
-                CommandLine.Trace($"[Trace]: Registered {nameof(ITypeConverter)} instances:");
+                CommandLine.Trace(
+                    $"[Trace]: Registered {nameof(ITypeConverter)} instances:");
 
                 if (paramNames != null && paramValues != null && paramValues.Length >= 1)
                 {
@@ -19,7 +24,12 @@ namespace Tracer
             }
         }
 
-        public override void TraceLeave(string methodInfo, long startTicks, long endTicks, [AllowNull]string[] paramNames, [AllowNull]object[] paramValues)
+        public override void TraceLeave(
+            string methodInfo,
+            long startTicks,
+            long endTicks,
+            [AllowNull] string[] paramNames,
+            [AllowNull] object[] paramValues)
         {
         }
     }

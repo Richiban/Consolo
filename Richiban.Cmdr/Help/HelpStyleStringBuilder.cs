@@ -4,12 +4,12 @@ using System.Text;
 
 namespace Richiban.Cmdr
 {
-    class HelpStyleStringBuilder
+    internal class HelpStyleStringBuilder
     {
         private readonly StringBuilder _stringBuilder;
+        private string _indentation;
 
         private int _indentationLevel;
-        private string _indentation;
         private bool _isAtStartOfLine = true;
 
         public HelpStyleStringBuilder()
@@ -33,17 +33,24 @@ namespace Richiban.Cmdr
 
         public void Append(string s)
         {
-            if (String.IsNullOrEmpty(s))
+            if (string.IsNullOrEmpty(s))
+            {
                 return;
+            }
 
-            if(_isAtStartOfLine)
+            if (_isAtStartOfLine)
+            {
                 _stringBuilder.Append(_indentation);
+            }
 
             _stringBuilder.Append(s);
             _isAtStartOfLine = false;
         }
 
         public override string ToString() => _stringBuilder.ToString();
+
+        private void GenerateIndentation() =>
+            _indentation = string.Concat(Enumerable.Repeat(" ", _indentationLevel * 4));
 
         private class HelpStringBuilderIndenter : IDisposable
         {
@@ -62,8 +69,5 @@ namespace Richiban.Cmdr
                 _helpStringBuilder.GenerateIndentation();
             }
         }
-
-        private void GenerateIndentation() =>
-            _indentation = String.Concat(Enumerable.Repeat(" ", _indentationLevel * 4));
     }
 }

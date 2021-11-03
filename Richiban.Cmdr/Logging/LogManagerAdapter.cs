@@ -1,9 +1,9 @@
-﻿using Richiban.Cmdr;
-using System;
+﻿using System;
+using Richiban.Cmdr;
 
 namespace Tracer
 {
-    static class LogManagerAdapter
+    internal static class LogManagerAdapter
     {
         public static LoggerAdapterBase GetLogger(Type type)
         {
@@ -11,30 +11,33 @@ namespace Tracer
             {
                 return new TypeConverterCollectionLoggerAdapter();
             }
-            else if (type == typeof(CommandLine))
+
+            if (type == typeof(CommandLine))
             {
                 return new CommandLineLoggerAdapter();
             }
-            else if (type == typeof(MethodMapper))
+
+            if (type == typeof(MethodMapper))
             {
                 return new MethodMapperLoggerAdapter();
             }
-            else if (type == typeof(AssemblyModel))
+
+            if (type == typeof(AssemblyModel))
             {
                 return new AssemblyModelLoggerAdapter();
             }
-            else if (type == typeof(CommandLineActionFactory))
+
+            if (type == typeof(CommandLineActionFactory))
             {
                 return new CommandLineActionFactoryLoggerAdapter();
             }
-            else if (type == typeof(CommandLineAction))
+
+            if (type == typeof(CommandLineAction))
             {
                 return new CommandLineActionLoggerAdapter();
             }
-            else
-            {
-                return new DefaultLoggerAdapter(type);
-            }
+
+            return new DefaultLoggerAdapter(type);
         }
     }
 }

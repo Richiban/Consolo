@@ -11,7 +11,10 @@ namespace Richiban.Cmdr
             _value = value;
 
             if (Matches("help"))
-                throw new InvalidOperationException("\"help\" is a reserved word and cannot be used in a route");
+            {
+                throw new InvalidOperationException(
+                    "\"help\" is a reserved word and cannot be used in a route");
+            }
         }
 
         public bool Matches(string rawValue) =>

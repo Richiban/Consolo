@@ -2,9 +2,14 @@
 
 namespace Richiban.Cmdr
 {
-    abstract class ParameterName
+    internal abstract class ParameterName
     {
-        private ParameterName() {}
+        private ParameterName()
+        {
+        }
+
+        public abstract bool Matches(string s);
+        public abstract override string ToString();
 
         public class LongForm : ParameterName
         {
@@ -15,7 +20,7 @@ namespace Richiban.Cmdr
 
             public string Value { get; }
 
-            public override bool Matches(string s) => 
+            public override bool Matches(string s) =>
                 Value.Equals(s, StringComparison.InvariantCultureIgnoreCase);
 
             public override string ToString() => Value;
@@ -30,13 +35,10 @@ namespace Richiban.Cmdr
 
             public char Value { get; }
 
-            public override bool Matches(string s) => 
+            public override bool Matches(string s) =>
                 Value.ToString().Equals(s, StringComparison.InvariantCultureIgnoreCase);
 
             public override string ToString() => Value.ToString();
         }
-
-        public abstract bool Matches(string s);
-        public abstract override string ToString();
     }
 }

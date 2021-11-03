@@ -1,12 +1,12 @@
-﻿using AutoLazy;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using AutoLazy;
 
 namespace Richiban.Cmdr
 {
-    class MethodHelp
+    internal class MethodHelp
     {
         public MethodHelp(
             string executableName,
@@ -30,13 +30,13 @@ namespace Richiban.Cmdr
         {
             var builder = new HelpStyleStringBuilder();
 
-            var parameterHeadings = String.Join(" ", ParameterHelp);
+            var parameterHeadings = string.Join(" ", ParameterHelp);
 
             builder.AppendLine($@"{ExecutableName} {RouteHelp} {parameterHeadings}");
 
             using (builder.Indent())
             {
-                if (!String.IsNullOrEmpty(MethodXmlComments))
+                if (!string.IsNullOrEmpty(MethodXmlComments))
                 {
                     builder.AppendLine(MethodXmlComments);
                     builder.AppendLine();
@@ -46,9 +46,8 @@ namespace Richiban.Cmdr
                     builder.AppendLine();
                 }
 
-                var parameterHelpsToUse = ParameterHelp
-                    .Select(h => GetParameterHelp(h))
-                    .Where(h => !String.IsNullOrEmpty(h));
+                var parameterHelpsToUse = ParameterHelp.Select(h => GetParameterHelp(h))
+                    .Where(h => !string.IsNullOrEmpty(h));
 
                 if (parameterHelpsToUse.Any())
                 {
@@ -70,11 +69,15 @@ namespace Richiban.Cmdr
 
         private string GetParameterHelp(ParameterHelp parameterHelp)
         {
-            var isInterestingType = parameterHelp.Type != typeof(string) && parameterHelp.Type != typeof(bool);
-            var hasXmlComment = !String.IsNullOrEmpty(parameterHelp.XmlComments);
+            var isInterestingType = parameterHelp.Type != typeof(string) &&
+                                    parameterHelp.Type != typeof(bool);
+
+            var hasXmlComment = !string.IsNullOrEmpty(parameterHelp.XmlComments);
 
             if (isInterestingType == false && hasXmlComment == false)
+            {
                 return "";
+            }
 
             var builder = new StringBuilder();
             builder.Append(parameterHelp);
@@ -90,7 +93,7 @@ namespace Richiban.Cmdr
                 }
 
                 builder.Append("Type: ");
-                builder.Append(parameterHelp.Type.ToString());
+                builder.Append(parameterHelp.Type);
             }
 
             return builder.ToString();

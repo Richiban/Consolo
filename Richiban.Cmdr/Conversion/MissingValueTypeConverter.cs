@@ -1,10 +1,10 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Richiban.Cmdr
 {
-    class MissingValueTypeConverter : ITypeConverter
+    internal class MissingValueTypeConverter : ITypeConverter
     {
         public bool TryConvertValue(
             Type convertToType,
@@ -14,13 +14,13 @@ namespace Richiban.Cmdr
             if (rawValues.Count == 0)
             {
                 convertedValue = Type.Missing;
+
                 return true;
             }
-            else
-            {
-                convertedValue = null;
-                return false;
-            }
+
+            convertedValue = null;
+
+            return false;
         }
     }
 }

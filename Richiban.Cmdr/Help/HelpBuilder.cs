@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Richiban.Cmdr
 {
-    class HelpBuilder
+    internal class HelpBuilder
     {
         private readonly XmlCommentsRepository _xmlComments;
 
@@ -19,22 +19,28 @@ namespace Richiban.Cmdr
             IEnumerable<MethodModel> models,
             IReadOnlyCollection<CommandLineAction> resolvedCommandLineActions)
         {
-            var (maxAccuracy, modelsForHelp) = models.AllByMax(m => m.GetPartialMatchAccuracy(commandLineArgs));
+            var (maxAccuracy, modelsForHelp) = models.AllByMax(
+                m => m.GetPartialMatchAccuracy(commandLineArgs));
 
             var sb = new StringBuilder();
 
             if (!commandLineArgs.IsCallForHelp)
             {
-                if (resolvedCommandLineActions.Count == 0)
+                switch (resolvedCommandLineActions)
                 {
-                    sb.AppendLine("Could not match the given arguments to a command");
-                    sb.AppendLine("");
-                }
-                else if (resolvedCommandLineActions.Count > 1)
-                {
-                    sb.AppendLine("The given arguments are ambiguous between the following:");
+                    case { Count: 0 }:
+                        sb.AppendLine("Could not match the given arguments to a command");
+                        sb.AppendLine("");
 
-                    modelsForHelp = resolvedCommandLineActions.Select(a => a.Model).ToList();
+                        break;
+                    case { Count: > 1 }:
+                        sb.AppendLine(
+                            "The given arguments are ambiguous between the following:");
+
+                        modelsForHelp = resolvedCommandLineActions.Select(a => a.Model)
+                            .ToList();
+
+                        break;
                 }
             }
 
@@ -44,12 +50,13 @@ namespace Richiban.Cmdr
             }
             else
             {
-                sb.AppendLine($"Help for {String.Join(" ", commandLineArgs.Take(maxAccuracy))}:");
+                sb.AppendLine(
+                    $"Help for {string.Join(" ", commandLineArgs.Take(maxAccuracy))}:");
             }
 
             sb.AppendLine("");
 
-            foreach(var model in modelsForHelp)
+            foreach (var model in modelsForHelp)
             {
                 sb.AppendLine(BuildForMethod(model).ToString());
             }
@@ -65,35 +72,36 @@ namespace Richiban.Cmdr
                 AppDomain.CurrentDomain.FriendlyName,
                 HelpForRoutes(method.Routes),
                 xmlComments.Match(Some: x => x.MethodComments, None: () => ""),
-                method.Parameters.Select(p => new ParameterHelp(
-                    p.Names,
-                    p.AllowNoValues,
-                    p.IsFlag,
-                    p.AllowMultipleValues,
-                    p.ParameterType,
-                    GetCommentsForParameterOrEmpty(p.OriginalName, xmlComments))).ToList());
+                method.Parameters.Select(
+                        p => new ParameterHelp(
+                            p.Names,
+                            p.AllowNoValues,
+                            p.IsFlag,
+                            p.AllowMultipleValues,
+                            p.ParameterType,
+                            GetCommentsForParameterOrEmpty(p.OriginalName, xmlComments)))
+                    .ToList());
         }
 
-        private string GetCommentsForParameterOrEmpty(string parameterName, Option<XmlComments> xmlComments)
+        private string GetCommentsForParameterOrEmpty(
+            string parameterName,
+            Option<XmlComments> xmlComments)
         {
-            return
-                xmlComments.Match(
-                    Some: x => x.ParameterComments.ContainsKey(parameterName)
-                        ? x.ParameterComments[parameterName]
-                        : "",
-                    None: () => "");
+            return xmlComments.Match(
+                Some: x => x.ParameterComments.ContainsKey(parameterName)
+                    ? x.ParameterComments[parameterName]
+                    : "",
+                None: () => "");
         }
 
         private string HelpForRoutes(RouteCollection routes)
         {
             var helpItems = routes.Select(buildHelpForSequence);
 
-            return String.Join("|", helpItems);
+            return string.Join("|", helpItems);
 
-            string buildHelpForSequence(IReadOnlyList<Verb> verbSequence)
-            {
-                return String.Join(" ", verbSequence);
-            }
+            string buildHelpForSequence(IReadOnlyList<Verb> verbSequence) =>
+                string.Join(" ", verbSequence);
         }
     }
 }

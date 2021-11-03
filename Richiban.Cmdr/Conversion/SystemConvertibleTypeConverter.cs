@@ -1,27 +1,34 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Richiban.Cmdr
 {
-    class SystemConvertibleTypeConverter : ITypeConverter
+    internal class SystemConvertibleTypeConverter : ITypeConverter
     {
         public bool TryConvertValue(
             Type convertToType,
             IReadOnlyList<string> rawValues,
             [AllowNull] out object convertedValue)
         {
-            if (typeof(IConvertible).IsAssignableFrom(convertToType) && rawValues.Count == 1)
+            if (typeof(IConvertible).IsAssignableFrom(convertToType) &&
+                rawValues.Count == 1)
             {
                 try
                 {
-                    convertedValue = Convert.ChangeType(rawValues[0], convertToType);
+                    convertedValue = Convert.ChangeType(
+                        rawValues[index: 0],
+                        convertToType);
+
                     return true;
                 }
-                catch (Exception) { }
+                catch (Exception)
+                {
+                }
             }
 
             convertedValue = null;
+
             return false;
         }
     }

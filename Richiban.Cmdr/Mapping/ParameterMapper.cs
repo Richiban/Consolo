@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using static Richiban.Cmdr.Prelude;
 
 namespace Richiban.Cmdr
 {
-    class ParameterMapper
+    internal class ParameterMapper
     {
         public Option<(ParameterMapping, CommandLineArgumentList remainingArguments)> Map(
             ParameterModel parameterModel,
@@ -13,12 +14,16 @@ namespace Richiban.Cmdr
             var maybeMappingByName = NamedPass(parameterModel, args);
 
             if (maybeMappingByName.HasValue)
+            {
                 return maybeMappingByName;
+            }
 
             var maybeMappingByPosition = PositionalPass(parameterModel, args);
 
             if (maybeMappingByPosition.HasValue)
+            {
                 return maybeMappingByPosition;
+            }
 
             if (parameterModel.AllowNoValues)
             {
@@ -28,9 +33,8 @@ namespace Richiban.Cmdr
             return None;
         }
 
-        public Option<(ParameterMapping, CommandLineArgumentList remainingArguments)> NamedPass(
-            ParameterModel parameterModel,
-            CommandLineArgumentList args)
+        public Option<(ParameterMapping, CommandLineArgumentList remainingArguments)>
+            NamedPass(ParameterModel parameterModel, CommandLineArgumentList args)
         {
             var argumentsMatched = new List<CommandLineArgument>();
             var suppliedValues = new List<string>();
@@ -42,30 +46,33 @@ namespace Richiban.Cmdr
                     switch (enumerator.Current)
                     {
                         case CommandLineArgument.NameValuePair nvPair
-                        when parameterModel.MatchesName(nvPair.Name):
+                            when parameterModel.MatchesName(nvPair.Name):
 
                             argumentsMatched.Add(nvPair);
 
                             if (parameterModel.AllowMultipleValues)
                             {
                                 suppliedValues.Add(nvPair.Value);
+
                                 continue;
                             }
 
                             return (
-                                new ParameterMapping.NamedValue(parameterModel, ListOf(nvPair.Value)),
+                                new ParameterMapping.NamedValue(
+                                    parameterModel,
+                                    ListOf(nvPair.Value)),
                                 args.Without(argumentsMatched));
 
                         case CommandLineArgument.BareNameOrFlag nameOrFlag
-                        when parameterModel.MatchesName(nameOrFlag.Name) && parameterModel.IsFlag:
+                            when parameterModel.MatchesName(nameOrFlag.Name) &&
+                                 parameterModel.IsFlag:
                             argumentsMatched.Add(nameOrFlag);
 
-                            return (
-                                new ParameterMapping.Flag(parameterModel),
+                            return (new ParameterMapping.Flag(parameterModel),
                                 args.Without(argumentsMatched));
 
                         case CommandLineArgument.BareNameOrFlag bnf
-                        when parameterModel.MatchesName(bnf.Name):
+                            when parameterModel.MatchesName(bnf.Name):
                             if (enumerator.MoveNext())
                             {
                                 if (enumerator.Current is CommandLineArgument.Free free)
@@ -76,6 +83,7 @@ namespace Richiban.Cmdr
                                     if (parameterModel.AllowMultipleValues)
                                     {
                                         suppliedValues.Add(free.Value);
+
                                         continue;
                                     }
 
@@ -88,29 +96,26 @@ namespace Richiban.Cmdr
                             }
 
                             break;
-
-                        default:
-                            break;
                     }
                 }
             }
 
             if (parameterModel.AllowMultipleValues && suppliedValues.Any())
             {
-                return (
-                    new ParameterMapping.NamedValue(parameterModel, suppliedValues),
+                return (new ParameterMapping.NamedValue(parameterModel, suppliedValues),
                     args.Without(argumentsMatched));
             }
 
             return default;
         }
 
-        public Option<(ParameterMapping, CommandLineArgumentList remainingArguments)> PositionalPass(
-            ParameterModel parameterModel,
-            CommandLineArgumentList args)
+        public Option<(ParameterMapping, CommandLineArgumentList remainingArguments)>
+            PositionalPass(ParameterModel parameterModel, CommandLineArgumentList args)
         {
             if (parameterModel.IsFlag)
+            {
                 return None;
+            }
 
             var argumentsMatched = new List<CommandLineArgument>();
             var suppliedValues = new List<string>();
@@ -131,8 +136,7 @@ namespace Richiban.Cmdr
                 return None;
             }
 
-            return (
-                new ParameterMapping.PositionalValue(parameterModel, suppliedValues), 
+            return (new ParameterMapping.PositionalValue(parameterModel, suppliedValues),
                 args.Without(argumentsMatched));
         }
     }

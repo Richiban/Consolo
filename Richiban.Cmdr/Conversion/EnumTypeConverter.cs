@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Richiban.Cmdr
 {
-    class EnumTypeConverter : ITypeConverter
+    internal class EnumTypeConverter : ITypeConverter
     {
         public bool TryConvertValue(
             Type convertToType,
@@ -15,14 +15,20 @@ namespace Richiban.Cmdr
             {
                 try
                 {
-                    convertedValue = Enum.Parse(convertToType, rawValues[0], ignoreCase: true);
+                    convertedValue = Enum.Parse(
+                        convertToType,
+                        rawValues[index: 0],
+                        ignoreCase: true);
+
                     return true;
                 }
                 catch (Exception)
-                { }
+                {
+                }
             }
 
             convertedValue = null;
+
             return false;
         }
     }

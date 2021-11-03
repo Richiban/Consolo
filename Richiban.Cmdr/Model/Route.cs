@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,15 +7,19 @@ namespace Richiban.Cmdr
 {
     internal class Route : IReadOnlyList<Verb>
     {
-        private readonly IReadOnlyList<Verb> _verbs;
         private readonly string _methodOrClassName;
-        
+        private readonly IReadOnlyList<Verb> _verbs;
+
         public Route(string methodOrClassName, IReadOnlyList<string> routeParts)
         {
             if (routeParts.Count == 0)
-                _verbs = new [] { new Verb(methodOrClassName) };
+            {
+                _verbs = new[] { new Verb(methodOrClassName) };
+            }
             else
+            {
                 _verbs = routeParts.Where(v => v != "").Select(s => new Verb(s)).ToList();
+            }
 
             _methodOrClassName = methodOrClassName;
         }
@@ -32,8 +37,8 @@ namespace Richiban.Cmdr
         public IEnumerator<Verb> GetEnumerator() => _verbs.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        public (bool isMatch, CommandLineArgumentList remainingArguments) MatchesVerbSequence(
-            CommandLineArgumentList commandLineArguments)
+        public (bool isMatch, CommandLineArgumentList remainingArguments)
+            MatchesVerbSequence(CommandLineArgumentList commandLineArguments)
         {
             var argsMatched = new List<CommandLineArgument>();
 
@@ -43,7 +48,8 @@ namespace Richiban.Cmdr
                 while (verbEnumerator.MoveNext())
                 {
                     if (inputArgumentEnumerator.MoveNext() &&
-                        inputArgumentEnumerator.Current is CommandLineArgument.Free free &&
+                        inputArgumentEnumerator
+                            .Current is CommandLineArgument.Free free &&
                         verbEnumerator.Current.Matches(free.Value))
                     {
                         argsMatched.Add(free);
@@ -54,13 +60,11 @@ namespace Richiban.Cmdr
                     }
                 }
             }
-            
+
             return (true, commandLineArguments.Without(argsMatched));
         }
 
-        public Route Concat(Route otherRoute)
-        {
-            return new Route(_methodOrClassName, _verbs.Concat(otherRoute._verbs).ToList());
-        }
+        public Route Concat(Route otherRoute) =>
+            new(_methodOrClassName, _verbs.Concat(otherRoute._verbs).ToList());
     }
 }

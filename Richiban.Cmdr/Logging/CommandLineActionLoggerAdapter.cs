@@ -1,23 +1,31 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Richiban.Cmdr;
-using System;
 
 namespace Tracer
 {
     internal class CommandLineActionLoggerAdapter : LoggerAdapterBase
     {
         public override void TraceEnter(
-            string methodInfo, [AllowNull]string[] paramNames, [AllowNull]object[] paramValues)
+            string methodInfo,
+            [AllowNull] string[] paramNames,
+            [AllowNull] object[] paramValues)
         {
-            CommandLine.Trace($"[Trace]: Executing action -->");
+            CommandLine.Trace("[Trace]: Executing action -->");
             CommandLine.Trace("");
         }
 
-        public override void TraceLeave(string methodInfo, long startTicks, long endTicks, 
-            [AllowNull]string[] paramNames, [AllowNull]object[] paramValues)
+        public override void TraceLeave(
+            string methodInfo,
+            long startTicks,
+            long endTicks,
+            [AllowNull] string[] paramNames,
+            [AllowNull] object[] paramValues)
         {
             CommandLine.Trace("");
-            CommandLine.Trace($"[Trace]: <-- Action completed in {TimeSpan.FromTicks(endTicks - startTicks)}");
+
+            CommandLine.Trace(
+                $"[Trace]: <-- Action completed in {TimeSpan.FromTicks(endTicks - startTicks)}");
         }
     }
 }

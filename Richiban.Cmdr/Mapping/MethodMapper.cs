@@ -1,16 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using static Richiban.Cmdr.Prelude;
 
 namespace Richiban.Cmdr
 {
-    class MethodMapper
+    internal class MethodMapper
     {
         private readonly ParameterMapper _parameterMapper;
 
-        public MethodMapper(ParameterMapper parameterMapper) => _parameterMapper = parameterMapper;
+        public MethodMapper(ParameterMapper parameterMapper)
+        {
+            _parameterMapper = parameterMapper;
+        }
 
-        
         public Option<MethodMapping> GetMethodMapping(
             MethodModel methodModel,
             CommandLineArgumentList args)
@@ -32,12 +35,13 @@ namespace Richiban.Cmdr
             {
                 var maybePropertyMapping = _parameterMapper.Map(prop, remainingArgs);
 
-                maybePropertyMapping.IfSome(s =>
-                {
-                    var (mapping, _) = s;
-                    remainingArgs = s.remainingArguments;
-                    parameterMappings.Add(mapping);
-                });
+                maybePropertyMapping.IfSome(
+                    s =>
+                    {
+                        var (mapping, _) = s;
+                        remainingArgs = s.remainingArguments;
+                        parameterMappings.Add(mapping);
+                    });
 
                 if (maybePropertyMapping.HasValue == false)
                 {
@@ -46,7 +50,9 @@ namespace Richiban.Cmdr
             }
 
             if (remainingArgs.Any())
+            {
                 return None;
+            }
 
             return new MethodMapping(methodModel, parameterMappings, explicitRouteMatch);
         }

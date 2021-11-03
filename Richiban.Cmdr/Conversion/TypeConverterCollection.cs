@@ -3,17 +3,15 @@ using System.Collections.Generic;
 
 namespace Richiban.Cmdr
 {
-    class TypeConverterCollection
+    internal class TypeConverterCollection
     {
         private readonly ImmutableStack<ITypeConverter> _typeConverters;
 
-        
         public TypeConverterCollection(Stack<ITypeConverter> typeConverters)
         {
             _typeConverters = ImmutableStack<ITypeConverter>.CopyFrom(typeConverters);
         }
 
-        
         public object ConvertValue(Type convertToType, IReadOnlyList<string> rawValues)
         {
             var converterStack = _typeConverters;
@@ -29,20 +27,22 @@ namespace Richiban.Cmdr
                     {
                         return result;
                     }
-                    else
-                    {
-                        throw new TypeConversionException(
-                            TypeConversionException.ATypeConverterReturnedAnIncorrectValue(
-                                rawValues, convertToType, result, converter));
-                    }
+
+                    throw new TypeConversionException(
+                        TypeConversionException.ATypeConverterReturnedAnIncorrectValue(
+                            rawValues,
+                            convertToType,
+                            result,
+                            converter));
                 }
             }
 
             throw new TypeConversionException(
-                TypeConversionException.NoTypeConvertersCouldConvertValue(rawValues, convertToType));
+                TypeConversionException.NoTypeConvertersCouldConvertValue(
+                    rawValues,
+                    convertToType));
         }
 
-        
         private bool TryConvertValue(
             ITypeConverter converter,
             Type convertToType,
@@ -54,13 +54,17 @@ namespace Richiban.Cmdr
                 var elementType = convertToType.GetElementType();
                 var resultantArray = Array.CreateInstance(elementType, rawValues.Count);
 
-                for(var i = 0; i < rawValues.Count; i++)
+                for (var i = 0; i < rawValues.Count; i++)
                 {
                     object convertedValue;
 
-                    if (!converter.TryConvertValue(elementType, new[] { rawValues[i] }, out convertedValue))
+                    if (!converter.TryConvertValue(
+                        elementType,
+                        new[] { rawValues[i] },
+                        out convertedValue))
                     {
                         result = null;
+
                         return false;
                     }
 
@@ -68,19 +72,19 @@ namespace Richiban.Cmdr
                 }
 
                 result = resultantArray;
+
                 return true;
             }
-            else
-            {
-                return converter.TryConvertValue(convertToType, rawValues, out result);
-            }
+
+            return converter.TryConvertValue(convertToType, rawValues, out result);
         }
 
-        
         private static bool ResultIsOfCorrectType(Type convertToType, object result)
         {
             if (result == null || result == Type.Missing)
+            {
                 return true;
+            }
 
             return convertToType.IsAssignableFrom(result.GetType());
         }

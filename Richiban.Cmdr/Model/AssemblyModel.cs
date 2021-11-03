@@ -3,12 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using TracerAttributes;
 
 namespace Richiban.Cmdr
 {
-    class AssemblyModel : IReadOnlyCollection<MethodModel>
+    internal class AssemblyModel : IReadOnlyCollection<MethodModel>
     {
         private readonly IReadOnlyCollection<MethodModel> _methodModels;
 
@@ -27,16 +25,14 @@ namespace Richiban.Cmdr
                 from assembly in assembliesToScan
                 from type in assembly.GetTypes()
                 from method in type.GetMethods()
-                where method
-                        .GetCustomAttributes(inherit: true)
-                        .OfType<CommandLineAttribute>()
-                        .Any()
+                where method.GetCustomAttributes(inherit: true)
+                    .OfType<CommandLineAttribute>()
+                    .Any()
                 select BuildMethodModel(method)).ToArray();
 
             return new AssemblyModel(methodModels);
         }
 
-        private static MethodModel BuildMethodModel(MethodInfo method) =>
-            new MethodModel(method);
+        private static MethodModel BuildMethodModel(MethodInfo method) => new(method);
     }
 }

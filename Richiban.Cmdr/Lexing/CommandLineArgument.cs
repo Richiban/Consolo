@@ -1,46 +1,17 @@
-﻿namespace Richiban.Cmdr
+﻿using System;
+
+namespace Richiban.Cmdr
 {
-    abstract class CommandLineArgument
+    internal abstract class CommandLineArgument
     {
         private readonly string _raw;
 
-        private CommandLineArgument(string raw) => _raw = raw;
+        private CommandLineArgument(string raw)
+        {
+            _raw = raw;
+        }
 
         public override string ToString() => _raw;
-
-        public class Free : CommandLineArgument
-        {
-            public Free(string value) : base(value) =>
-                Value = value;
-
-            public string Value { get; }
-        }
-
-        public class NameValuePair : CommandLineArgument
-        {
-            public NameValuePair(string name, string value, string raw) : base(raw) =>
-                (Name, Value) = (name, value);
-
-            public string Name { get; }
-            public string Value { get; }
-        }
-
-        public class BareNameOrFlag : CommandLineArgument
-        {
-            public BareNameOrFlag(string name, string raw) : base(raw) => Name = name;
-
-            public string Name { get; }
-        }
-
-        public class HelpSwitch : CommandLineArgument
-        {
-            public HelpSwitch(string raw) : base(raw) { }
-        }
-
-        public class DiagnosticSwitch : CommandLineArgument
-        {
-            public DiagnosticSwitch(string raw) : base(raw) { }
-        }
 
         public static CommandLineArgument Parse(string raw, int index)
         {
@@ -54,37 +25,78 @@
                 case "/?trace":
                     return new DiagnosticSwitch(raw);
                 case var _ when raw.StartsWith("/"):
-                    {
-                        var parts = raw.TrimStart('/').Split(':');
+                {
+                    var parts = raw.TrimStart(trimChar: '/').Split(separator: ':');
 
-                        if (parts.Length > 1)
-                        {
-                            return new NameValuePair(parts[0], parts[1], raw);
-                        }
-                        else
-                        {
-                            return new BareNameOrFlag(parts[0], raw);
-                        }
+                    if (parts.Length > 1)
+                    {
+                        return new NameValuePair(parts[0], parts[1], raw);
                     }
+
+                    return new BareNameOrFlag(parts[0], raw);
+                }
                 case var _ when raw.StartsWith("--"):
-                    {
-                        var parts = raw.TrimStart('-').Split('=');
+                {
+                    var parts = raw.TrimStart(trimChar: '-').Split(separator: '=');
 
-                        if (parts.Length > 1)
-                        {
-                            return new NameValuePair(parts[0], parts[1], raw);
-                        }
-                        else
-                        {
-                            return new BareNameOrFlag(parts[0], raw);
-                        }
-                    }
-                case var _ when raw.StartsWith("-"):
+                    if (parts.Length > 1)
                     {
-                        return new BareNameOrFlag(raw.TrimStart('-'), raw);
+                        return new NameValuePair(parts[0], parts[1], raw);
                     }
+
+                    return new BareNameOrFlag(parts[0], raw);
+                }
+                case var _ when raw.StartsWith("-"):
+                {
+                    return new BareNameOrFlag(raw.TrimStart(trimChar: '-'), raw);
+                }
                 default:
                     return new Free(raw);
+            }
+        }
+
+        public class Free : CommandLineArgument
+        {
+            public Free(string value) : base(value)
+            {
+                Value = value;
+            }
+
+            public string Value { get; }
+        }
+
+        public class NameValuePair : CommandLineArgument
+        {
+            public NameValuePair(string name, string value, string raw) : base(raw)
+            {
+                (Name, Value) = (name, value);
+            }
+
+            public string Name { get; }
+            public string Value { get; }
+        }
+
+        public class BareNameOrFlag : CommandLineArgument
+        {
+            public BareNameOrFlag(string name, string raw) : base(raw)
+            {
+                Name = name;
+            }
+
+            public string Name { get; }
+        }
+
+        public class HelpSwitch : CommandLineArgument
+        {
+            public HelpSwitch(string raw) : base(raw)
+            {
+            }
+        }
+
+        public class DiagnosticSwitch : CommandLineArgument
+        {
+            public DiagnosticSwitch(string raw) : base(raw)
+            {
             }
         }
     }

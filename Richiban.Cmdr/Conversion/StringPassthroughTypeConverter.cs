@@ -1,10 +1,10 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Richiban.Cmdr
 {
-    class StringPassthroughTypeConverter : ITypeConverter
+    internal class StringPassthroughTypeConverter : ITypeConverter
     {
         public bool TryConvertValue(
             Type convertToType,
@@ -13,14 +13,14 @@ namespace Richiban.Cmdr
         {
             if (convertToType == typeof(string) && rawValues.Count == 1)
             {
-                convertedValue = rawValues[0];
+                convertedValue = rawValues[index: 0];
+
                 return true;
             }
-            else
-            {
-                convertedValue = null;
-                return false;
-            }
+
+            convertedValue = null;
+
+            return false;
         }
     }
 }

@@ -1,8 +1,8 @@
-﻿using AutoLazy;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using AutoLazy;
 
 namespace Richiban.Cmdr
 {
@@ -19,23 +19,24 @@ namespace Richiban.Cmdr
             MethodModel = methodModel;
 
             MatchPriority = new MethodMatchPriority(
-                usesOptionalParameters: parameterMappings.OfType<ParameterMapping.NoValue>().Any(),
-                usesPositionalParameters: parameterMappings.OfType<ParameterMapping.PositionalValue>().Any(),
-                explicitRouteMatch: explicitRouteMatch);
+                parameterMappings.OfType<ParameterMapping.NoValue>().Any(),
+                parameterMappings.OfType<ParameterMapping.PositionalValue>().Any(),
+                explicitRouteMatch);
         }
-        
+
         public MethodModel MethodModel { get; }
         public MethodMatchPriority MatchPriority { get; }
 
         public int Count => _parameterMappings.Count;
         public ParameterMapping this[int index] => _parameterMappings[index];
-        public IEnumerator<ParameterMapping> GetEnumerator() => _parameterMappings.GetEnumerator();
+
+        public IEnumerator<ParameterMapping> GetEnumerator() =>
+            _parameterMappings.GetEnumerator();
+
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         [Lazy]
-        public override string ToString()
-        {
-            return $"{MethodModel}({String.Join(", ", _parameterMappings)})";
-        }
+        public override string ToString() =>
+            $"{MethodModel}({string.Join(", ", _parameterMappings)})";
     }
 }

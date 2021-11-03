@@ -12,18 +12,14 @@ namespace Richiban.Cmdr
 
         public RouteCollection(MethodInfo methodInfo)
         {
-            var methodRoutes =
-                methodInfo
-                .GetCustomAttributes(inherit: true)
+            var methodRoutes = methodInfo.GetCustomAttributes(inherit: true)
                 .OfType<RouteAttribute>()
                 .Select(m => new Route(methodInfo.Name, m.RouteParts))
                 .ToArray();
 
             var containingClass = methodInfo.DeclaringType;
 
-            var classRoutes =
-                containingClass
-                .GetCustomAttributes(inherit: true)
+            var classRoutes = containingClass.GetCustomAttributes(inherit: true)
                 .OfType<RouteAttribute>()
                 .Select(m => new Route(containingClass.Name, m.RouteParts))
                 .ToArray();
@@ -32,17 +28,16 @@ namespace Richiban.Cmdr
             {
                 _routes = methodRoutes;
             }
-            else
-            if (methodRoutes.Length == 0)
+            else if (methodRoutes.Length == 0)
             {
                 _routes = classRoutes;
             }
             else
+            {
                 _routes =
-                    (from c in classRoutes
-                     from m in methodRoutes
-                     select c.Concat(m))
-                        .ToList();
+                    (from c in classRoutes from m in methodRoutes select c.Concat(m))
+                    .ToList();
+            }
         }
 
         public int Count => _routes.Count;
@@ -63,8 +58,8 @@ namespace Richiban.Cmdr
                     while (verbEnumerator.MoveNext())
                     {
                         if (inputArgumentEnumerator.MoveNext() &&
-                            inputArgumentEnumerator.Current is CommandLineArgument.Free free &&
-                            verbEnumerator.Current.Matches(free.Value))
+                            inputArgumentEnumerator.Current is CommandLineArgument.Free
+                                free && verbEnumerator.Current.Matches(free.Value))
                         {
                             currentAccuracy++;
                         }
@@ -93,7 +88,8 @@ namespace Richiban.Cmdr
 
             foreach (var route in _routes)
             {
-                var (isRouteMatch, remainingArgs) = route.MatchesVerbSequence(commandLineArguments);
+                var (isRouteMatch, remainingArgs) =
+                    route.MatchesVerbSequence(commandLineArguments);
 
                 if (isRouteMatch)
                 {

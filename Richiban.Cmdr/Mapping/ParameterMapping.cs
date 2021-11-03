@@ -4,7 +4,7 @@ using static Richiban.Cmdr.Prelude;
 
 namespace Richiban.Cmdr
 {
-    abstract class ParameterMapping
+    internal abstract class ParameterMapping
     {
         private ParameterMapping(
             ParameterModel parameterModel,
@@ -20,8 +20,10 @@ namespace Richiban.Cmdr
         public sealed class NamedValue : ParameterMapping
         {
             public NamedValue(
-                ParameterModel parameterModel, IReadOnlyList<string> suppliedValues)
-                : base(parameterModel, suppliedValues)
+                ParameterModel parameterModel,
+                IReadOnlyList<string> suppliedValues) : base(
+                parameterModel,
+                suppliedValues)
             {
             }
         }
@@ -29,24 +31,28 @@ namespace Richiban.Cmdr
         public sealed class PositionalValue : ParameterMapping
         {
             public PositionalValue(
-                ParameterModel parameterModel, IReadOnlyList<string> suppliedValues) 
-                : base(parameterModel, suppliedValues)
+                ParameterModel parameterModel,
+                IReadOnlyList<string> suppliedValues) : base(
+                parameterModel,
+                suppliedValues)
             {
             }
         }
 
         public sealed class NoValue : ParameterMapping
         {
-            public NoValue(ParameterModel parameterModel)
-                : base(parameterModel, ListOf<string>())
+            public NoValue(ParameterModel parameterModel) : base(
+                parameterModel,
+                ListOf<string>())
             {
             }
         }
 
         public sealed class Flag : ParameterMapping
         {
-            public Flag(ParameterModel parameterModel)
-                : base(parameterModel, ListOf($"{true}"))
+            public Flag(ParameterModel parameterModel) : base(
+                parameterModel,
+                ListOf($"{true}"))
             {
             }
         }

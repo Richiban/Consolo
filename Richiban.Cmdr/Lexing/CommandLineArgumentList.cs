@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using AutoLazy;
 
@@ -19,11 +20,21 @@ namespace Richiban.Cmdr
             TraceToStandardOutput = traceToStandardOutput;
         }
 
+        public bool IsCallForHelp { get; }
+        public bool TraceToStandardOutput { get; }
+
+        public int Count => _args.Count;
+
+        public CommandLineArgument this[int index] => _args[index];
+        public IEnumerator<CommandLineArgument> GetEnumerator() => _args.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
         public static CommandLineArgumentList Parse(string[] args)
         {
             var parsedArgs = args.Select(CommandLineArgument.Parse).ToList();
 
-            var helpSwitches = parsedArgs.OfType<CommandLineArgument.HelpSwitch>().ToList();
+            var helpSwitches =
+                parsedArgs.OfType<CommandLineArgument.HelpSwitch>().ToList();
 
             foreach (var helpSwitch in helpSwitches)
             {
@@ -44,19 +55,9 @@ namespace Richiban.Cmdr
                 diagnosticSwitches.Any());
         }
 
-        public int Count => _args.Count;
-
-        public bool IsCallForHelp { get; }
-        public bool TraceToStandardOutput { get; }
-
-        public CommandLineArgument this[int index] => _args[index];
-        public IEnumerator<CommandLineArgument> GetEnumerator() => _args.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-        public CommandLineArgumentList Without(IEnumerable<CommandLineArgument> commandLineArguments) =>
-            new CommandLineArgumentList(
-                _args.Except(commandLineArguments).ToList(),
-                IsCallForHelp,
+        public CommandLineArgumentList Without(
+            IEnumerable<CommandLineArgument> commandLineArguments) =>
+            new(_args.Except(commandLineArguments).ToList(), IsCallForHelp,
                 TraceToStandardOutput);
 
         public CommandLineArgumentList ExpandShortFormArgument(
@@ -68,9 +69,10 @@ namespace Richiban.Cmdr
 
             foreach (var c in argumentToExpand.Name.ToCharArray())
             {
-                newArgumentList.Add(new CommandLineArgument.BareNameOrFlag(
-                    c.ToString(),
-                    $"{CommandLineEnvironment.FlagGlyph}{c}"));
+                newArgumentList.Add(
+                    new CommandLineArgument.BareNameOrFlag(
+                        c.ToString(),
+                        $"{CommandLineEnvironment.FlagGlyph}{c}"));
             }
 
             return new CommandLineArgumentList(

@@ -1,6 +1,6 @@
-﻿using AutoLazy;
-using System;
+﻿using System;
 using System.Reflection;
+using AutoLazy;
 
 namespace Richiban.Cmdr
 {
@@ -32,6 +32,7 @@ namespace Richiban.Cmdr
             Routes.GetPartialMatchAccuracy(commandLineArgs);
 
         [Lazy]
-        public override string ToString() => $"{_methodInfo.DeclaringType}.{_methodInfo.Name}";
+        public override string ToString() =>
+            $"{_methodInfo.DeclaringType}.{_methodInfo.Name}";
     }
 }

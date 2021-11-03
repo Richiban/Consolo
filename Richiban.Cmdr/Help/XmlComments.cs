@@ -5,7 +5,9 @@ namespace Richiban.Cmdr
 {
     internal class XmlComments
     {
-        public XmlComments(string methodComments, IReadOnlyDictionary<string, string> parameterComments)
+        public XmlComments(
+            string methodComments,
+            IReadOnlyDictionary<string, string> parameterComments)
         {
             MethodComments = methodComments;
             ParameterComments = parameterComments;

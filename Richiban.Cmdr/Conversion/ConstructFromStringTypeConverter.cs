@@ -7,46 +7,51 @@ using static Richiban.Cmdr.Prelude;
 
 namespace Richiban.Cmdr
 {
-    class ConstructFromStringTypeConverter : ITypeConverter
+    internal class ConstructFromStringTypeConverter : ITypeConverter
     {
         public bool TryConvertValue(
             Type convertToType,
             IReadOnlyList<string> rawValues,
             [AllowNull] out object convertedValue)
         {
-            if (TryGetCompatibleConstructor(convertToType, rawValues.Count).IsSome(out var constructor))
+            if (TryGetCompatibleConstructor(convertToType, rawValues.Count)
+                .IsSome(out var constructor))
             {
                 try
                 {
                     convertedValue = constructor.Invoke(rawValues.ToArray());
+
                     return true;
                 }
                 catch (TargetInvocationException e)
                 {
                     throw new TypeConversionException(
-                        TypeConversionException.TheConstructorForTypeXThrewAnException(convertToType, rawValues),
+                        TypeConversionException.TheConstructorForTypeXThrewAnException(
+                            convertToType,
+                            rawValues),
                         e.InnerException);
                 }
             }
-            else
-            {
-                convertedValue = null;
-                return false;
-            }
+
+            convertedValue = null;
+
+            return false;
         }
 
         private static Option<ConstructorInfo> TryGetCompatibleConstructor(
-            Type convertToType, int stringParameterCount)
+            Type convertToType,
+            int stringParameterCount)
         {
-            return convertToType
-                .GetConstructors()
-                .Where(constructor =>
-                {
-                    var constructorParameters = constructor.GetParameters();
+            return convertToType.GetConstructors()
+                .Where(
+                    constructor =>
+                    {
+                        var constructorParameters = constructor.GetParameters();
 
-                    return constructorParameters.Length == stringParameterCount &&
-                        constructorParameters.All(x => x.ParameterType == typeof(string));
-                })
+                        return constructorParameters.Length == stringParameterCount &&
+                               constructorParameters.All(
+                                   x => x.ParameterType == typeof(string));
+                    })
                 .Select(Some)
                 .SingleOrDefault();
         }

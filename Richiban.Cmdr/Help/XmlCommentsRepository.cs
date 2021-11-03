@@ -1,11 +1,11 @@
-﻿using AutoLazy;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml.XPath;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
-using System.Xml.XPath;
+using AutoLazy;
 
 namespace Richiban.Cmdr
 {
@@ -18,10 +18,46 @@ namespace Richiban.Cmdr
             _xmlComments = xDocuments;
         }
 
-        public static XmlCommentsRepository LoadFor(IReadOnlyCollection<Assembly> assemblies)
+        [Lazy]
+        public Option<XmlComments> this[MethodModel method]
         {
-            return new XmlCommentsRepository(assemblies.Select(LoadForAssembly).ToList());
+            get
+            {
+                var declaringTypeName = method.DeclaringType.FullName;
+
+                var methodElement = _xmlComments
+                    .Select(
+                        xdoc => xdoc.XPathSelectElement(
+                            $"//member[starts-with(@name, \"M:{declaringTypeName}.{method.Name}(\")]"))
+                    .FirstOrDefault(elem => elem != null);
+
+                if (methodElement == null)
+                {
+                    methodElement = _xmlComments
+                        .Select(
+                            xdoc => xdoc.XPathSelectElement(
+                                $"//member[@name=\"M:{declaringTypeName}.{method.Name}\"]"))
+                        .FirstOrDefault(elem => elem != null);
+                }
+
+                if (methodElement == null)
+                {
+                    return null;
+                }
+
+                var methodComment = methodElement.Element("summary")?.Value?.Trim();
+
+                var paramComments = methodElement.Descendants("param")
+                    .Where(e => !string.IsNullOrEmpty(e.Value))
+                    .ToDictionary(e => e.Attribute("name").Value, e => e.Value.Trim());
+
+                return new XmlComments(methodComment, paramComments);
+            }
         }
+
+        public static XmlCommentsRepository LoadFor(
+            IReadOnlyCollection<Assembly> assemblies) =>
+            new(assemblies.Select(LoadForAssembly).ToList());
 
         private static XDocument LoadForAssembly(Assembly assembly)
         {
@@ -33,41 +69,11 @@ namespace Richiban.Cmdr
                 .Replace(".exe", ".xml");
 
             if (File.Exists(xmlFilePath))
-                return XDocument.Load(xmlFilePath);
-            else
-                return new XDocument();
-        }
-
-        [Lazy]
-        public Option<XmlComments> this[MethodModel method]
-        {
-            get
             {
-                var declaringTypeName = method.DeclaringType.FullName;
-
-                var methodElement = _xmlComments
-                    .Select(xdoc => xdoc.XPathSelectElement(
-                        $"//member[starts-with(@name, \"M:{declaringTypeName}.{method.Name}(\")]"))
-                    .FirstOrDefault(elem => elem != null);
-
-                if (methodElement == null)
-                {
-                    methodElement = _xmlComments
-                       .Select(xdoc => xdoc.XPathSelectElement(
-                           $"//member[@name=\"M:{declaringTypeName}.{method.Name}\"]"))
-                       .FirstOrDefault(elem => elem != null);
-                }
-
-                if (methodElement == null)
-                    return null;
-
-                var methodComment = methodElement.Element("summary")?.Value?.Trim();
-                var paramComments = methodElement.Descendants("param")
-                    .Where(e => !String.IsNullOrEmpty(e.Value))
-                    .ToDictionary(e => e.Attribute("name").Value, e => e.Value.Trim());
-
-                return new XmlComments(methodComment, paramComments);
+                return XDocument.Load(xmlFilePath);
             }
+
+            return new XDocument();
         }
     }
 }

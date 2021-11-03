@@ -2,10 +2,10 @@
 
 namespace Richiban.Cmdr
 {
-    class MethodMatchPriority : IComparable<MethodMatchPriority>
+    internal class MethodMatchPriority : IComparable<MethodMatchPriority>
     {
         public MethodMatchPriority(
-            bool usesOptionalParameters, 
+            bool usesOptionalParameters,
             bool usesPositionalParameters,
             bool explicitRouteMatch)
         {
@@ -18,10 +18,10 @@ namespace Richiban.Cmdr
         public bool UsesPositionalParameters { get; }
         public bool ExplicitRouteMatch { get; }
 
-        public int CompareTo(MethodMatchPriority other)
-        {
-            return (ExplicitRouteMatch, !UsesOptionalParameters, !UsesPositionalParameters)
-                .CompareTo((other.ExplicitRouteMatch, !other.UsesOptionalParameters, !other.UsesPositionalParameters));
-        }
+        public int CompareTo(MethodMatchPriority other) =>
+            (ExplicitRouteMatch, !UsesOptionalParameters, !UsesPositionalParameters)
+            .CompareTo(
+                (other.ExplicitRouteMatch, !other.UsesOptionalParameters,
+                    !other.UsesPositionalParameters));
     }
 }

@@ -1,11 +1,11 @@
-﻿using AutoLazy;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using AutoLazy;
 
 namespace Richiban.Cmdr
 {
-    class ParameterHelp
+    internal class ParameterHelp
     {
         public ParameterHelp(
             IReadOnlyList<ParameterName> parameterNames,
@@ -33,19 +33,20 @@ namespace Richiban.Cmdr
         [Lazy]
         public override string ToString()
         {
-            string parameterName(ParameterName pName)
-            {
-                return pName is ParameterName.ShortForm s
-                    ? $"{CommandLineEnvironment.ShortFormFlagGlyph}{pName}"
+            string parameterName(ParameterName pName) =>
+                pName is ParameterName.ShortForm s
+                    ?
+                    $"{CommandLineEnvironment.ShortFormFlagGlyph}{pName}"
                     : IsFlag
                         ? $"{CommandLineEnvironment.FlagGlyph}{pName}"
                         : $"<{pName}>";
-            }
 
-            var namesString = String.Join("|", ParameterNames.Select(parameterName));
+            var namesString = string.Join("|", ParameterNames.Select(parameterName));
 
-            if(AllowMultipleValues)
+            if (AllowMultipleValues)
+            {
                 namesString = namesString + "...";
+            }
 
             return IsOptional ? $"[{namesString}]" : namesString;
         }
