@@ -21,7 +21,6 @@ namespace Richiban.Cmdr
         public IEnumerator<MethodModel> GetEnumerator() => _methodModels.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        [TraceOn]
         public static AssemblyModel Scan(IEnumerable<Assembly> assembliesToScan)
         {
             var methodModels = (

@@ -24,13 +24,11 @@ namespace Richiban.Cmdr
             _methodMapper = methodMapper;
         }
 
-        [TraceOn]
         public IReadOnlyCollection<CommandLineAction> Resolve(CommandLineArgumentList commandLineArgs) =>
             GetBestMatches(commandLineArgs)
                 .Select(mapping => CreateAction(mapping, _objectFactory))
                 .ToList();
 
-        [TraceOn]
         private IReadOnlyCollection<MethodMapping> GetBestMatches(CommandLineArgumentList commandLineArgs)
         {
             var matchGroups =
@@ -45,7 +43,6 @@ namespace Richiban.Cmdr
                 ?? new List<MethodMapping>();
         }
 
-        [TraceOn]
         private IReadOnlyCollection<MethodMapping> GetMethodMappings(CommandLineArgumentList args) =>
             _assemblyModel
                 .Select(model => _methodMapper.GetMethodMapping(model, args))

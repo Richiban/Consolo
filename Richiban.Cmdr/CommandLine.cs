@@ -1,5 +1,4 @@
-﻿using NullGuard;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -18,7 +17,6 @@ namespace Richiban.Cmdr
         /// </summary>
         /// <param name="args">The command line arguments</param>
         /// <returns>The object returned by the target method (or null if the method was void)</returns>
-        [return: AllowNull]
         public static object Execute(params string[] args) => 
             Execute(CommandLineConfiguration.GetDefault(), args);
 
@@ -28,8 +26,6 @@ namespace Richiban.Cmdr
         /// <param name="config">The CommandLine configuration</param>
         /// <param name="args">The command line arguments</param>
         /// <returns>The object returned by the target method (or null if the method was void)</returns>
-        [return:AllowNull]
-        [TracerAttributes.TraceOn]
         public static object Execute(CommandLineConfiguration config, params string[] args)
         {
             // Defensively copy the configuration into local variables

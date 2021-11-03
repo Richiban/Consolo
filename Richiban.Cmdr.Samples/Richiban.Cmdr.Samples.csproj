@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-    <AssemblyName>Richiban.Cmdr</AssemblyName>
-    <RootNamespace>Richiban.Cmdr</RootNamespace>
+    <AssemblyName>Richiban.Cmdr.Sample</AssemblyName>
+    <RootNamespace>Richiban.Cmdr.Sample</RootNamespace>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 

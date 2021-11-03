@@ -14,7 +14,6 @@ namespace Richiban.Cmdr
 
         public MethodModel Model { get; }
 
-        [TracerAttributes.TraceOn]
         public object Invoke() => _action();
     }
 }
