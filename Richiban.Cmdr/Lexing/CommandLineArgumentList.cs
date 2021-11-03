@@ -57,7 +57,9 @@ namespace Richiban.Cmdr
 
         public CommandLineArgumentList Without(
             IEnumerable<CommandLineArgument> commandLineArguments) =>
-            new(_args.Except(commandLineArguments).ToList(), IsCallForHelp,
+            new(
+                _args.Except(commandLineArguments).ToList(),
+                IsCallForHelp,
                 TraceToStandardOutput);
 
         public CommandLineArgumentList ExpandShortFormArgument(
@@ -70,9 +72,7 @@ namespace Richiban.Cmdr
             foreach (var c in argumentToExpand.Name.ToCharArray())
             {
                 newArgumentList.Add(
-                    new CommandLineArgument.BareNameOrFlag(
-                        c.ToString(),
-                        $"-{c}"));
+                    new CommandLineArgument.BareNameOrFlag(c.ToString(), $"-{c}"));
             }
 
             return new CommandLineArgumentList(

@@ -23,7 +23,7 @@ namespace Richiban.Cmdr
 
         public static ImmutableStack<T> CopyFrom(Stack<T> stack)
         {
-            var newStack = (ImmutableStack<T>) new EmptyStack();
+            var newStack = (ImmutableStack<T>)new EmptyStack();
 
             foreach (var item in stack)
             {

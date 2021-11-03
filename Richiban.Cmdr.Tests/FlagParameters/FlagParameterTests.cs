@@ -1,8 +1,9 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
 
 namespace Richiban.Cmdr.Tests
 {
-    class FlagParameterTests : CommandLineTest
+    internal class FlagParameterTests : CommandLineTest
     {
         [Test]
         public void FlagParametersAreMappedToTrueWhenNameIsPresent()
@@ -10,7 +11,11 @@ namespace Richiban.Cmdr.Tests
             var result = RunTest("test-route-1", "--param1");
 
             Assert.That(result.ProgramOutput, Is.Not.Null);
-            Assert.That(result.ProgramOutput.ExecutedAction, Is.EqualTo(nameof(TestProgram.SingleLevelRoutedActionWithParameter)));
+
+            Assert.That(
+                result.ProgramOutput.ExecutedAction,
+                Is.EqualTo(nameof(TestProgram.SingleLevelRoutedActionWithParameter)));
+
             Assert.That(result.ProgramOutput.Output, Is.EqualTo("True"));
         }
 
@@ -20,7 +25,11 @@ namespace Richiban.Cmdr.Tests
             var result = RunTest("test-route-1");
 
             Assert.That(result.ProgramOutput, Is.Not.Null);
-            Assert.That(result.ProgramOutput.ExecutedAction, Is.EqualTo(nameof(TestProgram.SingleLevelRoutedActionWithParameter)));
+
+            Assert.That(
+                result.ProgramOutput.ExecutedAction,
+                Is.EqualTo(nameof(TestProgram.SingleLevelRoutedActionWithParameter)));
+
             Assert.That(result.ProgramOutput.Output, Is.EqualTo("False"));
         }
 
@@ -30,7 +39,11 @@ namespace Richiban.Cmdr.Tests
             var result = RunTest("test-route-1", "--param1=true");
 
             Assert.That(result.ProgramOutput, Is.Not.Null);
-            Assert.That(result.ProgramOutput.ExecutedAction, Is.EqualTo(nameof(TestProgram.SingleLevelRoutedActionWithParameter)));
+
+            Assert.That(
+                result.ProgramOutput.ExecutedAction,
+                Is.EqualTo(nameof(TestProgram.SingleLevelRoutedActionWithParameter)));
+
             Assert.That(result.ProgramOutput.Output, Is.EqualTo("True"));
         }
 
@@ -40,7 +53,11 @@ namespace Richiban.Cmdr.Tests
             var result = RunTest("test-route-1", "--param1=false");
 
             Assert.That(result.ProgramOutput, Is.Not.Null);
-            Assert.That(result.ProgramOutput.ExecutedAction, Is.EqualTo(nameof(TestProgram.SingleLevelRoutedActionWithParameter)));
+
+            Assert.That(
+                result.ProgramOutput.ExecutedAction,
+                Is.EqualTo(nameof(TestProgram.SingleLevelRoutedActionWithParameter)));
+
             Assert.That(result.ProgramOutput.Output, Is.EqualTo("False"));
         }
     }

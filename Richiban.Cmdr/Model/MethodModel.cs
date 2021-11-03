@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Text.Json.Serialization;
 using AutoLazy;
 
 namespace Richiban.Cmdr
@@ -12,7 +13,7 @@ namespace Richiban.Cmdr
         {
             _methodInfo = methodInfo;
 
-            DeclaringType = methodInfo.DeclaringType;
+            //DeclaringType = methodInfo.DeclaringType;
             InvokeFunc = methodInfo.Invoke;
             Routes = new RouteCollection(methodInfo);
             Parameters = new ParameterModelList(methodInfo.GetParameters());
@@ -22,10 +23,13 @@ namespace Richiban.Cmdr
 
         public ParameterModelList Parameters { get; }
         public RouteCollection Routes { get; }
-        public bool IsStatic { get; }
 
-        public Type DeclaringType { get; }
+        public bool IsStatic { get; }
+        //public Type DeclaringType { get; }
+
+        [JsonIgnore]
         public Func<object, object[], object> InvokeFunc { get; }
+
         public string Name { get; }
 
         public int GetPartialMatchAccuracy(CommandLineArgumentList commandLineArgs) =>

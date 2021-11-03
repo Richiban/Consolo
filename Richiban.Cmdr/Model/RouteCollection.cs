@@ -58,8 +58,9 @@ namespace Richiban.Cmdr
                     while (verbEnumerator.MoveNext())
                     {
                         if (inputArgumentEnumerator.MoveNext() &&
-                            inputArgumentEnumerator.Current is CommandLineArgument.Positional
-                                free && verbEnumerator.Current.Matches(free.Value))
+                            inputArgumentEnumerator.Current is
+                                CommandLineArgument.Positional free &&
+                            verbEnumerator.Current.Matches(free.Value))
                         {
                             currentAccuracy++;
                         }

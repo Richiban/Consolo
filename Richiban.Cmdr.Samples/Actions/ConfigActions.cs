@@ -1,9 +1,8 @@
-﻿using Richiban.Cmdr;
-using System;
+﻿using System;
 
 namespace Richiban.Cmdr.Samples
 {
-    class ConfigActions
+    internal class ConfigActions
     {
         [CommandLine, Route("config")]
         public void GetConfigValue(string settingName, bool global = false)
@@ -12,9 +11,13 @@ namespace Richiban.Cmdr.Samples
         }
 
         [CommandLine, Route("config")]
-        public void SetConfigValue(string settingName, string settingValue, bool global = false)
+        public void SetConfigValue(
+            string settingName,
+            string settingValue,
+            bool global = false)
         {
-            Console.WriteLine($"Setting{(global ? " (global)" : "")} {settingName} = {settingValue}");
+            Console.WriteLine(
+                $"Setting{(global ? " (global)" : "")} {settingName} = {settingValue}");
         }
     }
 }

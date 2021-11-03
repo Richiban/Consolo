@@ -3,10 +3,10 @@ using System.IO;
 
 namespace Richiban.Cmdr.Samples.Actions
 {
-    class AddAction
+    internal class AddAction
     {
         [CommandLine, Route]
         public void Add(params FileInfo[] files) =>
-            Console.WriteLine($"Adding files: {String.Join(", ", (object[]) files)}");
+            Console.WriteLine($"Adding files: {string.Join(", ", (object[])files)}");
     }
 }

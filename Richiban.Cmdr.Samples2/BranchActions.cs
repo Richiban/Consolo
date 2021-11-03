@@ -10,9 +10,9 @@ namespace Richiban.Cmdr.Sample
         {
             var cleanCommand = new Command("branch")
             {
-                new Option(new [] {"D", "delete"}),
+                new Option(new[] { "D", "delete" })
             };
-            
+
             cleanCommand.Handler = CommandHandler.Create<bool>(Act);
 
             return cleanCommand;
@@ -20,7 +20,7 @@ namespace Richiban.Cmdr.Sample
 
         private void Act(bool delete)
         {
-            Console.WriteLine($"Running branch action");
+            Console.WriteLine("Running branch action");
             Console.WriteLine($"Delete: {delete}");
         }
     }

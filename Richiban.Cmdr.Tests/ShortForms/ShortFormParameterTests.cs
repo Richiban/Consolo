@@ -1,16 +1,22 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
 
 namespace Richiban.Cmdr.Tests
 {
-    class ShortFormParameterTests : CommandLineTest
+    internal class ShortFormParameterTests : CommandLineTest
     {
         [Test]
         public void ShortFormCanBeUsedInsteadOfFullParameterName()
         {
             var result = RunTest("short-form-tests", "-a", "-b", "-c").ProgramOutput;
 
-            Assert.That(result.ExecutedAction, Is.EqualTo(nameof(TestProgram.ShortFormTestAction)));
-            Assert.That(result.Output, Is.EqualTo("{ paramA = True, paramB = True, paramC = True }"));
+            Assert.That(
+                result.ExecutedAction,
+                Is.EqualTo(nameof(TestProgram.ShortFormTestAction)));
+
+            Assert.That(
+                result.Output,
+                Is.EqualTo("{ paramA = True, paramB = True, paramC = True }"));
         }
 
         [Test]
@@ -18,12 +24,18 @@ namespace Richiban.Cmdr.Tests
         {
             var result = RunTest("short-form-tests", "-paramA", "-paramB").ProgramOutput;
 
-            Assert.That(result.ExecutedAction, Is.EqualTo(nameof(TestProgram.ShortFormTestAction)));
-            Assert.That(result.Output, Is.EqualTo("{ paramA = True, paramB = True, paramC = False }"));
+            Assert.That(
+                result.ExecutedAction,
+                Is.EqualTo(nameof(TestProgram.ShortFormTestAction)));
+
+            Assert.That(
+                result.Output,
+                Is.EqualTo("{ paramA = True, paramB = True, paramC = False }"));
         }
 
         [Test]
-        public void FullParameterNameCannotBeUsedInsteadOfShortFormIfDisallowLongFormIsSet()
+        public void
+            FullParameterNameCannotBeUsedInsteadOfShortFormIfDisallowLongFormIsSet()
         {
             var result = RunTest("short-form-tests", "-paramC");
 
@@ -36,8 +48,13 @@ namespace Richiban.Cmdr.Tests
         {
             var result = RunTest("short-form-tests", "-abc").ProgramOutput;
 
-            Assert.That(result.ExecutedAction, Is.EqualTo(nameof(TestProgram.ShortFormTestAction)));
-            Assert.That(result.Output, Is.EqualTo("{ paramA = True, paramB = True, paramC = True }"));
+            Assert.That(
+                result.ExecutedAction,
+                Is.EqualTo(nameof(TestProgram.ShortFormTestAction)));
+
+            Assert.That(
+                result.Output,
+                Is.EqualTo("{ paramA = True, paramB = True, paramC = True }"));
         }
 
         [Test]
@@ -45,8 +62,13 @@ namespace Richiban.Cmdr.Tests
         {
             var result = RunTest("short-form-tests", "-A").ProgramOutput;
 
-            Assert.That(result.ExecutedAction, Is.EqualTo(nameof(TestProgram.ShortFormTestAction)));
-            Assert.That(result.Output, Is.EqualTo("{ paramA = True, paramB = False, paramC = False }"));
+            Assert.That(
+                result.ExecutedAction,
+                Is.EqualTo(nameof(TestProgram.ShortFormTestAction)));
+
+            Assert.That(
+                result.Output,
+                Is.EqualTo("{ paramA = True, paramB = False, paramC = False }"));
         }
 
         [Test]
@@ -54,8 +76,13 @@ namespace Richiban.Cmdr.Tests
         {
             var result = RunTest("short-form-tests", "/z").ProgramOutput;
 
-            Assert.That(result.ExecutedAction, Is.EqualTo(nameof(TestProgram.ShortFormTestAction)));
-            Assert.That(result.Output, Is.EqualTo("{ paramA = False, paramB = True, paramC = False }"));
+            Assert.That(
+                result.ExecutedAction,
+                Is.EqualTo(nameof(TestProgram.ShortFormTestAction)));
+
+            Assert.That(
+                result.Output,
+                Is.EqualTo("{ paramA = False, paramB = True, paramC = False }"));
         }
     }
 }

@@ -49,20 +49,24 @@ namespace Richiban.Cmdr
         private CommandLineAction CreateAction(
             MethodMapping methodMapping,
             Func<Type, object> objectFactory) =>
-            new(() =>
-            {
-                var instance = CreateInstanceOfDeclaringType(
-                    methodMapping.MethodModel,
-                    objectFactory);
+            new(
+                () =>
+                {
+                    var instance = CreateInstanceOfDeclaringType(
+                        methodMapping.MethodModel,
+                        objectFactory);
 
-                var methodArguments = methodMapping.Select(
-                        paramMapping => _typeConverterCollection.ConvertValue(
-                            paramMapping.ConvertToType,
-                            paramMapping.SuppliedValues))
-                    .ToArray();
+                    var methodArguments = methodMapping.Select(
+                            paramMapping => _typeConverterCollection.ConvertValue(
+                                /*TODO paramMapping.ConvertToType*/ typeof(string),
+                                paramMapping.SuppliedValues))
+                        .ToArray();
 
-                return methodMapping.MethodModel.InvokeFunc(instance, methodArguments);
-            }, methodMapping.MethodModel);
+                    return methodMapping.MethodModel.InvokeFunc(
+                        instance,
+                        methodArguments);
+                },
+                methodMapping.MethodModel);
 
         private static object CreateInstanceOfDeclaringType(
             MethodModel methodModel,
@@ -73,7 +77,7 @@ namespace Richiban.Cmdr
                 return null;
             }
 
-            return objectFactory(methodModel.DeclaringType);
+            return objectFactory(typeof(object) /*TODO methodModel.DeclaringType*/);
         }
     }
 }

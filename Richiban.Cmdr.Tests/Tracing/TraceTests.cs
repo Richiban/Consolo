@@ -1,9 +1,9 @@
-﻿using NUnit.Framework;
-using System;
+﻿using System;
+using NUnit.Framework;
 
 namespace Richiban.Cmdr.Tests
 {
-    class TraceTests : CommandLineTest
+    internal class TraceTests : CommandLineTest
     {
         [Test]
         public void StartOfAssemblyScanningIsTraced()
@@ -21,15 +21,17 @@ namespace Richiban.Cmdr.Tests
         {
             var traceOutput = RunTest().TraceOutput;
 
-            var expectedContent = new[] {
+            var expectedContent = new[]
+            {
                 @"[Trace]: Registered ITypeConverter instances:",
                 "        Richiban.Cmdr.MissingValueTypeConverter",
                 "        Richiban.Cmdr.StringPassthroughTypeConverter",
                 "        Richiban.Cmdr.EnumTypeConverter",
                 "        Richiban.Cmdr.SystemConvertibleTypeConverter",
-                "        Richiban.Cmdr.ConstructFromStringTypeConverter"};
+                "        Richiban.Cmdr.ConstructFromStringTypeConverter"
+            };
 
-            foreach(var expectedContent1 in expectedContent)
+            foreach (var expectedContent1 in expectedContent)
             {
                 Assert.That(traceOutput, Does.Contain(expectedContent1));
             }
@@ -40,7 +42,8 @@ namespace Richiban.Cmdr.Tests
         {
             var traceOutput = RunTest().TraceOutput;
 
-            var expectedContent = "[Trace]: Attempting to map method Richiban.Cmdr.Tests.TestProgram.SingleStringParameterTestAction from arguments \"\"";
+            var expectedContent =
+                "[Trace]: Attempting to map method Richiban.Cmdr.Tests.TestProgram.SingleStringParameterTestAction from arguments \"\"";
 
             Assert.That(traceOutput, Does.Contain(expectedContent));
         }
@@ -69,9 +72,10 @@ namespace Richiban.Cmdr.Tests
         public void TotalExecutionTimeIsTraced()
         {
             var traceOutput = RunTest().TraceOutput;
-            var totalTraceOutput = String.Join(Environment.NewLine, traceOutput);
+            var totalTraceOutput = string.Join(Environment.NewLine, traceOutput);
 
-            var expectedContent = @"(\r\n|\r|\n)\[Trace\]: CommandLine sequence finished in \d\d:\d\d:\d\d\.\d+";
+            var expectedContent =
+                @"(\r\n|\r|\n)\[Trace\]: CommandLine sequence finished in \d\d:\d\d:\d\d\.\d+";
 
             Assert.That(totalTraceOutput, Does.Match(expectedContent));
         }

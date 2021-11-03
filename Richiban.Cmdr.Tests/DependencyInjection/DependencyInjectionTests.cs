@@ -1,11 +1,9 @@
-﻿using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
+using NUnit.Framework;
 
 namespace Richiban.Cmdr.Tests.DependencyInjection
 {
-    class DependencyInjectionTests : CommandLineTest
+    internal class DependencyInjectionTests : CommandLineTest
     {
         [SetUp]
         public void SetUp()
@@ -17,12 +15,19 @@ namespace Richiban.Cmdr.Tests.DependencyInjection
         [Test]
         public void InstantiateClassWithDependency()
         {
-            var result = RunTest("DependencyInjectionTestProgram", "ActionRequiringDependency").ProgramOutput;
+            var result = RunTest(
+                    "DependencyInjectionTestProgram",
+                    "ActionRequiringDependency")
+                .ProgramOutput;
 
-            Assert.That(result.ExecutedAction, Is.EqualTo(
-                nameof(DependencyInjectionTestProgram.ActionRequiringDependency)));
+            Assert.That(
+                result.ExecutedAction,
+                Is.EqualTo(
+                    nameof(DependencyInjectionTestProgram.ActionRequiringDependency)));
 
-            Assert.That(result.Output, Is.EqualTo("This is a message from the dependency"));
+            Assert.That(
+                result.Output,
+                Is.EqualTo("This is a message from the dependency"));
         }
     }
 }

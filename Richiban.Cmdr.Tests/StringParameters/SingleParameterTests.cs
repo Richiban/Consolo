@@ -1,18 +1,19 @@
-﻿using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Reflection;
+﻿using System;
+using NUnit.Framework;
 
 namespace Richiban.Cmdr.Tests
 {
-    class SingleParameterTests : CommandLineTest
+    internal class SingleParameterTests : CommandLineTest
     {
         [Test]
         public void SingleStringParameterPowerShellStyleTest()
         {
             var result = RunTest("-paramA", "valueOfA1").ProgramOutput;
 
-            Assert.That(result.ExecutedAction, Is.EqualTo(nameof(TestProgram.SingleStringParameterTestAction)));
+            Assert.That(
+                result.ExecutedAction,
+                Is.EqualTo(nameof(TestProgram.SingleStringParameterTestAction)));
+
             Assert.That(result.Output, Is.EqualTo("valueOfA1"));
         }
 
@@ -21,7 +22,10 @@ namespace Richiban.Cmdr.Tests
         {
             var result = RunTest("--paramA=valueOfA2").ProgramOutput;
 
-            Assert.That(result.ExecutedAction, Is.EqualTo(nameof(TestProgram.SingleStringParameterTestAction)));
+            Assert.That(
+                result.ExecutedAction,
+                Is.EqualTo(nameof(TestProgram.SingleStringParameterTestAction)));
+
             Assert.That(result.Output, Is.EqualTo("valueOfA2"));
         }
 
@@ -30,7 +34,10 @@ namespace Richiban.Cmdr.Tests
         {
             var result = RunTest("/paramA:valueOfA3").ProgramOutput;
 
-            Assert.That(result.ExecutedAction, Is.EqualTo(nameof(TestProgram.SingleStringParameterTestAction)));
+            Assert.That(
+                result.ExecutedAction,
+                Is.EqualTo(nameof(TestProgram.SingleStringParameterTestAction)));
+
             Assert.That(result.Output, Is.EqualTo("valueOfA3"));
         }
     }

@@ -1,8 +1,9 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
 
 namespace Richiban.Cmdr.Tests.Routes
 {
-    class HelpTests : CommandLineTest
+    internal class HelpTests : CommandLineTest
     {
         [Test]
         public void NoArgumentsResultsInHelp()
@@ -48,15 +49,17 @@ namespace Richiban.Cmdr.Tests.Routes
         [Test]
         public void TooFewRoutePartsResultsInHelpForRoute()
         {
-            var outputHelp = 
-                RunTest(
+            var outputHelp = RunTest(
                     "five-part-route-1",
                     "five-part-route-2",
                     "five-part-route-2",
                     "five-part-route-4")
                 .OutputHelp;
 
-            Assert.That(outputHelp, Does.Contain("Help for five-part-route-1 five-part-route-2 five-part-route-2 five-part-route-4"));
+            Assert.That(
+                outputHelp,
+                Does.Contain(
+                    "Help for five-part-route-1 five-part-route-2 five-part-route-2 five-part-route-4"));
         }
     }
 }

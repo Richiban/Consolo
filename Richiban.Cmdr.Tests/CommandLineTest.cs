@@ -1,14 +1,15 @@
-﻿using NUnit.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using NUnit.Framework;
 
 namespace Richiban.Cmdr.Tests
 {
     [TestFixture]
-    abstract class CommandLineTest
+    internal abstract class CommandLineTest
     {
-        protected readonly CommandLineConfiguration _configuration = CommandLineConfiguration.GetDefault();
+        protected readonly CommandLineConfiguration _configuration =
+            CommandLineConfiguration.GetDefault();
 
         protected Result RunTest(params string[] args)
         {
@@ -27,7 +28,10 @@ namespace Richiban.Cmdr.Tests
 
         public class Result
         {
-            public Result(string helpOutput, dynamic programOutput, IReadOnlyList<string> traceOutput)
+            public Result(
+                string helpOutput,
+                dynamic programOutput,
+                IReadOnlyList<string> traceOutput)
             {
                 OutputHelp = helpOutput;
                 ProgramOutput = programOutput;

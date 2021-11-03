@@ -23,7 +23,7 @@ namespace Richiban.Cmdr
         {
             get
             {
-                var declaringTypeName = method.DeclaringType.FullName;
+                var declaringTypeName = "SomeType"; //method.DeclaringType.FullName;
 
                 var methodElement = _xmlComments
                     .Select(

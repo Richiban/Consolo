@@ -1,8 +1,9 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
 
 namespace Richiban.Cmdr.Tests.Routes
 {
-    class XmlCommentHelpTests : CommandLineTest
+    internal class XmlCommentHelpTests : CommandLineTest
     {
         [Test]
         public void ExplicitHelpGlyphResultsInHelpWithXmlCommentsForRoute()
@@ -24,10 +25,11 @@ namespace Richiban.Cmdr.Tests.Routes
         public void TooFewRoutePartsResultsInHelpWithXmlCommentsForRoute()
         {
             var outputHelp = RunTest(
-                "five-part-route-1",
-                "five-part-route-2",
-                "five-part-route-2",
-                "five-part-route-4").OutputHelp;
+                    "five-part-route-1",
+                    "five-part-route-2",
+                    "five-part-route-2",
+                    "five-part-route-4")
+                .OutputHelp;
 
             Assert.That(outputHelp, Does.Contain("Comments for five-part-route"));
         }

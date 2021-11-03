@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Richiban.Cmdr.Tests.DependencyInjection
 {
     [Route]
-    class DependencyInjectionTestProgram
+    internal class DependencyInjectionTestProgram
     {
         private readonly ISomeDependency _someDependency;
 
@@ -15,13 +13,11 @@ namespace Richiban.Cmdr.Tests.DependencyInjection
         }
 
         [CommandLine, Route]
-        public object ActionRequiringDependency()
-        {
-            return new
+        public object ActionRequiringDependency() =>
+            new
             {
                 ExecutedAction = nameof(ActionRequiringDependency),
                 Output = _someDependency.SomeMessage
             };
-        }
     }
 }

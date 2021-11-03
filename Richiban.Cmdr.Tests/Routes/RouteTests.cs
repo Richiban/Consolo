@@ -1,17 +1,18 @@
-﻿using NUnit.Framework;
-using System.Collections.Generic;
-using System.Reflection;
+﻿using System;
+using NUnit.Framework;
 
 namespace Richiban.Cmdr.Tests.Routes
 {
-    class RouteTests : CommandLineTest
+    internal class RouteTests : CommandLineTest
     {
         [Test]
         public void SingleLevelRouteTest()
         {
             var result = RunTest("test-route").ProgramOutput;
 
-            Assert.That(result.ExecutedAction, Is.EqualTo(nameof(TestProgram.RoutedAction)));
+            Assert.That(
+                result.ExecutedAction,
+                Is.EqualTo(nameof(TestProgram.RoutedAction)));
         }
 
         [Test]
@@ -19,7 +20,9 @@ namespace Richiban.Cmdr.Tests.Routes
         {
             var result = RunTest("test-route-1", "test-route-2").ProgramOutput;
 
-            Assert.That(result.ExecutedAction, Is.EqualTo(nameof(TestProgram.MultiLevelRoutedAction)));
+            Assert.That(
+                result.ExecutedAction,
+                Is.EqualTo(nameof(TestProgram.MultiLevelRoutedAction)));
         }
 
         [Test]
@@ -27,23 +30,37 @@ namespace Richiban.Cmdr.Tests.Routes
         {
             var result = RunTest("class-test-route-1").ProgramOutput;
 
-            Assert.That(result.ExecutedAction, Is.EqualTo(nameof(TestProgram.ClassRoutedActions.ZeroLevelRoutedAction)));
+            Assert.That(
+                result.ExecutedAction,
+                Is.EqualTo(nameof(TestProgram.ClassRoutedActions.ZeroLevelRoutedAction)));
         }
 
         [Test]
         public void SingleLevelClassAndMethodRouteTest()
         {
-            var result = RunTest("class-test-route-1", "class-test-route-2").ProgramOutput;
+            var result = RunTest("class-test-route-1", "class-test-route-2")
+                .ProgramOutput;
 
-            Assert.That(result.ExecutedAction, Is.EqualTo(nameof(TestProgram.ClassRoutedActions.SingleLevelClassRoutedActionWithParameter)));
+            Assert.That(
+                result.ExecutedAction,
+                Is.EqualTo(
+                    nameof(TestProgram.ClassRoutedActions
+                        .SingleLevelClassRoutedActionWithParameter)));
         }
 
         [Test]
         public void MultiLevelClassAndMethodRouteTest()
         {
-            var result = RunTest("class-test-route-1", "class-test-route-2", "class-test-route-3").ProgramOutput;
+            var result = RunTest(
+                    "class-test-route-1",
+                    "class-test-route-2",
+                    "class-test-route-3")
+                .ProgramOutput;
 
-            Assert.That(result.ExecutedAction, Is.EqualTo(nameof(TestProgram.ClassRoutedActions.MultiLevelClassRoutedAction)));
+            Assert.That(
+                result.ExecutedAction,
+                Is.EqualTo(
+                    nameof(TestProgram.ClassRoutedActions.MultiLevelClassRoutedAction)));
         }
     }
 }

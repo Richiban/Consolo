@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace AutoLazy
 {
-    class Lazy: Attribute
+    internal class Lazy : Attribute
     {
     }
 }

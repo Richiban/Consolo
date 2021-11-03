@@ -69,8 +69,8 @@ namespace Richiban.Cmdr
 
         private string GetParameterHelp(ParameterHelp parameterHelp)
         {
-            var isInterestingType = parameterHelp.Type != typeof(string) &&
-                                    parameterHelp.Type != typeof(bool);
+            var isInterestingType = parameterHelp.Type != typeof(string).ToString() &&
+                                    parameterHelp.Type != typeof(bool).ToString();
 
             var hasXmlComment = !string.IsNullOrEmpty(parameterHelp.XmlComments);
 

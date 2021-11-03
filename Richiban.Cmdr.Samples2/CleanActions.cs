@@ -7,7 +7,7 @@ namespace Richiban.Cmdr.Sample
     public class CleanActions
     {
         /// <summary>
-        /// Cleans the working directory
+        ///     Cleans the working directory
         /// </summary>
         /// <param name="removeDirectories">Removes empty directories</param>
         /// <param name="force"></param>
@@ -21,18 +21,19 @@ namespace Richiban.Cmdr.Sample
             //[ShortForm('x', DisallowLongForm = true)] 
             bool ignoreIgnore = false)
         {
-            Console.WriteLine($"Cleaning working directory ({new { removeDirectories, force, ignoreIgnore }})");
+            Console.WriteLine(
+                $"Cleaning working directory ({new { removeDirectories, force, ignoreIgnore }})");
         }
 
         public Command ToCommand()
         {
             var cleanCommand = new Command("clean")
             {
-                new Option(new [] {"x", "ignoreIgnore"}),
-                new Option(new [] {"d", "removeDirectories"}),
-                new Option(new [] {"f", "force"})
+                new Option(new[] { "x", "ignoreIgnore" }),
+                new Option(new[] { "d", "removeDirectories" }),
+                new Option(new[] { "f", "force" })
             };
-            
+
             cleanCommand.Handler = CommandHandler.Create<bool, bool, bool>(Clean);
 
             return cleanCommand;

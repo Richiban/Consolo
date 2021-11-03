@@ -1,12 +1,11 @@
-﻿using Richiban.Cmdr;
-using System;
+﻿using System;
 
 namespace Richiban.Cmdr.Samples
 {
     public class PushAction
     {
         /// <summary>
-        /// This is a comment for my push action
+        ///     This is a comment for my push action
         /// </summary>
         /// <param name="branchName">The branch to push</param>
         /// <param name="setUpstreamBranch">Add an upstream tracking reference to the default remote branch</param>
@@ -14,10 +13,11 @@ namespace Richiban.Cmdr.Samples
         [CommandLine, Route]
         public void Push(
             string branchName = null,
-            [ShortForm('u')] bool setUpstreamBranch = false,
+            [ShortForm(firstShortForm: 'u')] bool setUpstreamBranch = false,
             string setUpstreamBranchTo = null)
         {
-            Console.WriteLine($"Pushing branch {new { branchName, setUpstreamBranch, setUpstreamBranchTo }}");
+            Console.WriteLine(
+                $"Pushing branch {new { branchName, setUpstreamBranch, setUpstreamBranchTo }}");
         }
     }
 }

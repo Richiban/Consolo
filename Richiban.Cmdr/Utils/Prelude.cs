@@ -1,16 +1,20 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Richiban.Cmdr
 {
-    static class Prelude
+    internal static class Prelude
     {
-        public static OptionNone None { get; } = new OptionNone();
+        public static OptionNone None { get; } = new();
 
-        public static Option<T> Some<T>(T value) => new Option<T>(value);
+        public static Option<T> Some<T>(T value) => new(value);
 
-        public struct OptionNone { }
+        public static IReadOnlyList<T> ListOf<T>(params T[] items) =>
+            items.ToList().AsReadOnly();
 
-        public static IReadOnlyList<T> ListOf<T>(params T[] items) => items.ToList().AsReadOnly();
+        public struct OptionNone
+        {
+        }
     }
 }

@@ -25,18 +25,18 @@ namespace Richiban.Cmdr
 
             _names = BuildNamesList(parameterInfo);
 
-            ParameterType = parameterInfo.ParameterType;
+            ParameterType = parameterInfo.ParameterType.ToString();
 
-            IsFlag = ParameterType == typeof(bool);
+            IsFlag = parameterInfo.ParameterType == typeof(bool);
 
-            AllowMultipleValues = ParameterType.IsArray;
+            AllowMultipleValues = parameterInfo.ParameterType.IsArray;
 
             GreedilyGrabFreeValues = isParams;
 
             Names = _names;
         }
 
-        public Type ParameterType { get; }
+        public string ParameterType { get; }
         public bool IsFlag { get; }
         public bool AllowNoValues { get; }
         public bool HasShortForm { get; }

@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.CommandLine.Parsing;
 using System.Linq;
-using System.Xml;
 
 namespace Richiban.Cmdr.Sample
 {
@@ -27,7 +24,7 @@ namespace Richiban.Cmdr.Sample
 
             var valueTuples = command.OfType<Command>()
                 .ToDictionary(
-                    c => c.Name[0],
+                    c => c.Name[index: 0],
                     c =>
                     {
                         return (helpText: c.Name, action: (Action<Repl>)(r => Act(c, r)));
@@ -35,17 +32,17 @@ namespace Richiban.Cmdr.Sample
 
             if (command is RootCommand)
             {
-                valueTuples.Add(
-                    '/',
-                    (helpText: "Quit", action: _ => Environment.Exit(0)));
+                valueTuples.Add(key: '/', (helpText: "Quit", action: r => r.End()));
             }
             else
             {
-                valueTuples.Add('/', (helpText: "Go back", action: r => r.End()));
+                valueTuples.Add(key: '/', (helpText: "Go back", action: r => r.End()));
             }
 
             _commands = valueTuples;
         }
+
+        private string Indentation => new(c: ' ', _level * IndentationSize);
 
         private void Act(Command command, Repl repl)
         {
@@ -72,36 +69,30 @@ namespace Richiban.Cmdr.Sample
                             Write($"{o.Name} [y/*]: ");
 
                             var promptChar = PromptChar();
-                            
-                            System.Console.WriteLine();
+
+                            Console.WriteLine();
 
                             switch (promptChar)
                             {
-                                case 'y' : return new [] {o.Aliases.First()};
+                                case 'y': return new[] { o.Aliases.First() };
                                 case var _: return Array.Empty<string>();
                             }
                         })
                     .ToArray();
 
-                command.Handler?.InvokeAsync(
-                        new InvocationContext(
-                            new Parser(command.ToArray()).Parse(arguments.Concat(options).ToArray())))
-                    .Wait();
+                command.Invoke(arguments.Concat(options).ToArray());
             }
         }
-
-        private string Indentation => new(c: ' ', _level * IndentationSize);
 
         public void End()
         {
             _isEnd = true;
         }
 
-        public void Write(object toWrite) =>
-            System.Console.Write($"{Indentation}{toWrite}");
+        public void Write(object toWrite) => Console.Write($"{Indentation}{toWrite}");
 
         public void WriteLine(object toWrite) =>
-            System.Console.WriteLine($"{Indentation}{toWrite}");
+            Console.WriteLine($"{Indentation}{toWrite}");
 
         public void EnterLoop()
         {
@@ -119,11 +110,11 @@ namespace Richiban.Cmdr.Sample
                     WriteLine($"[{triggerKey}] {helpText}");
                 }
 
-                System.Console.WriteLine();
+                Console.WriteLine();
 
                 var input = PromptChar(_commands.Keys.ToHashSet());
 
-                System.Console.WriteLine();
+                Console.WriteLine();
 
                 _commands[input].action(this);
             }
@@ -137,42 +128,40 @@ namespace Richiban.Cmdr.Sample
 
             do
             {
-                lastInput = System.Console.ReadKey(intercept: true);
+                lastInput = Console.ReadKey(intercept: true);
 
                 if (lastInput.KeyChar is >= 'a' and <= 'z')
                 {
                     result.Add(lastInput.KeyChar);
-                    System.Console.Write(lastInput.KeyChar);
+                    Console.Write(lastInput.KeyChar);
                 }
             } while (lastInput.Key != ConsoleKey.Enter &&
                      lastInput.Key != ConsoleKey.Tab);
 
             if (inline == false && lastInput.Key == ConsoleKey.Enter)
             {
-                System.Console.WriteLine();
+                Console.WriteLine();
             }
 
-            return new String(result.ToArray());
+            return new string(result.ToArray());
         }
 
         private char PromptChar(ISet<char> allowedCharacters = null)
         {
             allowedCharacters ??= "abcdefghijklmnopqrstuvwxyz".ToHashSet();
-            
+
             Write("[ ]");
 
-            System.Console.SetCursorPosition(
-                System.Console.CursorLeft - 2,
-                System.Console.CursorTop);
+            Console.SetCursorPosition(Console.CursorLeft - 2, Console.CursorTop);
 
             char input;
 
             do
             {
-                input = System.Console.ReadKey(intercept: true).KeyChar;
+                input = Console.ReadKey(intercept: true).KeyChar;
             } while (!allowedCharacters.Contains(input));
 
-            System.Console.Write(input);
+            Console.Write(input);
 
             return input;
         }

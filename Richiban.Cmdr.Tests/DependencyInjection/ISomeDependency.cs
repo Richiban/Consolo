@@ -1,4 +1,6 @@
-﻿namespace Richiban.Cmdr.Tests.DependencyInjection
+﻿using System;
+
+namespace Richiban.Cmdr.Tests.DependencyInjection
 {
     internal interface ISomeDependency
     {

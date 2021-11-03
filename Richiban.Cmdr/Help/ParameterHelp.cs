@@ -12,7 +12,7 @@ namespace Richiban.Cmdr
             bool isOptional,
             bool isFlag,
             bool allowMultipleValues,
-            Type type,
+            string type,
             string xmlComments)
         {
             ParameterNames = parameterNames;
@@ -27,19 +27,15 @@ namespace Richiban.Cmdr
         public bool IsOptional { get; }
         public bool IsFlag { get; }
         public bool AllowMultipleValues { get; }
-        public Type Type { get; }
+        public string Type { get; }
         public string XmlComments { get; }
 
         [Lazy]
         public override string ToString()
         {
             string parameterName(ParameterName pName) =>
-                pName is ParameterName.ShortForm s
-                    ?
-                    $"-{pName}"
-                    : IsFlag
-                        ? $"-{pName}"
-                        : $"<{pName}>";
+                pName is ParameterName.ShortForm s ? $"-{pName}" :
+                IsFlag ? $"-{pName}" : $"<{pName}>";
 
             var namesString = string.Join("|", ParameterNames.Select(parameterName));
 

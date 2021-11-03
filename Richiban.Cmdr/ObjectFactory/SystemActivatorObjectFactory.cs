@@ -7,22 +7,22 @@ namespace Richiban.Cmdr
     {
         public object CreateInstance(Type typeToInstantiate)
         {
-            var constructor = typeToInstantiate
-                .GetConstructors()
+            var constructor = typeToInstantiate.GetConstructors()
                 .Where(c => c.GetParameters().Length == 0)
                 .SingleOrDefault();
 
-            if(constructor == null)
+            if (constructor == null)
             {
                 throw new InvalidOperationException(
-                    $"Cannot instantiate type {typeToInstantiate} because it does not"
-                    + " have a parameterless constructor");
+                    $"Cannot instantiate type {typeToInstantiate} because it does not" +
+                    " have a parameterless constructor");
             }
 
             return constructor.Invoke(new object[0]);
         }
 
-        public static implicit operator Func<Type, object>(SystemActivatorObjectFactory factory) =>
+        public static implicit operator Func<Type, object>(
+            SystemActivatorObjectFactory factory) =>
             factory.CreateInstance;
     }
 }

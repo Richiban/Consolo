@@ -1,5 +1,4 @@
-﻿using Richiban.Cmdr;
-using System;
+﻿using System;
 
 namespace Richiban.Cmdr.Samples
 {
@@ -8,7 +7,7 @@ namespace Richiban.Cmdr.Samples
         [CommandLine, Route("version")]
         public static void Execute()
         {
-            Console.WriteLine($"Displaying version");
+            Console.WriteLine("Displaying version");
         }
     }
 }

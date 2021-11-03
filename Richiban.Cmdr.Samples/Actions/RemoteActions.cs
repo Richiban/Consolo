@@ -1,19 +1,18 @@
-﻿using Richiban.Cmdr;
-using System;
+﻿using System;
 
 namespace Richiban.Cmdr.Samples
 {
     [Route("remote")]
-    class RemoteActions
+    internal class RemoteActions
     {
         [CommandLine, Route("")]
         public void ListRemotes()
         {
-            Console.WriteLine($"Listing remotes");
+            Console.WriteLine("Listing remotes");
         }
 
         /// <summary>
-        /// Add a new remote
+        ///     Add a new remote
         /// </summary>
         /// <param name="name">The name to give the new remote</param>
         /// <param name="remoteUri">The URI of the new remote</param>
@@ -38,25 +37,29 @@ namespace Richiban.Cmdr.Samples
         [CommandLine, Route("set-head")]
         public void SetHeadToBranch(
             [ParameterName("name")] string remoteName,
-            string branch = null, 
-            [ShortForm('d'), ParameterName("delete")] bool deleteRemote = false,
-            [ShortForm('a'), ParameterName("auto")] bool automaticallySetHead = false)
+            string branch = null,
+            [ShortForm(firstShortForm: 'd'), ParameterName("delete")] bool deleteRemote =
+                false,
+            [ShortForm(firstShortForm: 'a'), ParameterName("auto")]
+            bool automaticallySetHead = false)
         {
             if (branch != null)
             {
-                Console.WriteLine($"Setting head for remote {remoteName} to branch {branch}");
+                Console.WriteLine(
+                    $"Setting head for remote {remoteName} to branch {branch}");
             }
             else if (deleteRemote)
             {
                 Console.WriteLine($"Deleting head for remote {remoteName}");
             }
-            else if(automaticallySetHead)
+            else if (automaticallySetHead)
             {
                 Console.WriteLine($"Auto-setting head for remote {remoteName}");
             }
             else
             {
-                Console.WriteLine("You must supply either a branch name or one of the flags [delete] or [auto]");
+                Console.WriteLine(
+                    "You must supply either a branch name or one of the flags [delete] or [auto]");
             }
         }
     }

@@ -1,5 +1,4 @@
-﻿using Richiban.Cmdr;
-using System;
+﻿using System;
 
 namespace Richiban.Cmdr.Samples
 {
@@ -9,7 +8,7 @@ namespace Richiban.Cmdr.Samples
         [CommandLine, Route("")]
         public void Execute()
         {
-            Console.WriteLine($"Listing branches");
+            Console.WriteLine("Listing branches");
         }
 
         [CommandLine, Route("")]

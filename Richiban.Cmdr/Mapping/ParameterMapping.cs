@@ -15,7 +15,7 @@ namespace Richiban.Cmdr
         }
 
         public IReadOnlyList<string> SuppliedValues { get; }
-        public Type ConvertToType { get; }
+        public string ConvertToType { get; }
 
         public sealed class NamedValue : ParameterMapping
         {

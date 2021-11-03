@@ -21,7 +21,7 @@ namespace Richiban.Cmdr.Sample
 
         private void Act(bool delete)
         {
-            Console.WriteLine($"Running remote action");
+            Console.WriteLine("Running remote action");
             Console.WriteLine($"Delete: {delete}");
         }
 
@@ -46,13 +46,14 @@ namespace Richiban.Cmdr.Sample
         {
             public Command ToCommand()
             {
-                var removeRemoteCommand = new Command("remove") { new Argument("remoteName") };
+                var removeRemoteCommand =
+                    new Command("remove") { new Argument("remoteName") };
 
                 removeRemoteCommand.Handler = CommandHandler.Create<string>(Act);
 
                 return removeRemoteCommand;
             }
-            
+
             public void Act(string remoteName)
             {
                 Console.WriteLine($"Removing remote: {remoteName}");

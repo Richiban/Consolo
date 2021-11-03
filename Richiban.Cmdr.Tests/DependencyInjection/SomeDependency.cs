@@ -1,6 +1,8 @@
-﻿namespace Richiban.Cmdr.Tests.DependencyInjection
+﻿using System;
+
+namespace Richiban.Cmdr.Tests.DependencyInjection
 {
-    class SomeDependency : ISomeDependency
+    internal class SomeDependency : ISomeDependency
     {
         public string SomeMessage => "This is a message from the dependency";
     }
