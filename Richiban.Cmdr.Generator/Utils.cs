@@ -15,7 +15,9 @@ namespace Richiban.Cmdr.Generator
                 if (char.IsUpper(c))
                 {
                     if (!first)
-                        sb.Append('-');
+                    {
+                        sb.Append(value: '-');
+                    }
 
                     sb.Append(char.ToLower(c));
                 }

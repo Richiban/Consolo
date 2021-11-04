@@ -24,7 +24,7 @@ namespace Richiban.Cmdr.Generator
                 AddAttribute(context);
 
                 var components = GetComponents(context.Compilation);
-                
+
                 AddMainMethod(context, components);
             }
             catch (Exception)
@@ -33,8 +33,7 @@ namespace Richiban.Cmdr.Generator
             }
         }
 
-        private static ImmutableArray<MethodModel> GetComponents(
-            Compilation compilation)
+        private static ImmutableArray<MethodModel> GetComponents(Compilation compilation)
         {
             // Get all classes
             var allNodes =
@@ -43,8 +42,7 @@ namespace Richiban.Cmdr.Generator
             var allClasses = allNodes.Where(d => d.IsKind(SyntaxKind.MethodDeclaration))
                 .OfType<MethodDeclarationSyntax>();
 
-            return allClasses
-                .Choose(component => TryGetComponent(compilation, component))
+            return allClasses.Choose(component => TryGetComponent(compilation, component))
                 .ToImmutableArray();
         }
 
@@ -52,10 +50,8 @@ namespace Richiban.Cmdr.Generator
             Compilation compilation,
             MethodDeclarationSyntax method)
         {
-            var attributes = method.AttributeLists
-                .SelectMany(x => x.Attributes)
-                 .Where(attr => 
-                     attr.Name.ToString().Contains("CmdrMethod"))
+            var attributes = method.AttributeLists.SelectMany(x => x.Attributes)
+                .Where(attr => attr.Name.ToString().Contains("CmdrMethod"))
                 .ToList();
 
             if (attributes.Any())
@@ -87,8 +83,9 @@ namespace Richiban.Cmdr.Generator
             GeneratorExecutionContext context,
             ImmutableArray<MethodModel> components)
         {
-            var lines = components.Select(it => $@"rootCommand.Add(new Command(""{it.MethodName}""));");
-            
+            var lines = components.Select(
+                it => $@"rootCommand.Add(new Command(""{it.MethodName}""));");
+
             var code = @$"
 using System.CommandLine;
 

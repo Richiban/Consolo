@@ -1,37 +1,37 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-    <AssemblyName>Richiban.Cmdr</AssemblyName>
-    <RootNamespace>Richiban.Cmdr</RootNamespace>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+        <AssemblyName>Richiban.Cmdr</AssemblyName>
+        <RootNamespace>Richiban.Cmdr</RootNamespace>
+    </PropertyGroup>
 
-  <PropertyGroup>
-    <LangVersion>latest</LangVersion>
-    <DocumentationFile>bin\Debug\net5.0\Richiban.Cmdr.xml</DocumentationFile>
-  </PropertyGroup>
+    <PropertyGroup>
+        <LangVersion>latest</LangVersion>
+        <DocumentationFile>bin\Debug\net5.0\Richiban.Cmdr.xml</DocumentationFile>
+    </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <Optimize>false</Optimize>
-  </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <Optimize>false</Optimize>
+    </PropertyGroup>
 
-  <PropertyGroup>
-    <DebugType>pdbonly</DebugType>
-    <Authors>Richard Gibson</Authors>
-    <Company>Richibansoft</Company>
-    <Version>0.0.1-rc.1</Version>
-    <Description>A library for not just parsing command line arguments, but for making your standard C# methods callable from the command line</Description>
-    <PackageProjectUrl>https://github.com/Richiban/CommandLine</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/Richiban/CommandLine</RepositoryUrl>
-    <RepositoryType>Git</RepositoryType>
-    <PackageTags>command line shell</PackageTags>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/Richiban/CommandLine/master/LICENSE</PackageLicenseUrl>
-    <PackageReleaseNotes>Very first version. Not recommended for production use.</PackageReleaseNotes>
-  </PropertyGroup>
+    <PropertyGroup>
+        <DebugType>pdbonly</DebugType>
+        <Authors>Richard Gibson</Authors>
+        <Company>Richibansoft</Company>
+        <Version>0.0.1-rc.1</Version>
+        <Description>A library for not just parsing command line arguments, but for making your standard C# methods callable from the command line</Description>
+        <PackageProjectUrl>https://github.com/Richiban/CommandLine</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/Richiban/CommandLine</RepositoryUrl>
+        <RepositoryType>Git</RepositoryType>
+        <PackageTags>command line shell</PackageTags>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageLicenseUrl>https://raw.githubusercontent.com/Richiban/CommandLine/master/LICENSE</PackageLicenseUrl>
+        <PackageReleaseNotes>Very first version. Not recommended for production use.</PackageReleaseNotes>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <None Include="..\LICENSE" Pack="true" PackagePath="$(PackageLicenseFile)" />
-  </ItemGroup>
+    <ItemGroup>
+        <None Include="..\LICENSE" Pack="true" PackagePath="$(PackageLicenseFile)"/>
+    </ItemGroup>
 
 </Project>

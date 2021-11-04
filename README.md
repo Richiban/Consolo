@@ -8,11 +8,13 @@ Most libraries on the subject are just for parsing the arguments to your executa
 var options = SomeLibrary.Parse<MyOptions>();
 ```
 
-The problem with this is twofold: first, you must then write the branching logic yourself to execute whatever logic you want based on what was set on your options object and second, 
-this has no support for _verbs_ at the command line (more on that later).
+The problem with this is twofold: first, you must then write the branching logic yourself to execute whatever logic you
+want based on what was set on your options object and second, this has no support for _verbs_ at the command line (more
+on that later).
 
-My goal with Richiban.Cmdr was to create a library that felt--as much as possible--as if you could simple call your C# methods directly from the command line. For example, if
-I have a method called `ProcessItems` that takes two arguments: an `int batchSize` and a `bool waitBetweenBatches` then I want to write absolutely as little code as I possibly can
+My goal with Richiban.Cmdr was to create a library that felt--as much as possible--as if you could simple call your C#
+methods directly from the command line. For example, if I have a method called `ProcessItems` that takes two arguments:
+an `int batchSize` and a `bool waitBetweenBatches` then I want to write absolutely as little code as I possibly can
 apart from:
 
 ```csharp
@@ -59,7 +61,8 @@ which can, indeed, be called like this:
 myApp.exe 1000 /waitBetweenBatches
 ```
 
-As you can, once I've installed the Richiban.Cmdr NuGet package I've had to write almost no code to make the method callable from the command line.
+As you can, once I've installed the Richiban.Cmdr NuGet package I've had to write almost no code to make the method
+callable from the command line.
 
 Multiple methods can be tagged. All that matters is that the command line arguments have unique names‡.
 
@@ -88,25 +91,26 @@ public class Program
 
 ### It supports Unix-style, Windows-style and Powershell-style argument passing
 
-Unix-style looks like this: 
+Unix-style looks like this:
 
 ```sh
 someApp --paramA=valueA --flag1
 ```
 
-Windows-style looks like this: 
+Windows-style looks like this:
 
 ```batchfile
 someApp.exe /paramA:valueA /flag1
 ```
 
-Powershell-style looks like this: 
+Powershell-style looks like this:
 
 ```powershell
 someApp -paramA valueA -flag1
 ```
 
-These are all supported out of the box†, and can even be mixed and matched (although this is not recommended). For example, this is perfectly acceptable:
+These are all supported out of the box†, and can even be mixed and matched (although this is not recommended). For
+example, this is perfectly acceptable:
 
 ```
 someApp.exe /paramA:valueA --flag1 -paramB:valueB
@@ -120,14 +124,20 @@ someApp.exe /paramA:valueA --flag1 -paramB:valueB
 ```sh
 myApp --paramA=valueA --paramB=valueB
 ```
+
 and
+
 ```sh
 myApp --paramB=valueB --paramA=valueA
 ```
-are considered equal, because the names have been given; i.e. the order is not important because it's unambiguous. Note that if you don't give the names:
+
+are considered equal, because the names have been given; i.e. the order is not important because it's unambiguous. Note
+that if you don't give the names:
+
 ```sh
 myApp valueB valueA
 ```
+
 then it still works, but the order is now important.
 
 ### Verbs are supported
@@ -138,7 +148,9 @@ We're getting into more advanced terratory now. Let's look at an example from th
 git remote add origin http://example.com/project.git
 ```
 
-In the example above, the tokens `remote` and `add` are _verbs_, and `origin` and `http://example.com/project.git` are the arguments. Richiban.Cmdr supports verbs! Since, technically, only the last of these tokens is really a verb we call them _routes_. This example with two route parts and two arguments would look like this:
+In the example above, the tokens `remote` and `add` are _verbs_, and `origin` and `http://example.com/project.git` are
+the arguments. Richiban.Cmdr supports verbs! Since, technically, only the last of these tokens is really a verb we call
+them _routes_. This example with two route parts and two arguments would look like this:
 
 ```csharp
 [CommandLine, Route("remote", "add")]
@@ -150,8 +162,8 @@ public void AddRemote(string remoteName, Uri remoteUri)
 
 > Note that here we have an argument of type `Uri`. See [Argument types are converted].
 
-For the purposes of code organisation and not repeating oneself, you can also put route attributes
-on the containing class. So, instead of having to write:
+For the purposes of code organisation and not repeating oneself, you can also put route attributes on the containing
+class. So, instead of having to write:
 
 ```csharp
 class MyRemoteActions
@@ -200,23 +212,24 @@ public void MyAction()
 }
 ```
 
-### Argument types are converted 
+### Argument types are converted
 
 Note that arguments do not have to be strings.
 
 The rule is that arguments must either:
- * Be of type `string`
- * implement `IConvertible` (the conversion is done by `Convert.ChangeType(...)`)
- * have a constructor that takes a `string` or `string[]` as argument
- * be of an Enum type (then the conversion is done by `Enum.Parse(...)`)
+
+* Be of type `string`
+* implement `IConvertible` (the conversion is done by `Convert.ChangeType(...)`)
+* have a constructor that takes a `string` or `string[]` as argument
+* be of an Enum type (then the conversion is done by `Enum.Parse(...)`)
 
 Some example types that work out of the box:
+
 * string
 * bool
 * int
 * Uri
-* FileInfo
-and many more
+* FileInfo and many more
 
 ### Compatible with dependency injection frameworks
 
@@ -257,7 +270,8 @@ public class SomeClass
 }
 ```
 
-Well, it is easy with Richiban.Cmdr! First, we note that there is an overload of `CommandLine.Execute` that takes a `CommandLineConfiguration` object. Let's look at the
+Well, it is easy with Richiban.Cmdr! First, we note that there is an overload of `CommandLine.Execute` that takes
+a `CommandLineConfiguration` object. Let's look at the
 `CommandLineConfiguration` type:
 
 ```csharp
@@ -273,9 +287,10 @@ Well, it is easy with Richiban.Cmdr! First, we note that there is an overload of
     }
 ```
 
-Of interest is the `ObjectFactory` property. It's a `Func<Type, object>`, which is the most generic possible definition of a factory (it's a function that takes a `Type` as argument and 
-returns an `object`). The `ObjectFactory` property has a setter, so we can provide whatever implementation we want. Since it's a `Func` we don't even have to implement an interface, we
-can simply configure like this:
+Of interest is the `ObjectFactory` property. It's a `Func<Type, object>`, which is the most generic possible definition
+of a factory (it's a function that takes a `Type` as argument and returns an `object`). The `ObjectFactory` property has
+a setter, so we can provide whatever implementation we want. Since it's a `Func` we don't even have to implement an
+interface, we can simply configure like this:
 
 ```csharp
 public static void Main(string[] args)
@@ -304,7 +319,8 @@ public void Method1(string someArgument, bool someFlag = false)
 }
 ```
 
-But, when it comes time to use this app, our user can't quite remember the order of arguments or their exact names. Using the auto-help feature, they can enter:
+But, when it comes time to use this app, our user can't quite remember the order of arguments or their exact names.
+Using the auto-help feature, they can enter:
 
 ```bash
 > myapp method1 -?
@@ -325,11 +341,13 @@ Help for method1:
 
 > Note the `--` prefix to `someFlag`. Since there isn't a 'correct' way of writing flags or named arguments in Richiban.Cmdr, a best guess is made when writing auto-help. Currently this is relies on the path separator for your system, so on Windows this would appear as: `myapp method1 <someArgument> [/someFlag]`.
 
-If the user calls `help` and the arguments they have supplied are ambiguous then auto-help will be displayed for all routes that even partially match what they did supply.
+If the user calls `help` and the arguments they have supplied are ambiguous then auto-help will be displayed for all
+routes that even partially match what they did supply.
 
 #### XML comments from your methods and classes will appear in auto-help
 
-Auto help can even pick out your XML comments! (Don't forget to enable the export of your XML comments in your project file).
+Auto help can even pick out your XML comments! (Don't forget to enable the export of your XML comments in your project
+file).
 
 Let's say we have the following method:
 
@@ -361,14 +379,14 @@ Richiban.Cmdr.Samples.exe method <param1> <param2> [-f|--someFlag]
         [-f|--someFlag] A flag that does something interesting
 ```
 
-Note that because the type for parameter `param2` is 'interesting' (i.e. it isn't a `string` or `bool`) 
+Note that because the type for parameter `param2` is 'interesting' (i.e. it isn't a `string` or `bool`)
 auto help has automatically noted the type here in the comments.
 
 ### Alternative names and short forms
 
 Parameters on the command line, by default, get the name they have in the method definition. If you would like to
-override this, use the `ParameterName` attribute. This attribute has a convenient `IncludeOriginal` property that
-you can set if you want to include the original name in addition to the one provided.
+override this, use the `ParameterName` attribute. This attribute has a convenient `IncludeOriginal` property that you
+can set if you want to include the original name in addition to the one provided.
 
 ```csharp
 [CommandLine]
@@ -378,8 +396,8 @@ public void MyMethod([ParameterName("my-param")] string param1)
 }
 ```
 
-A related (but slightly deeper) topic is that of _short forms_. A short form looks like a single-character 
-parameter name but it behaves slightly differently:
+A related (but slightly deeper) topic is that of _short forms_. A short form looks like a single-character parameter
+name but it behaves slightly differently:
 
 ```csharp
 [CommandLine]
@@ -393,11 +411,10 @@ public void MyMethod(
 }
 ```
 
-Firstly, a shortform does not replace the original parameter name; it is usable in addition (to flip this behaviour
-set the `DisallowLongForm` property on the `ShortForm` attribute in question).
+Firstly, a shortform does not replace the original parameter name; it is usable in addition (to flip this behaviour set
+the `DisallowLongForm` property on the `ShortForm` attribute in question).
 
-Secondly, shortforms can be _collapsed_. So, as well as providing them as if they were just single-character 
-names:
+Secondly, shortforms can be _collapsed_. So, as well as providing them as if they were just single-character names:
 
 ```bash
 > myapp -a -b -c
@@ -447,4 +464,6 @@ If using `params` then this parameter will hoover up all remaining (unnamed) arg
 ```
 
 -------
-That's about it for the readme. Please feel free to read the issues in this project to see what's coming further down the road or, if you dream up more features for Richiban.Cmdr, post an issue of your own. I also welcome (expected) PRs so contact me before starting any work.
+That's about it for the readme. Please feel free to read the issues in this project to see what's coming further down
+the road or, if you dream up more features for Richiban.Cmdr, post an issue of your own. I also welcome (expected) PRs
+so contact me before starting any work.

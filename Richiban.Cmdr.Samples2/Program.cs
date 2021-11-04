@@ -18,7 +18,7 @@ __________                __
         \/      \/     \/     \/
 ";
 
-if (args is { Length: 1 } && (args[0] is "--interactive" or "-i"))
+if (args is { Length: 1 } && args[0] is "--interactive" or "-i")
 {
     var repl = new Repl(rootCommand, "What would you like to do?");
     repl.EnterLoop();
