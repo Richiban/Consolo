@@ -35,7 +35,6 @@ namespace Richiban.Cmdr.Generator
 
         private static ImmutableArray<MethodModel> GetComponents(Compilation compilation)
         {
-            // Get all classes
             var allNodes =
                 compilation.SyntaxTrees.SelectMany(s => s.GetRoot().DescendantNodes());
 
@@ -54,16 +53,46 @@ namespace Richiban.Cmdr.Generator
                 .Where(attr => attr.Name.ToString().Contains("CmdrMethod"))
                 .ToList();
 
-            if (attributes.Any())
+            if (!attributes.Any())
             {
-                var methodName = method.Identifier.Text;
-
-                var componentName = Utils.ToKebabCase(methodName);
-
-                return new MethodModel(componentName);
+                return null;
             }
 
-            return null;
+            var methodName = method.Identifier.Text;
+
+            var parameters = method.ParameterList.Parameters.Select(GetArgumentModel)
+                .ToArray();
+
+            var classDeclarationSyntax = (ClassDeclarationSyntax)method.Parent;
+
+            var usings = compilation.GetSemanticModel(classDeclarationSyntax.SyntaxTree)
+                .GetDeclaredSymbol(classDeclarationSyntax)
+                .DeclaringSyntaxReferences
+                .SelectMany(x => x.SyntaxTree.GetCompilationUnitRoot().Usings)
+                .Select(x => x.Name.ToString())
+                .ToArray();
+
+            var classNamespace =
+                ((NamespaceDeclarationSyntax)classDeclarationSyntax.Parent).Name
+                .ToString();
+
+            var className = classDeclarationSyntax.Identifier.Text;
+
+            return new MethodModel(
+                methodName,
+                className,
+                parameters,
+                usings,
+                classNamespace);
+        }
+
+        private static ArgumentModel GetArgumentModel(ParameterSyntax p)
+        {
+            var name = p.Identifier.Text;
+            var type = p.Type.ToString();
+            var isFlag = type.EndsWith("bool") || type.EndsWith("Boolean");
+
+            return new ArgumentModel(name, type, isFlag);
         }
 
         private static void AddAttribute(GeneratorExecutionContext context)
@@ -81,29 +110,80 @@ namespace Richiban.Cmdr.Generator
 
         private static void AddMainMethod(
             GeneratorExecutionContext context,
-            ImmutableArray<MethodModel> components)
+            ImmutableArray<MethodModel> methods)
         {
-            var lines = components.Select(
-                it => $@"rootCommand.Add(new Command(""{it.MethodName}""));");
+            var commands = methods.Select(MethodModelToString);
+
+            var commandsString = string.Join("\n", commands);
+
+            var usings = new UsingsModel
+            {
+                "System", "System.CommandLine", "System.CommandLine.Invocation"
+            };
+
+            usings.AddRange(methods.SelectMany(m => m.Usings));
+
+            var usingsString = string.Join("\n", usings.Select(u => $"using {u};"));
+
+            var title = "Welcome to your app";
 
             var code = @$"
-using System.CommandLine;
+{usingsString}
 
 public static class Program 
 {{
     public static void Main(string[] args)
     {{
-        System.Console.WriteLine(""In the auto main method"");
+        System.Console.WriteLine(""{title}"");
 
 var rootCommand = new RootCommand();
 
-        {string.Join("\n", lines)}
+        {commandsString}
 
 rootCommand.Invoke(args);
     }}
 }}";
 
             context.AddSource("Program.g.cs", SourceText.From(code, Encoding.UTF8));
+        }
+
+        private static string MethodModelToString(MethodModel method)
+        {
+            var parameterStrings = method.Arguments.Select(ArgumentOrOptionToString);
+
+            var parametersString = string.Join(",\n", parameterStrings);
+
+            var argumentTypes = method.Arguments.Select(a => a.Type);
+
+            var argumentTypesString = string.Join(", ", argumentTypes);
+
+            var cmdName = method.NameIn + "Command";
+
+            return $@"
+var {cmdName} = new Command(""{method.NameOut}"")
+{{ 
+    {parametersString}
+}};
+
+{cmdName}.Handler = CommandHandler.Create<{argumentTypesString}>({method.ClassName}.{method.NameIn});
+
+rootCommand.Add({cmdName});";
+        }
+
+        private static string ArgumentOrOptionToString(ArgumentModel x)
+        {
+            return x.IsFlag ? OptionToString(x) : ArgumentToString(x);
+        }
+
+        private static string ArgumentToString(ArgumentModel x) =>
+            $@"new Argument(""{x.NameOut}"")";
+
+        private static string OptionToString(ArgumentModel argumentModel)
+        {
+            var aliases = new[] { argumentModel.NameOut[0].ToString(), argumentModel.NameOut };
+            var aliasesString = string.Join(", ", aliases.Select(a => $"\"{a}\""));
+
+            return $@"new Option({aliasesString})";
         }
     }
 }
