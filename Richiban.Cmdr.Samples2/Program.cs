@@ -27,6 +27,5 @@ if (args is { Length: 1 } && args[0] is "--interactive" or "-i")
 }
 else
 {
-    return await rootCommand.InvokeAsync(args);
     return rootCommand.Invoke(args);
 }
