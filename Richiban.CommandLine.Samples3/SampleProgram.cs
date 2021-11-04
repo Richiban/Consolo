@@ -1,15 +1,24 @@
 ﻿using System;
-using Richiban.Cmdr.Generator;
+using Richiban.Cmdr;
 
-namespace Richiban.CommandLine.Samples3
+namespace Richiban
 {
-    public static class SampleProgram
+    namespace CommandLine
     {
-        [CmdrMethod]
-        public static void UpdateStats(DateTime since, bool allowClobber)
+        namespace Samples3
         {
-            Console.WriteLine(
-                $"Updating stats since {since}, with {new { allowClobber }}");
+            public static class ContainerClass
+            {
+                public static class SampleProgram
+                {
+                    [CmdrMethod]
+                    public static void UpdateStats(DateTime since, bool allowClobber)
+                    {
+                        Console.WriteLine(
+                            $"Updating stats since {since}, with {new { allowClobber }}");
+                    }
+                }
+            }
         }
     }
 }
