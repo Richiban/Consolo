@@ -130,7 +130,7 @@ namespace Richiban.Cmdr.Sample
             {
                 lastInput = Console.ReadKey(intercept: true);
 
-                if (lastInput.KeyChar is >= 'a' and <= 'z')
+                if (lastInput.KeyChar is >= 'a' and <= 'z' or >= '0' and <= '9')
                 {
                     result.Add(lastInput.KeyChar);
                     Console.Write(lastInput.KeyChar);

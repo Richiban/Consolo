@@ -138,7 +138,7 @@ public static class Program
 
         if (args is {{ Length: 1 }} && args[0] is ""--interactive"" or ""-i"")
         {{
-            var repl = new Repl(rootCommand, ""What would you like to do?"");
+            var repl = new Repl(rootCommand, ""Select a command"");
             repl.EnterLoop();
 
             return 0;
@@ -321,6 +321,8 @@ namespace Richiban.Cmdr
 
         private string PromptString(bool inline = false)
         {
+            if  (!inline) return Console.ReadLine();
+
             List<char> result = new();
 
             ConsoleKeyInfo lastInput;
@@ -329,7 +331,7 @@ namespace Richiban.Cmdr
             {
                 lastInput = Console.ReadKey(intercept: true);
 
-                if (lastInput.KeyChar is >= 'a' and <= 'z')
+                if (lastInput.KeyChar is >= 'a' and <= 'z' or >= '0' and <= '9')
                 {
                     result.Add(lastInput.KeyChar);
                     Console.Write(lastInput.KeyChar);

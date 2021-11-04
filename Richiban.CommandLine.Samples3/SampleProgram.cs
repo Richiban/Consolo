@@ -6,10 +6,10 @@ namespace Richiban.CommandLine.Samples3
     public static class SampleProgram
     {
         [CmdrMethod]
-        public static void UpdateStats(DateTime since, bool someFlag)
+        public static void UpdateStats(DateTime since, bool allowClobber)
         {
-            Console.WriteLine($"Inside {nameof(UpdateStats)}");
-            Console.WriteLine(new { since, someFlag });
+            Console.WriteLine(
+                $"Updating stats since {since}, with {new { allowClobber }}");
         }
     }
 }
