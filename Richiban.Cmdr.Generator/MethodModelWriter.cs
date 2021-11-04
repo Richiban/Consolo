@@ -20,7 +20,7 @@ namespace Richiban.Cmdr.Generator
 
             var parametersString = string.Join((string)",\n", parameterStrings);
 
-            var argumentTypes = _methodModel.Arguments.Select(a => a.Type);
+            var argumentTypes = _methodModel.Arguments.Select(a => a.FullyQualifiedTypeName);
 
             var argumentTypesString = string.Join(", ", argumentTypes);
 

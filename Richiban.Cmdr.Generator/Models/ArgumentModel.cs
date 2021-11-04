@@ -4,17 +4,17 @@ namespace Richiban.Cmdr.Generator
 {
     internal class ArgumentModel
     {
-        public ArgumentModel(string nameIn, string type, bool isFlag)
+        public ArgumentModel(string nameIn, string fullyQualifiedTypeName, bool isFlag)
         {
             NameIn = nameIn;
-            Type = type;
+            FullyQualifiedTypeName = fullyQualifiedTypeName;
             IsFlag = isFlag;
             NameOut = Utils.ToKebabCase(nameIn);
         }
 
         public string NameIn { get; }
         public string NameOut { get; }
-        public string Type { get; }
+        public string FullyQualifiedTypeName { get; }
         public bool IsFlag { get; }
     }
 }
