@@ -1,43 +1,45 @@
 ﻿using System;
 using Richiban.Cmdr;
 
-namespace Richiban.Cmdr
+namespace Richiban.Cmdr.Samples
 {
-    namespace Samples3
+    public static class SampleProgram
+    {
+        [CmdrMethod]
+        public static void UpdateStats(DateTime since, bool allowClobber)
+        {
+            Console.WriteLine(
+                $"Updating stats since {since}, with {new { allowClobber }}");
+        }
+    }
+
+    // Methods can be arbitrarily nested inside namespaces and static classes
+    namespace InnerNamespace
     {
         public static class ContainerClass
         {
-            public static class SampleProgram
+            public static class InnerContainerClass
             {
                 [CmdrMethod]
-                public static void UpdateStat(DateTime since, bool allowClobber)
+                public static void AnotherMethod(Data data)
                 {
-                    Console.WriteLine(
-                        $"Updating stats since {since}, with {new { allowClobber }}");
+                    Console.WriteLine($"In {nameof(AnotherMethod)}, {new { data }}");
                 }
             }
-        }
-    }
-}
 
-namespace SomethingElse
-{
-    public static class C
-    {
-        [CmdrMethod]
-        public static void M(Data data)
-        {
-            Console.WriteLine($"In M, {new { data }}");
-        }
-    }
+            // Method arguments don't have to be strings; they can be any type that has 
+            // a constructor that takes a string
+            public class Data
+            {
+                public Data(string value)
+                {
+                    Value = value;
+                }
 
-    public class Data
-    {
-        public Data(string value)
-        {
-            Value = value;
-        }
+                public string Value { get; }
 
-        public string Value { get; }
+                public override string ToString() => Value;
+            }
+        }
     }
 }
