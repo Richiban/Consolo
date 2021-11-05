@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace Richiban.Cmdr.Generator
+namespace Richiban.Cmdr
 {
     public static class Utils
     {

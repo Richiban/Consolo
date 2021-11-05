@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Richiban.Cmdr.Generator
+namespace Richiban.Cmdr.Models
 {
     internal class UsingsModel : IEnumerable<string>
     {

@@ -3,15 +3,19 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Richiban.Cmdr.Generator
+namespace Richiban.Cmdr.Writers
 {
-    public class ReplWriter
+    class ReplWriter
     {
         private readonly GeneratorExecutionContext _context;
+        private readonly CmdrAttribute _cmdrAttribute;
 
-        public ReplWriter(GeneratorExecutionContext context)
+        public ReplWriter(
+            GeneratorExecutionContext context,
+            CmdrAttribute cmdrAttribute)
         {
             _context = context;
+            _cmdrAttribute = cmdrAttribute;
         }
 
         public void WriteToContext()

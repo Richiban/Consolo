@@ -5,7 +5,7 @@ namespace Richiban.Cmdr.Samples
 {
     public static class SampleProgram
     {
-        [CmdrMethod]
+        [CmdrMethod("test")]
         public static void UpdateStats(DateTime since, bool allowClobber)
         {
             Console.WriteLine(
@@ -18,9 +18,10 @@ namespace Richiban.Cmdr.Samples
     {
         public static class ContainerClass
         {
+            [CmdrMethod("test1")]
             public static class InnerContainerClass
             {
-                [CmdrMethod]
+                [CmdrMethod("test2")]
                 public static void AnotherMethod(Data data)
                 {
                     Console.WriteLine($"In {nameof(AnotherMethod)}, {new { data }}");

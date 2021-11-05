@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using Richiban.Cmdr.Models;
 
-namespace Richiban.Cmdr.Generator
+namespace Richiban.Cmdr.Writers
 {
     class ProgramClassWriter
     {
@@ -18,7 +19,7 @@ namespace Richiban.Cmdr.Generator
 
         public void WriteToContext(IReadOnlyCollection<MethodModel> methods)
         {
-            var commands = methods.Select(m => new MethodModelWriter(m).WriteString());
+            var commands = methods.Select(m => new CommandModelWriter(m).WriteString());
 
             var commandsString = string.Join("\n", commands);
 

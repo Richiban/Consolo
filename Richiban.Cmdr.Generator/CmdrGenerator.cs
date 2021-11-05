@@ -2,8 +2,9 @@
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using Richiban.Cmdr.Writers;
 
-namespace Richiban.Cmdr.Generator
+namespace Richiban.Cmdr
 {
     [Generator]
     public class CmdrGenerator : ISourceGenerator
@@ -16,15 +17,16 @@ namespace Richiban.Cmdr.Generator
         {
             try
             {
-                var cmdrAttributeWriter = new CmdrAttributeWriter(context);
-                cmdrAttributeWriter.WriteToContext();
+                var cmdrAttribute = new CmdrAttribute();
+                
+                new CmdrAttributeWriter(cmdrAttribute, context).WriteToContext();
 
                 var methods =
-                    new MethodModelBuilder(context).GetMethods(cmdrAttributeWriter);
+                    new MethodModelBuilder(context, cmdrAttribute).GetMethods();
 
                 new ProgramClassWriter(context).WriteToContext(methods);
 
-                new ReplWriter(context).WriteToContext();
+                new ReplWriter(context, cmdrAttribute).WriteToContext();
             }
             catch (Exception)
             {

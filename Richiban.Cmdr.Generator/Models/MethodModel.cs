@@ -1,26 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 
-namespace Richiban.Cmdr.Generator
+namespace Richiban.Cmdr.Models
 {
-    internal record MethodModel
+    class MethodModel
     {
         public MethodModel(
-            string nameIn,
+            string name,
+            IReadOnlyList<string> parentNames,
             string fullyQualifiedClassName,
             IReadOnlyCollection<ArgumentModel> arguments)
         {
-            NameIn = nameIn;
+            Name = name;
+            ParentNames = parentNames;
             Arguments = arguments;
             FullyQualifiedClassName = fullyQualifiedClassName;
-            NameOut = Utils.ToKebabCase(nameIn);
+            NameOut = Utils.ToKebabCase(name);
         }
 
-        public string NameIn { get; }
+        public string Name { get; }
+        public string NameOut { get; }
+        public IReadOnlyList<string> ParentNames { get; }
         public IReadOnlyCollection<ArgumentModel> Arguments { get; }
         public string FullyQualifiedClassName { get; }
-        public string NameOut { get; }
     }
 }

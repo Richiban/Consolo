@@ -1,84 +1,112 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Richiban.Cmdr.Models;
 
-namespace Richiban.Cmdr.Generator
+namespace Richiban.Cmdr
 {
     class MethodModelBuilder
     {
         private readonly GeneratorExecutionContext _context;
+        private readonly CmdrAttribute _cmdrAttribute;
 
-        private static SymbolDisplayFormat? _symbolDisplayFormat =
-            new SymbolDisplayFormat(
-                typeQualificationStyle: SymbolDisplayTypeQualificationStyle
-                    .NameAndContainingTypesAndNamespaces);
+        private static readonly SymbolDisplayFormat SymbolDisplayFormat = new(
+            typeQualificationStyle: SymbolDisplayTypeQualificationStyle
+                .NameAndContainingTypesAndNamespaces);
 
-        public MethodModelBuilder(GeneratorExecutionContext context)
+        public MethodModelBuilder(
+            GeneratorExecutionContext context,
+            CmdrAttribute cmdrAttribute)
         {
             _context = context;
+            _cmdrAttribute = cmdrAttribute;
         }
 
-        public ImmutableArray<MethodModel> GetMethods(
-            CmdrAttributeWriter cmdrAttributeWriter)
+        public ImmutableArray<MethodModel> GetMethods()
         {
-            var compilation = _context.Compilation;
-
-            return GetQualifyingMethods(compilation, cmdrAttributeWriter.Name)
-                .Choose(m => TryMapMethod(m, compilation, cmdrAttributeWriter.Name))
+            return GetQualifyingMethods(_context.Compilation)
+                .Choose(TryMapMethod)
                 .ToImmutableArray();
         }
 
-        private MethodModel? TryMapMethod(
-            MethodDeclarationSyntax methodSymtax,
-            Compilation compilation,
-            string attributeName)
+        private MethodModel? TryMapMethod(IMethodSymbol? methodSymbol)
         {
-            var semanticModel =
-                compilation.GetSemanticModel(methodSymtax.SyntaxTree.GetRoot().SyntaxTree);
-
-            if (semanticModel.GetDeclaredSymbol(methodSymtax) is not { } methodSymbol)
+            if (methodSymbol is null)
             {
                 return null;
             }
 
             if (!methodSymbol.IsStatic)
             {
-                ReportStaticMethodDiagnostic(attributeName, methodSymbol);
+                ReportStaticMethodDiagnostic(methodSymbol);
 
                 return null;
             }
 
-            var parameters = methodSymbol.Parameters.Select(GetArgumentModel).ToImmutableArray();
+            var parameters = methodSymbol.Parameters.Select(GetArgumentModel)
+                .ToImmutableArray();
 
-            var fullyQualifiedName = GetFullyQualifiedClassName(methodSymbol);
+            var aliases = GetAttributeArguments(methodSymbol);
 
-            return new MethodModel(methodSymbol.Name, fullyQualifiedName, parameters);
+            var fullyQualifiedName = GetFullyQualifiedTypeName(methodSymbol.ContainingType);
+
+            return new MethodModel(
+                methodSymbol.Name,
+                aliases,
+                fullyQualifiedName,
+                parameters);
         }
 
-        private static string GetFullyQualifiedClassName(IMethodSymbol methodSymbol)
+        private ImmutableArray<string> GetAttributeArguments(IMethodSymbol methodSymbol)
         {
-            var containingType = methodSymbol.ContainingType;
+            return GetAttributesAllTheWayToRoot(methodSymbol)
+                .Select(a => a.ConstructorArguments.Single().ToString())
+                .ToImmutableArray();
+        }
 
-            return GetFullyQualifiedTypeName(containingType);
+        private Stack<AttributeData> GetAttributesAllTheWayToRoot(
+            IMethodSymbol methodSymbol)
+        {
+            var attributes = new Stack<AttributeData>();
+
+            var current = (ISymbol)methodSymbol;
+
+            while (current != null)
+            {
+                if (GetAttribute(current) is { } attr)
+                    attributes.Push(attr);
+
+                Debugger.Launch();
+
+                current = current.ContainingType;
+            }
+
+            return attributes;
+        }
+
+        private AttributeData? GetAttribute(ISymbol current)
+        {
+            return current.GetAttributes()
+                .SingleOrDefault(
+                    a => a.AttributeClass?.Name == _cmdrAttribute.AttributeName);
         }
 
         private static string GetFullyQualifiedTypeName(ITypeSymbol containingType) =>
-            containingType.ToDisplayString(_symbolDisplayFormat);
+            containingType.ToDisplayString(SymbolDisplayFormat);
 
-        private void ReportStaticMethodDiagnostic(
-            string attributeName,
-            IMethodSymbol methodSymbol)
+        private void ReportStaticMethodDiagnostic(IMethodSymbol methodSymbol)
         {
             _context.ReportDiagnostic(
                 Diagnostic.Create(
                     new DiagnosticDescriptor(
                         "SG0001",
                         "Non-static method",
-                        $"Method {{0}} must be static in order to use the [{attributeName}] attribute",
+                        $"Method {{0}} must be static in order to use the [{_cmdrAttribute.AttributeName}] attribute",
                         "yeet",
                         DiagnosticSeverity.Error,
                         isEnabledByDefault: true),
@@ -86,19 +114,41 @@ namespace Richiban.Cmdr.Generator
                     methodSymbol.Name));
         }
 
-        private IEnumerable<MethodDeclarationSyntax> GetQualifyingMethods(
-            Compilation compilation,
-            string attributeName)
+        private IEnumerable<IMethodSymbol?> GetQualifyingMethods(Compilation compilation)
         {
-            bool isQualifying(MethodDeclarationSyntax method)
+            bool isCmdrMethodAttribute(AttributeData attr) =>
+                attr.AttributeClass?.Name.Contains(_cmdrAttribute.AttributeName) == true;
+
+            bool isQualifying(IMethodSymbol method)
             {
-                return method.AttributeLists.SelectMany(x => x.Attributes)
-                    .Any(attr => attr.Name.ToString().Contains(attributeName));
+                return method.GetAttributes().Any(isCmdrMethodAttribute);
             }
 
-            return compilation.SyntaxTrees.SelectMany(s => s.GetRoot().DescendantNodes())
-                .Where(d => d.IsKind(SyntaxKind.MethodDeclaration))
-                .OfType<MethodDeclarationSyntax>()
+            IEnumerable<IMethodSymbol> getMethodSymbols(
+                IEnumerable<MethodDeclarationSyntax> methodDeclarations,
+                SemanticModel semanticModel)
+            {
+                return methodDeclarations.Choose(
+                    methodDeclaration =>
+                        semanticModel.GetDeclaredSymbol(methodDeclaration));
+            }
+
+            (IEnumerable<MethodDeclarationSyntax> methodDeclarations, SemanticModel
+                semanticModel) getMethodDeclarationsAndModel(SyntaxTree tree)
+            {
+                var methodDeclarations = tree.GetRoot()
+                    .DescendantNodes()
+                    .Where(d => d.IsKind(SyntaxKind.MethodDeclaration))
+                    .OfType<MethodDeclarationSyntax>();
+
+                var semanticModel = compilation.GetSemanticModel(tree);
+
+                return (methodDeclarations, semanticModel);
+            }
+
+            return compilation.SyntaxTrees.Select(getMethodDeclarationsAndModel)
+                .SelectMany(
+                    pair => getMethodSymbols(pair.methodDeclarations, pair.semanticModel))
                 .Where(isQualifying);
         }
 

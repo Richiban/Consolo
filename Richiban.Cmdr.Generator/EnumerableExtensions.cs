@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Richiban.Cmdr.Generator
+namespace Richiban.Cmdr
 {
     public static class EnumerableExtensions
     {
@@ -18,6 +18,11 @@ namespace Richiban.Cmdr.Generator
                     yield return chosen;
                 }
             }
+        }
+        
+        public static string StringJoin<T>(this IEnumerable<T> source, string separator)
+        {
+            return string.Join(separator, source);
         }
     }
 }

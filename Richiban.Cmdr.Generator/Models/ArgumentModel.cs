@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Richiban.Cmdr.Generator
+namespace Richiban.Cmdr.Models
 {
-    internal class ArgumentModel
+    class ArgumentModel
     {
         public ArgumentModel(string nameIn, string fullyQualifiedTypeName, bool isFlag)
         {
