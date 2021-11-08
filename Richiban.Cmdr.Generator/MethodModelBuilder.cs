@@ -12,8 +12,8 @@ namespace Richiban.Cmdr
 {
     internal class MethodModelBuilder
     {
-        private static readonly SymbolDisplayFormat SymbolDisplayFormat = new(
-            typeQualificationStyle: SymbolDisplayTypeQualificationStyle
+        private static readonly SymbolDisplayFormat SymbolDisplayFormat =
+            new(typeQualificationStyle: SymbolDisplayTypeQualificationStyle
                 .NameAndContainingTypesAndNamespaces);
 
         private readonly CmdrAttribute _cmdrAttribute;
@@ -49,40 +49,67 @@ namespace Richiban.Cmdr
             var parameters = methodSymbol.Parameters.Select(GetArgumentModel)
                 .ToImmutableArray();
 
-            var aliases = GetAttributeArguments(methodSymbol);
+            var parentNames = GetAttributeArguments(methodSymbol);
 
             var fullyQualifiedName =
                 GetFullyQualifiedTypeName(methodSymbol.ContainingType);
 
+            var aliases = GetAliases(methodSymbol);
+
             return new MethodModel(
                 methodSymbol.Name,
                 aliases,
+                parentNames,
                 fullyQualifiedName,
                 parameters);
         }
 
+        private string[] GetAliases(IMethodSymbol methodSymbol) =>
+            GetRelevantAttribute(methodSymbol) switch
+            {
+                null => Array.Empty<string>(),
+                var attr => GetConstructorArguments(attr)
+            };
+
         private ImmutableArray<string> GetAttributeArguments(IMethodSymbol methodSymbol)
         {
-            return GetAttributesAllTheWayToRoot(methodSymbol)
-                .Select(a => a.ConstructorArguments.Single().ToString())
+            return GetRelevantAttributesAllTheWayUp(methodSymbol)
+                .SelectMany(GetConstructorArguments)
                 .ToImmutableArray();
         }
 
-        private Stack<AttributeData> GetAttributesAllTheWayToRoot(
+        private static string[] GetConstructorArguments(AttributeData attributeData)
+        {
+            if (attributeData.ConstructorArguments.Length == 0)
+                return Array.Empty<string>();
+
+            return attributeData.ConstructorArguments.First() switch
+            {
+                { Kind: TypedConstantKind.Primitive, Value: var val } => new[]
+                    {
+                        (string?) val
+                    }.Choose(x => x)
+                    .ToArray(),
+                { Kind: TypedConstantKind.Array, Values: var vals } => vals
+                    .Choose(x => (string?) x.Value)
+                    .ToArray(),
+                _ => Array.Empty<string>()
+            };
+        }
+
+        private Stack<AttributeData> GetRelevantAttributesAllTheWayUp(
             IMethodSymbol methodSymbol)
         {
             var attributes = new Stack<AttributeData>();
 
-            var current = (ISymbol)methodSymbol;
+            var current = (ISymbol) methodSymbol;
 
             while (current != null)
             {
-                if (GetAttribute(current) is { } attr)
+                if (GetRelevantAttribute(current) is { } attr)
                 {
                     attributes.Push(attr);
                 }
-
-                //Debugger.Launch();
 
                 current = current.ContainingType;
             }
@@ -90,7 +117,7 @@ namespace Richiban.Cmdr
             return attributes;
         }
 
-        private AttributeData? GetAttribute(ISymbol current)
+        private AttributeData? GetRelevantAttribute(ISymbol current)
         {
             return current.GetAttributes()
                 .SingleOrDefault(

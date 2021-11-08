@@ -6,7 +6,7 @@ namespace Richiban.Cmdr.Models
     static class RootCommandModelExtensions
     {
         public static IEnumerable<CommandModel.LeafCommandModel>
-            GetAllLeafCommandModelsWithParents(this CommandModel.RootCommandModel root)
+            GetAllLeafCommandModels(this CommandModel.RootCommandModel root)
         {
             foreach (var subCommand in root.SubCommands)
             {
@@ -14,7 +14,7 @@ namespace Richiban.Cmdr.Models
                 {
                     case CommandModel.CommandGroupModel subGroup:
                     {
-                        foreach (var pair in subGroup.GetAllLeafCommandsWithParents())
+                        foreach (var pair in subGroup.GetAllLeafCommands())
                         {
                             yield return pair;
                         }
@@ -34,7 +34,7 @@ namespace Richiban.Cmdr.Models
         }
 
         private static IEnumerable<CommandModel.LeafCommandModel>
-            GetAllLeafCommandsWithParents(this CommandModel.CommandGroupModel group)
+            GetAllLeafCommands(this CommandModel.CommandGroupModel group)
         {
             foreach (var subCommand in group.SubCommands)
             {
@@ -42,7 +42,7 @@ namespace Richiban.Cmdr.Models
                 {
                     case CommandModel.CommandGroupModel subGroup:
                     {
-                        foreach (var pair in subGroup.GetAllLeafCommandsWithParents())
+                        foreach (var pair in subGroup.GetAllLeafCommands())
                         {
                             yield return pair;
                         }

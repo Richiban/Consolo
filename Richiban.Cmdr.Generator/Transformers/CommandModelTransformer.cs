@@ -36,14 +36,24 @@ namespace Richiban.Cmdr.Transformers
             }
             else
             {
-                var commandText = Utils.ToKebabCase(tree.MethodModel.Name);
+                var methodModel = tree.MethodModel!;
 
-                var commandParameterModels = MapCommandParameterModels(tree.MethodModel);
+                var primaryName = methodModel switch
+                {
+                    {
+                        ProvidedNames: { Count: > 1 } names
+                    } => names.First(), // TODO all names
+                    { MethodName: var methodName } => methodName
+                };
+
+                var commandText = Utils.ToKebabCase(primaryName);
+
+                var commandParameterModels = MapCommandParameterModels(methodModel);
 
                 return new CommandModel.LeafCommandModel(
                     commandText,
-                    tree.MethodModel.FullyQualifiedClassName,
-                    tree.MethodModel.Name,
+                    methodModel.FullyQualifiedClassName,
+                    primaryName,
                     commandParameterModels);
             }
         }
@@ -71,7 +81,7 @@ namespace Richiban.Cmdr.Transformers
 
             foreach (var methodModel in models)
             {
-                root[new ListWalker<string>(methodModel.ParentNames)] = methodModel;
+                root[new ListWalker<string>(methodModel.GroupCommandPath)] = methodModel;
             }
 
             return root;
@@ -109,6 +119,7 @@ namespace Richiban.Cmdr.Transformers
             public CommandTree(MethodModel methodModel)
             {
                 MethodModel = methodModel;
+                CommandText = "";
             }
 
             public CommandTree(string commandText)
@@ -117,7 +128,7 @@ namespace Richiban.Cmdr.Transformers
             }
 
             public MethodModel? MethodModel { get; }
-            public string? CommandText { get; }
+            public string CommandText { get; }
 
             public List<CommandTree> SubTrees { get; } = new();
 

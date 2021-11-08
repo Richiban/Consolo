@@ -27,9 +27,20 @@ namespace Richiban.Cmdr
 
                 new ReplWriter(context, cmdrAttribute).WriteToContext();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Debugger.Launch();
+                //Debugger.Launch();
+
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        new DiagnosticDescriptor(
+                            "Cmdr0004",
+                            "Failed!",
+                            $"There was a failure: {ex.Message}",
+                            "Error",
+                            DiagnosticSeverity.Error,
+                            isEnabledByDefault: true),
+                        location: null));
             }
         }
     }

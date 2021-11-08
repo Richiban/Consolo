@@ -7,20 +7,23 @@ namespace Richiban.Cmdr.Models
     internal class MethodModel
     {
         public MethodModel(
-            string name,
-            IReadOnlyList<string> parentNames,
+            string methodName,
+            IReadOnlyCollection<string> providedNames,
+            IReadOnlyList<string> groupCommandPath,
             string fullyQualifiedClassName,
             IReadOnlyCollection<ArgumentModel> arguments)
         {
-            Name = name;
-            ParentNames = parentNames;
+            MethodName = methodName;
+            ProvidedNames = providedNames;
+            GroupCommandPath = groupCommandPath;
             Arguments = arguments;
             FullyQualifiedClassName = fullyQualifiedClassName;
         }
 
         public string FullyQualifiedClassName { get; }
-        public string Name { get; }
-        public IReadOnlyList<string> ParentNames { get; }
+        public string MethodName { get; }
+        public IReadOnlyCollection<string> ProvidedNames { get; }
+        public IReadOnlyList<string> GroupCommandPath { get; }
         public IReadOnlyCollection<ArgumentModel> Arguments { get; }
     }
 }

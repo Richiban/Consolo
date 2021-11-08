@@ -29,7 +29,7 @@ namespace Richiban.Cmdr.Generators
 
         private string WriteRootString(CommandModel.RootCommandModel rootCommandModel)
         {
-            var leafCommandStatements = rootCommandModel.GetAllLeafCommandModelsWithParents()
+            var leafCommandStatements = rootCommandModel.GetAllLeafCommandModels()
                 .Select(x => WriteLeafString1(x))
                 .StringJoin("\n");
             

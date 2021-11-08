@@ -41,13 +41,12 @@ namespace Richiban.Cmdr.Generators
             }
 
             yield return "    ";
-            yield return "        if (args.Length == 1 && args[0] is \"--interactive\" or \"-i\")";
+            yield return "        if (args.Length == 1 && (args[0] == \"--interactive\" || args[0] == \"-i\"))";
             yield return "        {";
-            yield return "                var repl = new Repl(rootCommand, \"Select a command\");";
-            yield return "                repl.EnterLoop();";
+            yield return "            var repl = new Repl(rootCommand, \"Select a command\");";
+            yield return "            repl.EnterLoop();";
             yield return "";
-            yield return "                return 0;";
-            yield return "            }";
+            yield return "            return 0;";
             yield return "        }";
             yield return "        else";
             yield return "        {";

@@ -10,12 +10,13 @@ namespace Richiban.Cmdr.Generator.Tests
     public class ProgramClassWriterTests
     {
         [Test]
-        public void Test1()
+        public void BasicTest()
         {
             var methods = new[]
             {
                 new MethodModel(
                     "SomeFunction",
+                    Array.Empty<string>(),
                     Array.Empty<string>(),
                     "SomeClass",
                     Array.Empty<ArgumentModel>())
