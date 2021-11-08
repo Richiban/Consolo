@@ -31,5 +31,19 @@ namespace Richiban.Cmdr
 
             return sb.ToString();
         }
+
+        public static string ToCamelCase(string s)
+        {
+            if (string.IsNullOrEmpty(s))
+            {
+                return s;
+            }
+
+            var arr = s.ToCharArray();
+
+            arr[0] = char.ToLower(arr[0]);
+
+            return new string(arr);
+        }
     }
 }

@@ -10,14 +10,14 @@ using Richiban.Cmdr.Models;
 
 namespace Richiban.Cmdr
 {
-    class MethodModelBuilder
+    internal class MethodModelBuilder
     {
-        private readonly GeneratorExecutionContext _context;
-        private readonly CmdrAttribute _cmdrAttribute;
-
         private static readonly SymbolDisplayFormat SymbolDisplayFormat = new(
             typeQualificationStyle: SymbolDisplayTypeQualificationStyle
                 .NameAndContainingTypesAndNamespaces);
+
+        private readonly CmdrAttribute _cmdrAttribute;
+        private readonly GeneratorExecutionContext _context;
 
         public MethodModelBuilder(
             GeneratorExecutionContext context,
@@ -27,12 +27,10 @@ namespace Richiban.Cmdr
             _cmdrAttribute = cmdrAttribute;
         }
 
-        public ImmutableArray<MethodModel> GetMethods()
-        {
-            return GetQualifyingMethods(_context.Compilation)
+        public ImmutableArray<MethodModel> GetMethods() =>
+            GetQualifyingMethods(_context.Compilation)
                 .Choose(TryMapMethod)
                 .ToImmutableArray();
-        }
 
         private MethodModel? TryMapMethod(IMethodSymbol? methodSymbol)
         {
@@ -53,7 +51,8 @@ namespace Richiban.Cmdr
 
             var aliases = GetAttributeArguments(methodSymbol);
 
-            var fullyQualifiedName = GetFullyQualifiedTypeName(methodSymbol.ContainingType);
+            var fullyQualifiedName =
+                GetFullyQualifiedTypeName(methodSymbol.ContainingType);
 
             return new MethodModel(
                 methodSymbol.Name,
@@ -79,9 +78,11 @@ namespace Richiban.Cmdr
             while (current != null)
             {
                 if (GetAttribute(current) is { } attr)
+                {
                     attributes.Push(attr);
+                }
 
-                Debugger.Launch();
+                //Debugger.Launch();
 
                 current = current.ContainingType;
             }
@@ -119,10 +120,8 @@ namespace Richiban.Cmdr
             bool isCmdrMethodAttribute(AttributeData attr) =>
                 attr.AttributeClass?.Name.Contains(_cmdrAttribute.AttributeName) == true;
 
-            bool isQualifying(IMethodSymbol method)
-            {
-                return method.GetAttributes().Any(isCmdrMethodAttribute);
-            }
+            bool isQualifying(IMethodSymbol method) =>
+                method.GetAttributes().Any(isCmdrMethodAttribute);
 
             IEnumerable<IMethodSymbol> getMethodSymbols(
                 IEnumerable<MethodDeclarationSyntax> methodDeclarations,

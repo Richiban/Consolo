@@ -6,7 +6,11 @@ namespace Richiban.Cmdr.Models
 {
     internal class UsingsModel : IEnumerable<string>
     {
-        private readonly HashSet<string> _usings = new HashSet<string>();
+        private readonly HashSet<string> _usings = new();
+
+        public IEnumerator<string> GetEnumerator() => _usings.GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_usings).GetEnumerator();
 
         public void Add(string @namespace)
         {
@@ -15,10 +19,6 @@ namespace Richiban.Cmdr.Models
 
         private static string CleanUpNamespace(string @namespace) =>
             @namespace.Replace("using ", "").Replace(";", "");
-
-        public IEnumerator<string> GetEnumerator() => _usings.GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_usings).GetEnumerator();
 
         public void AddRange(IEnumerable<string> usings)
         {

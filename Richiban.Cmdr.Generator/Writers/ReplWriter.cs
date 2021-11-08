@@ -5,14 +5,12 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Richiban.Cmdr.Writers
 {
-    class ReplWriter
+    internal class ReplWriter
     {
-        private readonly GeneratorExecutionContext _context;
         private readonly CmdrAttribute _cmdrAttribute;
+        private readonly GeneratorExecutionContext _context;
 
-        public ReplWriter(
-            GeneratorExecutionContext context,
-            CmdrAttribute cmdrAttribute)
+        public ReplWriter(GeneratorExecutionContext context, CmdrAttribute cmdrAttribute)
         {
             _context = context;
             _cmdrAttribute = cmdrAttribute;
@@ -27,9 +25,8 @@ namespace Richiban.Cmdr.Writers
                 SourceText.From(replClassText, Encoding.UTF8));
         }
 
-        private static string GetReplClassText()
-        {
-            return @"using System;
+        private static string GetReplClassText() =>
+            @"using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.Linq;
@@ -200,6 +197,5 @@ namespace Richiban.Cmdr
         }
     }
 }";
-        }
     }
 }

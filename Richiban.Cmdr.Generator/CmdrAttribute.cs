@@ -2,7 +2,7 @@
 
 namespace Richiban.Cmdr
 {
-    class CmdrAttribute
+    internal class CmdrAttribute
     {
         public string AttributeName => "CmdrMethod";
         public string Namespace => "Richiban.Cmdr";

@@ -2,18 +2,16 @@
 
 namespace Richiban.Cmdr.Models
 {
-    class ArgumentModel
+    internal class ArgumentModel
     {
-        public ArgumentModel(string nameIn, string fullyQualifiedTypeName, bool isFlag)
+        public ArgumentModel(string name, string fullyQualifiedTypeName, bool isFlag)
         {
-            NameIn = nameIn;
+            Name = name;
             FullyQualifiedTypeName = fullyQualifiedTypeName;
             IsFlag = isFlag;
-            NameOut = Utils.ToKebabCase(nameIn);
         }
 
-        public string NameIn { get; }
-        public string NameOut { get; }
+        public string Name { get; }
         public string FullyQualifiedTypeName { get; }
         public bool IsFlag { get; }
     }

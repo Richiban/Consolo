@@ -18,13 +18,12 @@ namespace Richiban.Cmdr
             try
             {
                 var cmdrAttribute = new CmdrAttribute();
-                
+
                 new CmdrAttributeWriter(cmdrAttribute, context).WriteToContext();
 
-                var methods =
-                    new MethodModelBuilder(context, cmdrAttribute).GetMethods();
+                var methods = new MethodModelBuilder(context, cmdrAttribute).GetMethods();
 
-                new ProgramClassWriter(context).WriteToContext(methods);
+                new ProgramClassWriter(context, methods).WriteToContext();
 
                 new ReplWriter(context, cmdrAttribute).WriteToContext();
             }

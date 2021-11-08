@@ -19,10 +19,9 @@ namespace Richiban.Cmdr
                 }
             }
         }
-        
-        public static string StringJoin<T>(this IEnumerable<T> source, string separator)
-        {
-            return string.Join(separator, source);
-        }
+
+        public static string
+            StringJoin<T>(this IEnumerable<T> source, string separator) =>
+            string.Join(separator, source);
     }
 }

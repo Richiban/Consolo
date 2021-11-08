@@ -1,31 +1,83 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Data;
 using System.Linq;
 using Richiban.Cmdr.Models;
 
 namespace Richiban.Cmdr.Transformers
 {
-    class CommandModelTransformer
+    internal class CommandModelTransformer
     {
-        public CommandModel Transform(IEnumerable<MethodModel> methodModels)
+        public CommandModel.RootCommandModel Transform(
+            IEnumerable<MethodModel> methodModels)
         {
             var tree = Group(methodModels);
+
+            return (CommandModel.RootCommandModel) Map(tree, isRoot: true);
         }
 
-        Tree Group(IEnumerable<MethodModel> cs)
+        private CommandModel Map(CommandTree tree, bool isRoot)
         {
-            var root = new Tree("");
-
-            foreach (var c in cs)
+            if (isRoot)
             {
-                root[new ListWalker<string>(c.ParentNames)] = c.NameOut;
+                return new CommandModel.RootCommandModel(
+                    tree.SubTrees.Select(tree1 => Map(tree1, isRoot: false))
+                        .ToImmutableArray());
+            }
+
+            if (tree.SubTrees.Any())
+            {
+                var commandText = Utils.ToKebabCase(tree.CommandText);
+
+                return new CommandModel.CommandGroupModel(
+                    commandText,
+                    tree.SubTrees.Select(tree1 => Map(tree1, isRoot: false))
+                        .ToImmutableArray());
+            }
+            else
+            {
+                var commandText = Utils.ToKebabCase(tree.MethodModel.Name);
+
+                var commandParameterModels = MapCommandParameterModels(tree.MethodModel);
+
+                return new CommandModel.LeafCommandModel(
+                    commandText,
+                    tree.MethodModel.FullyQualifiedClassName,
+                    tree.MethodModel.Name,
+                    commandParameterModels);
+            }
+        }
+
+        private static CommandParameterModel[] MapCommandParameterModels(
+            MethodModel treeMethodModel)
+        {
+            return treeMethodModel.Arguments.Select(
+                    argumentModel => argumentModel switch
+                    {
+                        { IsFlag: true, Name: var name } => new
+                            CommandParameterModel.CommandFlagParameterModel(
+                                Utils.ToKebabCase(name)) as CommandParameterModel,
+                        { IsFlag: false, Name: var name } => new
+                            CommandParameterModel.CommandPositionalParameterModel(
+                                Utils.ToKebabCase(name),
+                                argumentModel.FullyQualifiedTypeName)
+                    })
+                .ToArray();
+        }
+
+        private CommandTree Group(IEnumerable<MethodModel> models)
+        {
+            var root = new CommandTree("");
+
+            foreach (var methodModel in models)
+            {
+                root[new ListWalker<string>(methodModel.ParentNames)] = methodModel;
             }
 
             return root;
         }
 
-        private struct ListWalker<T>
+        private readonly struct ListWalker<T>
         {
             public ListWalker(IReadOnlyList<T> list)
             {
@@ -52,21 +104,30 @@ namespace Richiban.Cmdr.Transformers
             }
         }
 
-        private class Tree
+        private class CommandTree
         {
-            public Tree(string value) => Value = value;
+            public CommandTree(MethodModel methodModel)
+            {
+                MethodModel = methodModel;
+            }
 
-            public string Value { get; }
+            public CommandTree(string commandText)
+            {
+                CommandText = commandText;
+            }
 
-            public List<Tree> SubTrees { get; } = new();
+            public MethodModel? MethodModel { get; }
+            public string? CommandText { get; }
 
-            public string this[ListWalker<string> path]
+            public List<CommandTree> SubTrees { get; } = new();
+
+            public MethodModel this[in ListWalker<string> path]
             {
                 set
                 {
                     if (path.AtEnd)
                     {
-                        SubTrees.Add(new Tree(value));
+                        SubTrees.Add(new CommandTree(value));
 
                         return;
                     }
@@ -74,7 +135,7 @@ namespace Richiban.Cmdr.Transformers
                     var (current, remaining) = path;
                     var subTreeWasMatched = false;
 
-                    foreach (var tree in SubTrees.Where(t => t.Value == current))
+                    foreach (var tree in SubTrees.Where(t => t.CommandText == current))
                     {
                         subTreeWasMatched = true;
 
@@ -86,7 +147,7 @@ namespace Richiban.Cmdr.Transformers
                         return;
                     }
 
-                    SubTrees.Add(new Tree(current) { [remaining] = value });
+                    SubTrees.Add(new CommandTree(current) { [remaining] = value });
                 }
             }
         }

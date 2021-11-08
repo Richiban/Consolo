@@ -1,34 +1,27 @@
 ﻿using System;
 using Microsoft.CodeAnalysis;
+using Richiban.Cmdr.Generators;
 
 namespace Richiban.Cmdr.Writers
 {
-    class CmdrAttributeWriter : CodeWriter
+    internal class CmdrAttributeWriter : CodeWriter
     {
         private readonly CmdrAttribute _cmdrAttribute;
-        private static string _fileName = "CmdrMethodAttribute.g.cs";
 
         public CmdrAttributeWriter(
             CmdrAttribute cmdrAttribute,
-            GeneratorExecutionContext context) : base(_fileName, context)
+            GeneratorExecutionContext context)
         {
             _cmdrAttribute = cmdrAttribute;
+            Context = context;
+            CodeGenerator = GetCodeGenerator();
         }
 
-        protected override string GetCode() =>
-            @$"
-namespace {_cmdrAttribute.Namespace}
-{{
-    [System.AttributeUsage(System.AttributeTargets.Method|System.AttributeTargets.Class, AllowMultiple = false)]
-    public class {_cmdrAttribute.AttributeName} : System.Attribute
-    {{
-        public {_cmdrAttribute.AttributeName}(string alias)
-        {{
-            Alias = alias;
-        }} 
+        private CmdrAttributeGenerator GetCodeGenerator() =>
+            new CmdrAttributeGenerator(_cmdrAttribute);
 
-        public string Alias {{ get; }}
-    }}
-}}";
+        protected override GeneratorExecutionContext Context { get; }
+        protected override ICodeGenerator CodeGenerator { get; }
+        protected override string FileName => "CmdrMethodAttribute.g.cs";
     }
 }

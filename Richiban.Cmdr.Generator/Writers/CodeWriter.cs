@@ -2,25 +2,28 @@
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using Richiban.Cmdr.Generators;
 
 namespace Richiban.Cmdr.Writers
 {
-    abstract class CodeWriter
+    internal abstract class CodeWriter
     {
-        private readonly string _fileName;
-        private readonly GeneratorExecutionContext _context;
-
-        protected CodeWriter(string fileName, GeneratorExecutionContext context)
-        {
-            _fileName = fileName;
-            _context = context;
-        }
-
-        protected abstract string GetCode();
+        protected abstract GeneratorExecutionContext Context { get; }
+        protected abstract ICodeGenerator CodeGenerator { get; }
+        protected abstract string FileName { get; }
 
         public void WriteToContext()
         {
-            _context.AddSource(_fileName, SourceText.From(GetCode(), Encoding.UTF8));
+            var codeLines = CodeGenerator.GetCodeLines();
+
+            var sb = new StringBuilder();
+
+            foreach (var line in codeLines)
+            {
+                sb.AppendLine(line);
+            }
+
+            Context.AddSource(FileName, SourceText.From(sb.ToString(), Encoding.UTF8));
         }
     }
 }

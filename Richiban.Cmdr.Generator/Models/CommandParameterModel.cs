@@ -1,24 +1,31 @@
-﻿namespace Richiban.Cmdr.Models
+﻿using System;
+
+namespace Richiban.Cmdr.Models
 {
     public abstract class CommandParameterModel
     {
-        private CommandParameterModel(string name)
+        private CommandParameterModel(string name, string fullyQualifiedTypeName)
         {
             Name = name;
+            FullyQualifiedTypeName = fullyQualifiedTypeName;
         }
+
+        public string Name { get; }
+        public string FullyQualifiedTypeName { get; }
 
         public sealed class CommandPositionalParameterModel : CommandParameterModel
         {
-            public CommandPositionalParameterModel(string name) : base(name)
+            public CommandPositionalParameterModel(
+                string name,
+                string fullyQualifiedTypeName) : base(name, fullyQualifiedTypeName)
             {
             }
         }
 
-        public string Name { get; }
-
         public sealed class CommandFlagParameterModel : CommandParameterModel
         {
-            public CommandFlagParameterModel(string name) : base(name)
+            public CommandFlagParameterModel(string name) :
+                base(name, "System.Boolean")
             {
             }
         }
