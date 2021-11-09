@@ -14,11 +14,11 @@ namespace Richiban.Cmdr.Writers
             ImmutableArray<MethodModel> methodModels)
         {
             Context = context;
-            CodeGenerator = new ProgramClassCodeGenerator(methodModels);
+            CodeFileGenerator = new ProgramClassCodeFileGenerator(methodModels);
         }
 
         protected override GeneratorExecutionContext Context { get; }
-        protected override ICodeGenerator CodeGenerator { get; }
+        protected override ICodeFileGenerator CodeFileGenerator { get; }
         protected override string FileName => "Program.g.cs";
     }
 }

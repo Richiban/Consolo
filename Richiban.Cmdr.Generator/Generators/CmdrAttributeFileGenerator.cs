@@ -3,16 +3,16 @@ using System.Collections.Generic;
 
 namespace Richiban.Cmdr.Generators
 {
-    internal class CmdrAttributeGenerator : ICodeGenerator
+    internal class CmdrAttributeFileGenerator : ICodeFileGenerator
     {
         private readonly CmdrAttribute _cmdrAttribute;
 
-        public CmdrAttributeGenerator(CmdrAttribute cmdrAttribute)
+        public CmdrAttributeFileGenerator(CmdrAttribute cmdrAttribute)
         {
             _cmdrAttribute = cmdrAttribute;
         }
 
-        public IEnumerable<string> GetCodeLines() => Array.Empty<string>(); // TODO disabled for now
+        public string GetCode() =>""; // TODO disabled for now
 
         public string GetCodeBk() =>
             @$"

@@ -48,5 +48,27 @@ namespace Richiban.Cmdr
 
             return (successes.ToImmutable(), failures.ToImmutable());
         }
+        
+        public static IEnumerable<T> Truncate<T>(this IReadOnlyCollection<T> source, int count)
+        {
+            var toTake = count switch
+            {
+                >= 0 => count,
+                < 0 => source.Count + count
+            };
+            
+            if (toTake == 0)
+            {
+                yield break;
+            }
+                
+            using var e = source.GetEnumerator();
+            
+            while (toTake-- > 0)
+            {
+                e.MoveNext();
+                yield return e.Current;
+            }
+        }
     }
 }

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 
 namespace Richiban.Cmdr.Generators
 {
-    internal interface ICodeGenerator
+    internal interface ICodeFileGenerator
     {
-        IEnumerable<string> GetCodeLines();
+        string GetCode();
     }
 }

@@ -8,13 +8,13 @@ namespace Richiban.Cmdr.Models
     {
         public MethodModel(
             string methodName,
-            IReadOnlyCollection<string> providedNames,
+            string? providedName,
             IReadOnlyList<string> groupCommandPath,
             string fullyQualifiedClassName,
             IReadOnlyCollection<ArgumentModel> arguments)
         {
             MethodName = methodName;
-            ProvidedNames = providedNames;
+            ProvidedName = providedName;
             GroupCommandPath = groupCommandPath;
             Arguments = arguments;
             FullyQualifiedClassName = fullyQualifiedClassName;
@@ -22,7 +22,7 @@ namespace Richiban.Cmdr.Models
 
         public string FullyQualifiedClassName { get; }
         public string MethodName { get; }
-        public IReadOnlyCollection<string> ProvidedNames { get; }
+        public string? ProvidedName { get; }
         public IReadOnlyList<string> GroupCommandPath { get; }
         public IReadOnlyCollection<ArgumentModel> Arguments { get; }
     }

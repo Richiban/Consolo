@@ -20,7 +20,7 @@ namespace Richiban.Cmdr.Generator.Tests
             {
                 new MethodModel(
                     "SomeFunction",
-                    new[] { "shortcut" },
+                    "shortcut",
                     new[] { "SomeParent" },
                     "SomeClass",
                     new ArgumentModel[] { })

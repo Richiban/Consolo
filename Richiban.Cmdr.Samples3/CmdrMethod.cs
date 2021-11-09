@@ -4,11 +4,11 @@ namespace Richiban.Cmdr
 {
     public class CmdrMethod : System.Attribute
     {
-        public CmdrMethod(params string[] aliases)
+        public CmdrMethod(string name)
         {
-            Aliases = aliases;
+            Name = name;
         }
-
-        public string[] Aliases { get; }
+        
+        public string Name { get; }
     }
 }

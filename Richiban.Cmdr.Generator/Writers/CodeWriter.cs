@@ -9,21 +9,14 @@ namespace Richiban.Cmdr.Writers
     internal abstract class CodeWriter
     {
         protected abstract GeneratorExecutionContext Context { get; }
-        protected abstract ICodeGenerator CodeGenerator { get; }
+        protected abstract ICodeFileGenerator CodeFileGenerator { get; }
         protected abstract string FileName { get; }
 
         public void WriteToContext()
         {
-            var codeLines = CodeGenerator.GetCodeLines();
-
-            var sb = new StringBuilder();
-
-            foreach (var line in codeLines)
-            {
-                sb.AppendLine(line);
-            }
-
-            Context.AddSource(FileName, SourceText.From(sb.ToString(), Encoding.UTF8));
+            var source = CodeFileGenerator.GetCode();
+            
+            Context.AddSource(FileName, SourceText.From(source, Encoding.UTF8));
         }
     }
 }

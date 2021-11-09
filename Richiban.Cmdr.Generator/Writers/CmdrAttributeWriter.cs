@@ -14,14 +14,14 @@ namespace Richiban.Cmdr.Writers
         {
             _cmdrAttribute = cmdrAttribute;
             Context = context;
-            CodeGenerator = GetCodeGenerator();
+            CodeFileGenerator = GetCodeGenerator();
         }
 
-        private CmdrAttributeGenerator GetCodeGenerator() =>
-            new CmdrAttributeGenerator(_cmdrAttribute);
+        private CmdrAttributeFileGenerator GetCodeGenerator() =>
+            new CmdrAttributeFileGenerator(_cmdrAttribute);
 
         protected override GeneratorExecutionContext Context { get; }
-        protected override ICodeGenerator CodeGenerator { get; }
+        protected override ICodeFileGenerator CodeFileGenerator { get; }
         protected override string FileName => "CmdrMethodAttribute.g.cs";
     }
 }

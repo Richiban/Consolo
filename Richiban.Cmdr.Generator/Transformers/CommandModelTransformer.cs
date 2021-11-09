@@ -13,7 +13,7 @@ namespace Richiban.Cmdr.Transformers
         {
             var tree = Group(methodModels);
 
-            return (CommandModel.RootCommandModel) Map(tree, isRoot: true);
+            return (CommandModel.RootCommandModel)Map(tree, isRoot: true);
         }
 
         private CommandModel Map(CommandTree tree, bool isRoot)
@@ -40,9 +40,7 @@ namespace Richiban.Cmdr.Transformers
 
                 var primaryName = methodModel switch
                 {
-                    {
-                        ProvidedNames: { Count: > 1 } names
-                    } => names.First(), // TODO all names
+                    { ProvidedName: { } name } => name,
                     { MethodName: var methodName } => methodName
                 };
 
@@ -61,18 +59,15 @@ namespace Richiban.Cmdr.Transformers
         private static CommandParameterModel[] MapCommandParameterModels(
             MethodModel treeMethodModel)
         {
-            return treeMethodModel.Arguments.Select(
-                    argumentModel => argumentModel switch
-                    {
-                        { IsFlag: true, Name: var name } => new
-                            CommandParameterModel.CommandFlagParameterModel(
-                                Utils.ToKebabCase(name)) as CommandParameterModel,
-                        { IsFlag: false, Name: var name } => new
-                            CommandParameterModel.CommandPositionalParameterModel(
-                                Utils.ToKebabCase(name),
-                                argumentModel.FullyQualifiedTypeName)
-                    })
-                .ToArray();
+            CommandParameterModel transformParameter(ArgumentModel argumentModel) =>
+                argumentModel.IsFlag
+                    ? new CommandParameterModel.CommandFlagParameterModel(
+                        Utils.ToKebabCase(argumentModel.Name))
+                    : new CommandParameterModel.CommandPositionalParameterModel(
+                        Utils.ToKebabCase(argumentModel.Name),
+                        argumentModel.FullyQualifiedTypeName);
+
+            return treeMethodModel.Arguments.Select(transformParameter).ToArray();
         }
 
         private CommandTree Group(IEnumerable<MethodModel> models)
@@ -89,10 +84,8 @@ namespace Richiban.Cmdr.Transformers
 
         private readonly struct ListWalker<T>
         {
-            public ListWalker(IReadOnlyList<T> list)
+            public ListWalker(IReadOnlyList<T> list) : this(list, index: 0)
             {
-                List = list;
-                Index = 0;
             }
 
             private ListWalker(IReadOnlyList<T> list, int index)

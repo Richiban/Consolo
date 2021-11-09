@@ -16,15 +16,15 @@ namespace Richiban.Cmdr.Generator.Tests
             {
                 new MethodModel(
                     "SomeFunction",
-                    Array.Empty<string>(),
+                    providedName: null,
                     Array.Empty<string>(),
                     "SomeClass",
                     Array.Empty<ArgumentModel>())
             };
 
-            var codeGenerator = new ProgramClassCodeGenerator(methods);
+            var codeGenerator = new ProgramClassCodeFileGenerator(methods);
 
-            var actual = String.Join("\n", codeGenerator.GetCodeLines());
+            var actual = codeGenerator.GetCode();
 
             Console.WriteLine(actual);
 

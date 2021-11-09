@@ -24,7 +24,8 @@ namespace Richiban.Cmdr
             IEnumerable<IMethodSymbol?> qualifyingMethods) =>
             qualifyingMethods.Choose(TryMapMethod);
 
-        private Result<MethodModelFailure, MethodModel> TryMapMethod(IMethodSymbol? methodSymbol)
+        private Result<MethodModelFailure, MethodModel> TryMapMethod(
+            IMethodSymbol? methodSymbol)
         {
             if (methodSymbol is null)
             {
@@ -41,72 +42,59 @@ namespace Richiban.Cmdr
             var parameters = methodSymbol.Parameters.Select(GetArgumentModel)
                 .ToImmutableArray();
 
-            var parentNames = GetAttributeArguments(methodSymbol);
-
             var fullyQualifiedName =
                 GetFullyQualifiedTypeName(methodSymbol.ContainingType);
 
-            var aliases = GetAliases(methodSymbol);
+            var commandPath = GetCommandPath(methodSymbol);
+
+            var parentNames = commandPath.Truncate(-1).ToList();
+
+            var providedName = commandPath.LastOrDefault();
 
             return new MethodModel(
                 methodSymbol.Name,
-                aliases,
+                providedName,
                 parentNames,
                 fullyQualifiedName,
                 parameters);
         }
 
-        private string[] GetAliases(IMethodSymbol methodSymbol) =>
-            GetRelevantAttribute(methodSymbol) switch
-            {
-                null => Array.Empty<string>(),
-                var attr => GetConstructorArguments(attr)
-            };
-
-        private ImmutableArray<string> GetAttributeArguments(IMethodSymbol methodSymbol)
+        private ImmutableList<string> GetCommandPath(ISymbol symbol)
         {
-            return GetRelevantAttributesAllTheWayUp(methodSymbol)
-                .SelectMany(GetConstructorArguments)
-                .ToImmutableArray();
+            var path = ImmutableList.CreateBuilder<string>();
+
+            while (symbol != null)
+            {
+                if (GetRelevantAttribute(symbol) is { } attr)
+                {
+                    if (GetConstructorArgument(attr) is { } arg)
+                    {
+                        path.Add(arg);
+                    }
+                    else
+                    {
+                        path.Add(symbol.Name);
+                    }
+                }
+
+                symbol = symbol.ContainingType;
+            }
+
+            path.Reverse();
+
+            return path.ToImmutable();
         }
 
-        private static string[] GetConstructorArguments(AttributeData attributeData)
+        private static string? GetConstructorArgument(AttributeData attributeData)
         {
             if (attributeData.ConstructorArguments.Length == 0)
-                return Array.Empty<string>();
+                return null;
 
             return attributeData.ConstructorArguments.First() switch
             {
-                { Kind: TypedConstantKind.Primitive, Value: var val } => new[]
-                    {
-                        (string?)val
-                    }.Choose(x => x)
-                    .ToArray(),
-                { Kind: TypedConstantKind.Array, Values: var vals } => vals
-                    .Choose(x => (string?)x.Value)
-                    .ToArray(),
-                _ => Array.Empty<string>()
+                { Kind: TypedConstantKind.Primitive } arg => (string?)arg.Value,
+                _ => null
             };
-        }
-
-        private Stack<AttributeData> GetRelevantAttributesAllTheWayUp(
-            IMethodSymbol methodSymbol)
-        {
-            var attributes = new Stack<AttributeData>();
-
-            var current = (ISymbol)methodSymbol;
-
-            while (current != null)
-            {
-                if (GetRelevantAttribute(current) is { } attr)
-                {
-                    attributes.Push(attr);
-                }
-
-                current = current.ContainingType;
-            }
-
-            return attributes;
         }
 
         private AttributeData? GetRelevantAttribute(ISymbol current)
