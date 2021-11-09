@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Richiban.Cmdr.Writers;
 
 namespace Richiban.Cmdr
@@ -11,17 +12,25 @@ namespace Richiban.Cmdr
     {
         public void Initialize(GeneratorInitializationContext context)
         {
+            context.RegisterForSyntaxNotifications(() => new MySyntaxReceiver());
         }
 
         public void Execute(GeneratorExecutionContext context)
         {
             try
             {
+                if (context.SyntaxReceiver is not MySyntaxReceiver
+                    { MethodToAugment: { } method })
+                {
+                    return;
+                }
+
                 var cmdrAttribute = new CmdrAttribute();
 
                 new CmdrAttributeWriter(cmdrAttribute, context).WriteToContext();
 
-                var methods = new MethodModelContextBuilder(context, cmdrAttribute).Build();
+                var methods =
+                    new MethodModelContextBuilder(context, cmdrAttribute).Build();
 
                 new ProgramClassWriter(context, methods).WriteToContext();
 
@@ -41,6 +50,21 @@ namespace Richiban.Cmdr
                             DiagnosticSeverity.Error,
                             isEnabledByDefault: true),
                         location: null));
+            }
+        }
+
+        class MySyntaxReceiver : ISyntaxReceiver
+        {
+            public MethodDeclarationSyntax MethodToAugment { get; private set; }
+
+            public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
+            {
+                if (syntaxNode is MethodDeclarationSyntax method && method.AttributeLists
+                    .SelectMany(x => x.Attributes)
+                    .Any())
+                {
+                    MethodToAugment = method;
+                }
             }
         }
     }

@@ -51,7 +51,7 @@ namespace Richiban.Cmdr.Transformers
                 return new CommandModel.LeafCommandModel(
                     commandText,
                     methodModel.FullyQualifiedClassName,
-                    primaryName,
+                    methodModel.MethodName,
                     commandParameterModels);
             }
         }

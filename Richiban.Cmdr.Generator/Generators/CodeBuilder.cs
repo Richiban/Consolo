@@ -92,8 +92,9 @@ namespace Richiban.Cmdr.Generators
 
         public class CommaSeparatedExpressionSyntax : IDisposable
         {
-            private readonly bool _any = false;
+            private bool _anyWritten;
             private readonly CodeBuilder _codeBuilder;
+            private bool _doneOne;
 
             public CommaSeparatedExpressionSyntax(CodeBuilder codeBuilder)
             {
@@ -108,23 +109,32 @@ namespace Richiban.Cmdr.Generators
 
             public void Append(string expression)
             {
-                if (_any)
+                if (_anyWritten)
                 {
                     _codeBuilder.Append(", ");
+                    _doneOne = false;
                 }
 
                 _codeBuilder.Append(expression);
+                
+                _anyWritten = true;
             }
 
             public void AppendLine(string expression)
             {
-                if (_any)
+                if (_anyWritten && _doneOne)
                 {
-                    _codeBuilder.Append(",\n");
+                    _codeBuilder.AppendLine(",");
+                    _doneOne = false;
                 }
 
-                _codeBuilder.Append(expression);
+                _codeBuilder.AppendLine(expression);
+                _anyWritten = true;
             }
+            
+            public void DoneOne() => _doneOne = true;
+
+            public IDisposable Indent() => new Indenter(_codeBuilder);
         }
     }
 }

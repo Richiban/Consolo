@@ -137,10 +137,24 @@ namespace TestSamples
     public class OuterTest
     {
         [CmdrMethod]
-        public class InnerTest
+        public class InnerTest1
         {        
             [CmdrMethod]
-            public static void TestMethod()
+            public static void TestMethod1()
+            {
+            } 
+
+            [CmdrMethod]
+            public static void TestMethod2(string arg1, string arg2)
+            {
+            }
+        }
+
+        [CmdrMethod]
+        public class InnerTest2
+        {
+            [CmdrMethod]
+            public static void TestMethod3()
             {
             }
         }

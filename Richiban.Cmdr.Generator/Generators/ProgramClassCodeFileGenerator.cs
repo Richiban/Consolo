@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using Richiban.Cmdr.Models;
 using Richiban.Cmdr.Transformers;
-using Richiban.Cmdr.Writers;
 
 namespace Richiban.Cmdr.Generators
 {
@@ -28,10 +26,11 @@ namespace Richiban.Cmdr.Generators
 
         private void WriteCodeLines()
         {
-            _codeBuilder.AppendLine("using System;");
-            _codeBuilder.AppendLine("using System.CommandLine;");
-            _codeBuilder.AppendLine("using System.CommandLine.Invocation;");
-            _codeBuilder.AppendLine("using Richiban.Cmdr;");
+            _codeBuilder.AppendLines(
+                "using System;",
+                "using System.CommandLine;",
+                "using System.CommandLine.Invocation;",
+                "using Richiban.Cmdr;");
 
             _codeBuilder.AppendLine();
 
@@ -43,6 +42,7 @@ namespace Richiban.Cmdr.Generators
 
                 using (_codeBuilder.Indent())
                 {
+                    WriteLeafCommandStatements(_commandModel);
                     WriteRootStatement(_commandModel);
 
                     _codeBuilder.AppendLine();
@@ -66,6 +66,26 @@ namespace Richiban.Cmdr.Generators
             _codeBuilder.AppendLine("}");
         }
 
+        private void WriteLeafCommandStatements(
+            CommandModel.RootCommandModel rootCommandModel)
+        {
+            foreach (var leaf in rootCommandModel.GetAllLeafCommandModels())
+            {
+                _codeBuilder.AppendLine(
+                    $"var {leaf.VariableName} = new Command(\"{leaf.CommandName}\")");
+
+                _codeBuilder.AppendLine("{");
+
+                GetParametersString(leaf);
+
+                _codeBuilder.AppendLine("};");
+                _codeBuilder.AppendLine();
+
+                WriteHandlerStatement(leaf);
+                _codeBuilder.AppendLine();
+            }
+        }
+
         private void WriteRootCommandCall()
         {
             using (_codeBuilder.Indent())
@@ -87,16 +107,18 @@ namespace Richiban.Cmdr.Generators
             }
         }
 
-        private void WriteCommandExpression(CommandModel commandModel)
+        private void WriteCommandExpression(
+            CommandModel commandModel,
+            CodeBuilder.CommaSeparatedExpressionSyntax expr)
         {
             switch (commandModel)
             {
                 case CommandModel.CommandGroupModel group:
-                    WriteGroupExpression(group);
+                    WriteGroupExpression(group, expr);
 
                     break;
                 case CommandModel.LeafCommandModel leaf:
-                    WriteLeafExpression(leaf);
+                    WriteLeafExpression(leaf, expr);
 
                     break;
                 case CommandModel.RootCommandModel:
@@ -110,11 +132,6 @@ namespace Richiban.Cmdr.Generators
 
         private void WriteRootStatement(CommandModel.RootCommandModel rootCommandModel)
         {
-            foreach (var leaf in rootCommandModel.GetAllLeafCommandModels())
-            {
-                WriteLeafStatement(leaf);
-            }
-
             _codeBuilder.AppendLine("var rootCommand = new RootCommand()");
             _codeBuilder.AppendLine("{");
 
@@ -122,8 +139,7 @@ namespace Richiban.Cmdr.Generators
             {
                 foreach (var subCommand in rootCommandModel.SubCommands)
                 {
-                    //expr.Append(/*subCommand*/ "[This is supposed to be a subcommand]");
-                    WriteCommandExpression(subCommand);
+                    WriteCommandExpression(subCommand, expr);
                 }
             }
 
@@ -131,53 +147,48 @@ namespace Richiban.Cmdr.Generators
         }
 
         private void WriteGroupExpression(
-            CommandModel.CommandGroupModel commandGroupModel)
+            CommandModel.CommandGroupModel commandGroupModel,
+            CodeBuilder.CommaSeparatedExpressionSyntax expr)
         {
-            _codeBuilder.AppendLine($"new Command(\"{commandGroupModel.CommandName}\")");
-            _codeBuilder.AppendLine("{");
+            expr.AppendLine($"new Command(\"{commandGroupModel.CommandName}\")");
+            expr.AppendLine("{");
 
-            using (_codeBuilder.Indent())
+            using (expr.Indent())
             {
-                foreach (var commandModel in commandGroupModel.SubCommands)
+                using (var expr2 = _codeBuilder.OpenExpressionList())
                 {
-                    WriteCommandExpression(commandModel);
+                    foreach (var commandModel in commandGroupModel.SubCommands)
+                    {
+                        WriteCommandExpression(commandModel, expr2);
+                        expr2.DoneOne();
+                    }
                 }
             }
 
-            _codeBuilder.AppendLine("}");
+            expr.AppendLine("}");
+            expr.DoneOne();
         }
 
-        private void WriteLeafExpression(CommandModel.LeafCommandModel leafModel)
+        private void WriteLeafExpression(
+            CommandModel.LeafCommandModel leafModel,
+            CodeBuilder.CommaSeparatedExpressionSyntax expr)
         {
-            _codeBuilder.AppendLine(leafModel.VariableName);
-        }
-
-        private void WriteLeafStatement(CommandModel.LeafCommandModel leafModel)
-        {
-            _codeBuilder.AppendLine(
-                $"var {leafModel.VariableName} = new Command(\"{leafModel.CommandName}\")");
-
-            _codeBuilder.AppendLine("{");
-
-            GetParametersString(leafModel);
-
-            _codeBuilder.AppendLine("};");
-            _codeBuilder.AppendLine();
-
-            WriteHandlerString(leafModel);
-            _codeBuilder.AppendLine();
+            expr.AppendLine(leafModel.VariableName);
         }
 
         private void GetParametersString(CommandModel.LeafCommandModel leafModel)
         {
-            var parameterStrings = leafModel.Parameters.Select(ArgumentOrOptionToString);
-
-            var parametersString = string.Join((string)",\n", parameterStrings);
-
-            _codeBuilder.AppendLine(parametersString);
+            using (var expr = _codeBuilder.OpenExpressionList())
+            {
+                foreach (var leafModelParameter in leafModel.Parameters)
+                {
+                    expr.AppendLine(ArgumentOrOptionToString(leafModelParameter));
+                    expr.DoneOne();
+                }
+            }
         }
 
-        private void WriteHandlerString(CommandModel.LeafCommandModel leafModel)
+        private void WriteHandlerStatement(CommandModel.LeafCommandModel leafModel)
         {
             var parameters = leafModel.Parameters;
 
@@ -187,15 +198,6 @@ namespace Richiban.Cmdr.Generators
 
             _codeBuilder.AppendLine(
                 $"{leafModel.VariableName}.Handler = CommandHandler.Create{handlerTypeArguments}({leafModel.FullyQualifiedName});");
-        }
-
-        private string GenerateParentCommandExpression(
-            CommandModel.CommandGroupModel group,
-            string methodCommandName)
-        {
-            return group.SubCommands.Aggregate(
-                methodCommandName,
-                (current, cmd) => $@"new Command(""{cmd}"") {{ {current} }}");
         }
 
         private static string ArgumentOrOptionToString(
