@@ -21,7 +21,7 @@ namespace Richiban.Cmdr
 
                 new CmdrAttributeWriter(cmdrAttribute, context).WriteToContext();
 
-                var methods = new MethodModelBuilder(context, cmdrAttribute).GetMethods();
+                var methods = new MethodModelContextBuilder(context, cmdrAttribute).Build();
 
                 new ProgramClassWriter(context, methods).WriteToContext();
 

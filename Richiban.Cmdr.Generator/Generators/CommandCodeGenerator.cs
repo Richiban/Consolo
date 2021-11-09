@@ -30,19 +30,19 @@ namespace Richiban.Cmdr.Generators
         private string WriteRootString(CommandModel.RootCommandModel rootCommandModel)
         {
             var leafCommandStatements = rootCommandModel.GetAllLeafCommandModels()
-                .Select(x => WriteLeafString1(x))
+                .Select(WriteLeafString1)
                 .StringJoin("\n");
             
             var subCommandExpressions = rootCommandModel.SubCommands.Select(GetCode)
                 .StringJoin(",\n    ");
 
             return $@"
-{leafCommandStatements}
+        {leafCommandStatements}
 
-var rootCommand = new RootCommand()
-{{
-    {subCommandExpressions}
-}};";
+        var rootCommand = new RootCommand()
+        {{
+            {subCommandExpressions}
+        }};";
         }
 
         private string WriteGroupString(CommandModel.CommandGroupModel commandGroupModel)
