@@ -9,15 +9,15 @@ namespace Richiban.Cmdr
 {
     internal class MethodModelBuilder
     {
-        private static readonly SymbolDisplayFormat SymbolDisplayFormat = new(
-            typeQualificationStyle: SymbolDisplayTypeQualificationStyle
+        private static readonly SymbolDisplayFormat SymbolDisplayFormat =
+            new(typeQualificationStyle: SymbolDisplayTypeQualificationStyle
                 .NameAndContainingTypesAndNamespaces);
 
-        private readonly CmdrAttribute _cmdrAttribute;
+        private readonly CmdrAttributeDefinition _cmdrAttributeDefinition;
 
-        public MethodModelBuilder(CmdrAttribute cmdrAttribute)
+        public MethodModelBuilder(CmdrAttributeDefinition cmdrAttributeDefinition)
         {
-            _cmdrAttribute = cmdrAttribute;
+            _cmdrAttributeDefinition = cmdrAttributeDefinition;
         }
 
         public IEnumerable<Result<MethodModelFailure, MethodModel>> BuildFrom(
@@ -35,7 +35,7 @@ namespace Richiban.Cmdr
             if (!methodSymbol.IsStatic)
             {
                 return new MethodModelFailure(
-                    $"Method {methodSymbol} must be static in order to use the {_cmdrAttribute.AttributeName} attribute.",
+                    $"Method {methodSymbol} must be static in order to use the {_cmdrAttributeDefinition.ShortName} attribute.",
                     methodSymbol.Locations.FirstOrDefault());
             }
 
@@ -92,7 +92,7 @@ namespace Richiban.Cmdr
 
             return attributeData.ConstructorArguments.First() switch
             {
-                { Kind: TypedConstantKind.Primitive } arg => (string?)arg.Value,
+                { Kind: TypedConstantKind.Primitive } arg => (string?) arg.Value,
                 _ => null
             };
         }
@@ -101,7 +101,7 @@ namespace Richiban.Cmdr
         {
             return current.GetAttributes()
                 .SingleOrDefault(
-                    a => a.AttributeClass?.Name == _cmdrAttribute.AttributeName);
+                    a => a.AttributeClass?.ToString() == _cmdrAttributeDefinition.FullyQualifiedName);
         }
 
         private static string GetFullyQualifiedTypeName(ITypeSymbol containingType) =>

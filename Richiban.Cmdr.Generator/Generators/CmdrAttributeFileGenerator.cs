@@ -5,29 +5,28 @@ namespace Richiban.Cmdr.Generators
 {
     internal class CmdrAttributeFileGenerator : ICodeFileGenerator
     {
-        private readonly CmdrAttribute _cmdrAttribute;
+        private readonly CmdrAttributeDefinition _cmdrAttributeDefinition;
 
-        public CmdrAttributeFileGenerator(CmdrAttribute cmdrAttribute)
+        public CmdrAttributeFileGenerator(CmdrAttributeDefinition cmdrAttributeDefinition)
         {
-            _cmdrAttribute = cmdrAttribute;
+            _cmdrAttributeDefinition = cmdrAttributeDefinition;
         }
 
-        public string GetCode() =>""; // TODO disabled for now
+        public string GetCode() =>
+            @$"using System;
 
-        public string GetCodeBk() =>
-            @$"
- namespace {_cmdrAttribute.Namespace}
- {{
-     [System.AttributeUsage(System.AttributeTargets.Method|System.AttributeTargets.Class, AllowMultiple = false)]
-     public class {_cmdrAttribute.AttributeName} : System.Attribute
-     {{
-         public {_cmdrAttribute.AttributeName}(string alias)
-         {{
-             Alias = alias;
-         }} 
+namespace {_cmdrAttributeDefinition.Namespace}
+{{
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
+    public class {_cmdrAttributeDefinition.LongName} : Attribute
+    {{
+        public {_cmdrAttributeDefinition.LongName}(string name)
+        {{
+            Name = name;
+        }}
 
-         public string Alias {{ get; }}
-     }}
- }}";
+        public string Name {{ get; }}
+    }}
+}}";
     }
 }

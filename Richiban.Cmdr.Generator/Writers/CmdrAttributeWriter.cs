@@ -6,22 +6,22 @@ namespace Richiban.Cmdr.Writers
 {
     internal class CmdrAttributeWriter : CodeWriter
     {
-        private readonly CmdrAttribute _cmdrAttribute;
+        private readonly CmdrAttributeDefinition _cmdrAttributeDefinition;
 
         public CmdrAttributeWriter(
-            CmdrAttribute cmdrAttribute,
+            CmdrAttributeDefinition cmdrAttributeDefinition,
             GeneratorExecutionContext context)
         {
-            _cmdrAttribute = cmdrAttribute;
+            _cmdrAttributeDefinition = cmdrAttributeDefinition;
             Context = context;
             CodeFileGenerator = GetCodeGenerator();
         }
 
         private CmdrAttributeFileGenerator GetCodeGenerator() =>
-            new CmdrAttributeFileGenerator(_cmdrAttribute);
+            new CmdrAttributeFileGenerator(_cmdrAttributeDefinition);
 
         protected override GeneratorExecutionContext Context { get; }
         protected override ICodeFileGenerator CodeFileGenerator { get; }
-        protected override string FileName => "CmdrMethodAttribute.g.cs";
+        protected override string FileName => $"{_cmdrAttributeDefinition.LongName}.g.cs";
     }
 }

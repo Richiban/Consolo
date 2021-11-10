@@ -12,20 +12,13 @@ namespace Richiban.Cmdr
     {
         public void Initialize(GeneratorInitializationContext context)
         {
-            context.RegisterForSyntaxNotifications(() => new MySyntaxReceiver());
         }
 
         public void Execute(GeneratorExecutionContext context)
         {
             try
             {
-                if (context.SyntaxReceiver is not MySyntaxReceiver
-                    { MethodToAugment: { } method })
-                {
-                    return;
-                }
-
-                var cmdrAttribute = new CmdrAttribute();
+                var cmdrAttribute = new CmdrAttributeDefinition();
 
                 new CmdrAttributeWriter(cmdrAttribute, context).WriteToContext();
 
@@ -43,28 +36,14 @@ namespace Richiban.Cmdr
                 context.ReportDiagnostic(
                     Diagnostic.Create(
                         new DiagnosticDescriptor(
-                            "Cmdr0004",
-                            "Failed!",
-                            $"There was a failure: {ex.Message}",
-                            "Error",
+                            id: "Cmdr0004",
+                            title: "Unhandled exception",
+                            messageFormat:
+                            $"There was an unhandled exception: {ex.Message}",
+                            category: "Cmdr",
                             DiagnosticSeverity.Error,
                             isEnabledByDefault: true),
                         location: null));
-            }
-        }
-
-        class MySyntaxReceiver : ISyntaxReceiver
-        {
-            public MethodDeclarationSyntax MethodToAugment { get; private set; }
-
-            public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
-            {
-                if (syntaxNode is MethodDeclarationSyntax method && method.AttributeLists
-                    .SelectMany(x => x.Attributes)
-                    .Any())
-                {
-                    MethodToAugment = method;
-                }
             }
         }
     }

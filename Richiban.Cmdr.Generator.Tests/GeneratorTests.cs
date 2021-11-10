@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Moq;
 using NUnit.Framework;
+using Shouldly;
 
 namespace Richiban.Cmdr.Generator.Tests
 {
@@ -15,7 +16,7 @@ namespace Richiban.Cmdr.Generator.Tests
     class GeneratorTests
     {
         [Test]
-        public void SimplestGeneratorTest()
+        public void CmdrAttributeFileTest()
         {
             var source = @"";
             var (outputCompilation, diagnostics) = RunGenerator(source);
@@ -25,41 +26,38 @@ namespace Richiban.Cmdr.Generator.Tests
             Assert.That(
                 outputCompilation.SyntaxTrees.Count,
                 Is.EqualTo(4),
-                "We expected four syntax trees: the original one plus the four we generated");
-
-            var programFile = GetProgramSyntaxTree(outputCompilation);
+                "We expected four syntax trees: the original one plus the three we generated");
             
-            var cmdrAttribute = GetCmdrAttributeFile(outputCompilation);
+            var cmdrAttributeFile = GetCmdrAttributeFile(outputCompilation);
 
-            var repl = GetReplFile(outputCompilation);
+            var src = cmdrAttributeFile.GetText().ToString();
 
-            var original = GetOriginalSourceFile(outputCompilation);
+            src.ShouldBe(@"using System;
 
-            Console.WriteLine(programFile.GetText().ToString());
+namespace Richiban.Cmdr
+{
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
+    public class CmdrMethodAttribute1 : Attribute
+    {
+        public CmdrMethodAttribute1(string name)
+        {
+            Name = name;
+        }
+
+        public string Name { get; }
+    }
+}");
         }
 
         [Test]
         public void InstanceMethodGivesDiagnosticError()
         {
             var source = @"
-namespace Richiban.Cmdr
-{
-    public class CmdrMethodAttribute : System.Attribute
-    {
-        public CmdrMethodAttribute(params string[] names)
-        {
-            Names = names;
-        }
-
-        public string[] Names { get; }
-    }
-}
-
 namespace TestSamples
 {
     public class TestClass
     {
-        [CmdrMethod]
+        [Richiban.Cmdr.CmdrMethodAttribute]
         public void TestMethod()
         {
         }
@@ -77,31 +75,18 @@ namespace TestSamples
             Assert.That(
                 diagnostic.GetMessage(),
                 Is.EqualTo(
-                    "Method TestSamples.TestClass.TestMethod() must be static in order to use the CmdrMethod attribute."));
+                    "Method TestSamples.TestClass.TestMethod() must be static in order to use the Cmdr attribute."));
         }
 
         [Test]
         public void StaticMethod()
         {
             var source = @"
-namespace Richiban.Cmdr
-{
-    public class CmdrMethodAttribute : System.Attribute
-    {
-        public CmdrMethodAttribute(params string[] names)
-        {
-            Names = names;
-        }
-
-        public string[] Names { get; }
-    }
-}
-
 namespace TestSamples
 {
     public class TestClass
     {
-        [CmdrMethod]
+        [Richiban.Cmdr.CmdrMethodAttribute]
         public static void TestMethod()
         {
         }
@@ -118,42 +103,29 @@ namespace TestSamples
         public void NestedAttributeUsage()
         {
             var source = @"
-namespace Richiban.Cmdr
-{
-    public class CmdrMethodAttribute : System.Attribute
-    {
-        public CmdrMethodAttribute(params string[] names)
-        {
-            Names = names;
-        }
-
-        public string[] Names { get; }
-    }
-}
-
 namespace TestSamples
 {
-    [CmdrMethod]
+    [Richiban.Cmdr.CmdrMethodAttribute]
     public class OuterTest
     {
-        [CmdrMethod]
+        [Richiban.Cmdr.CmdrMethodAttribute]
         public class InnerTest1
         {        
-            [CmdrMethod]
+            [Richiban.Cmdr.CmdrMethodAttribute]
             public static void TestMethod1()
             {
             } 
 
-            [CmdrMethod]
+            [Richiban.Cmdr.CmdrMethodAttribute]
             public static void TestMethod2(string arg1, string arg2)
             {
             }
         }
 
-        [CmdrMethod]
+        [Richiban.Cmdr.CmdrMethodAttribute]
         public class InnerTest2
         {
-            [CmdrMethod]
+            [Richiban.Cmdr.CmdrMethodAttribute]
             public static void TestMethod3()
             {
             }

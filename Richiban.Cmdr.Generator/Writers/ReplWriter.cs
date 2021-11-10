@@ -7,13 +7,13 @@ namespace Richiban.Cmdr.Writers
 {
     internal class ReplWriter
     {
-        private readonly CmdrAttribute _cmdrAttribute;
+        private readonly CmdrAttributeDefinition _cmdrAttributeDefinition;
         private readonly GeneratorExecutionContext _context;
 
-        public ReplWriter(GeneratorExecutionContext context, CmdrAttribute cmdrAttribute)
+        public ReplWriter(GeneratorExecutionContext context, CmdrAttributeDefinition cmdrAttributeDefinition)
         {
             _context = context;
-            _cmdrAttribute = cmdrAttribute;
+            _cmdrAttributeDefinition = cmdrAttributeDefinition;
         }
 
         public void WriteToContext()

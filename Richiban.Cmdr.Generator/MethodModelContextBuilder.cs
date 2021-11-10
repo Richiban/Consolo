@@ -14,22 +14,23 @@ namespace Richiban.Cmdr
     {
         private readonly GeneratorExecutionContext _context;
         private readonly MethodModelBuilder _builder;
-        private readonly CmdrAttribute _cmdrAttribute;
+        private readonly CmdrAttributeDefinition _cmdrAttributeDefinition;
 
         public MethodModelContextBuilder(
             GeneratorExecutionContext context,
-            CmdrAttribute cmdrAttribute)
+            CmdrAttributeDefinition cmdrAttributeDefinition)
         {
             _context = context;
-            _cmdrAttribute = cmdrAttribute;
-            _builder = new MethodModelBuilder(cmdrAttribute);
+            _cmdrAttributeDefinition = cmdrAttributeDefinition;
+            _builder = new MethodModelBuilder(cmdrAttributeDefinition);
         }
 
         public ImmutableArray<MethodModel> Build()
         {
             var qualifyingMethods = GetQualifyingMethods(_context.Compilation);
 
-            var (methodModels, failures) = _builder.BuildFrom(qualifyingMethods).Partition();
+            var (methodModels, failures) =
+                _builder.BuildFrom(qualifyingMethods).Partition();
 
             RegisterFailures(failures);
 
@@ -46,8 +47,19 @@ namespace Richiban.Cmdr
 
         private IEnumerable<IMethodSymbol?> GetQualifyingMethods(Compilation compilation)
         {
-            bool isCmdrMethodAttribute(AttributeData attr) =>
-                attr.AttributeClass?.Name.Contains(_cmdrAttribute.AttributeName) == true;
+            bool isCmdrMethodAttribute(AttributeData attr)
+            {
+                if (attr.AttributeClass is not { } attrClass) return false;
+
+                if (attrClass is IErrorTypeSymbol errType)
+                {
+                    var x = errType.CandidateReason;
+                    var y = errType.CandidateSymbols;
+                }
+
+                return attrClass.ToString() ==
+                       _cmdrAttributeDefinition.FullyQualifiedName;
+            }
 
             bool isQualifying(IMethodSymbol method) =>
                 method.GetAttributes().Any(isCmdrMethodAttribute);
