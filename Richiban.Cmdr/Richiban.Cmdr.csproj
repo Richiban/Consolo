@@ -1,37 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net5.0</TargetFramework>
-        <AssemblyName>Richiban.Cmdr</AssemblyName>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <LangVersion>Latest</LangVersion>
+        <Nullable>enable</Nullable>
         <RootNamespace>Richiban.Cmdr</RootNamespace>
     </PropertyGroup>
 
-    <PropertyGroup>
-        <LangVersion>latest</LangVersion>
-        <DocumentationFile>bin\Debug\net5.0\Richiban.Cmdr.xml</DocumentationFile>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-        <Optimize>false</Optimize>
-    </PropertyGroup>
-
-    <PropertyGroup>
-        <DebugType>pdbonly</DebugType>
-        <Authors>Richard Gibson</Authors>
-        <Company>Richibansoft</Company>
-        <Version>0.0.1-rc.1</Version>
-        <Description>A library for not just parsing command line arguments, but for making your standard C# methods callable from the command line</Description>
-        <PackageProjectUrl>https://github.com/Richiban/CommandLine</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/Richiban/CommandLine</RepositoryUrl>
-        <RepositoryType>Git</RepositoryType>
-        <PackageTags>command line shell</PackageTags>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <PackageLicenseUrl>https://raw.githubusercontent.com/Richiban/CommandLine/master/LICENSE</PackageLicenseUrl>
-        <PackageReleaseNotes>Very first version. Not recommended for production use.</PackageReleaseNotes>
-    </PropertyGroup>
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>Richiban.Cmdr.Tests</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\LICENSE" Pack="true" PackagePath="$(PackageLicenseFile)" />
+        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.1">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.8.0">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
     </ItemGroup>
 
 </Project>
