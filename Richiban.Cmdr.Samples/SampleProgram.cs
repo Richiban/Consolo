@@ -2,13 +2,20 @@
 
 namespace Richiban.Cmdr.Samples
 {
+    [Cmdr("remote")]
     public class SampleProgram
     {
-        [CmdrMethod("update")]
-        public static void UpdateStats(DateTime since, bool allowClobber)
+        [Cmdr("a")]
+        public static void ListRemotes()
+        {
+            Console.WriteLine("Listing remotes");
+        }
+            
+        [Cmdr("remove")]
+        public static void RemoveRemote(string remoteName)
         {
             Console.WriteLine(
-                $"Updating stats since {since}, with {new { allowClobber }}");
+                $"Removing remote '{remoteName}'");
         }
     }
 }

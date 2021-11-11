@@ -42,7 +42,7 @@ namespace Richiban.Cmdr.Writers
                     _codeBuilder.AppendLine();
 
                     _codeBuilder.AppendLines(
-                        "if (args.Length == 1 && (args[0] == \"--interactive\" || args[0] == \"-i\"))",
+                        "if (Repl.IsCall(args))",
                         "{");
 
                     WriteReplCall();
@@ -98,9 +98,8 @@ namespace Richiban.Cmdr.Writers
             using (_codeBuilder.Indent())
             {
                 _codeBuilder.AppendLine(
-                    "var repl = new Repl(rootCommand, \"Select a command\");");
+                    "Repl.EnterNewLoop(rootCommand, \"Select a command\");");
 
-                _codeBuilder.AppendLine("repl.EnterLoop();");
                 _codeBuilder.AppendLine();
                 _codeBuilder.AppendLine("return 0;");
             }
@@ -116,7 +115,7 @@ namespace Richiban.Cmdr.Writers
                     WriteGroupExpression(group, expr);
 
                     break;
-                case CommandModel.LeafCommandModel leaf:
+                case CommandModel.NormalCommandModel leaf:
                     WriteLeafExpression(leaf, expr);
 
                     break;
@@ -172,33 +171,33 @@ namespace Richiban.Cmdr.Writers
         }
 
         private void WriteLeafExpression(
-            CommandModel.LeafCommandModel leafModel,
+            CommandModel.NormalCommandModel normalModel,
             CodeBuilder.CommaSeparatedExpressionSyntax expr)
         {
-            expr.AppendLine(leafModel.VariableName);
+            expr.AppendLine(normalModel.VariableName);
         }
 
-        private void WriteParameterExpressions(CommandModel.LeafCommandModel leafModel)
+        private void WriteParameterExpressions(CommandModel.NormalCommandModel normalModel)
         {
             using var expr = _codeBuilder.OpenExpressionList();
 
-            foreach (var leafModelParameter in leafModel.Parameters)
+            foreach (var leafModelParameter in normalModel.Parameters)
             {
                 expr.AppendLine(GetArgumentOrOptionExpression(leafModelParameter));
                 expr.Next();
             }
         }
 
-        private void WriteHandlerStatement(CommandModel.LeafCommandModel leafModel)
+        private void WriteHandlerStatement(CommandModel.NormalCommandModel normalModel)
         {
-            var parameters = leafModel.Parameters;
+            var parameters = normalModel.Parameters;
 
             var handlerTypeArguments = parameters.Count == 0
                 ? ""
                 : $"<{parameters.Select(a => a.FullyQualifiedTypeName).StringJoin(", ")}>";
 
             _codeBuilder.AppendLine(
-                $"{leafModel.VariableName}.Handler = CommandHandler.Create{handlerTypeArguments}({leafModel.FullyQualifiedName});");
+                $"{normalModel.VariableName}.Handler = CommandHandler.Create{handlerTypeArguments}({normalModel.FullyQualifiedName});");
         }
 
         private static string GetArgumentOrOptionExpression(

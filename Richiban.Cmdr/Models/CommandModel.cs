@@ -9,38 +9,27 @@ namespace Richiban.Cmdr.Models
         {
         }
 
-        public sealed class LeafCommandModel : CommandModel
+        public sealed class NormalCommandModel : CommandModel
         {
-            public LeafCommandModel(
+            public NormalCommandModel(
                 string commandName,
                 string fullyQualifiedClassName,
                 string methodName,
-                IReadOnlyCollection<CommandParameterModel> parameters)
+                IReadOnlyCollection<CommandParameterModel> parameters,
+                IReadOnlyCollection<NormalCommandModel> subCommands)
             {
                 CommandName = commandName;
                 Parameters = parameters;
+                SubCommands = subCommands;
                 FullyQualifiedName = $"{fullyQualifiedClassName}.{methodName}";
                 VariableName = $"{Utils.ToCamelCase(methodName)}Command";
             }
 
             public string CommandName { get; }
             public IReadOnlyCollection<CommandParameterModel> Parameters { get; }
+            public IReadOnlyCollection<NormalCommandModel> SubCommands { get; }
             public string FullyQualifiedName { get; }
             public string VariableName { get; }
-        }
-
-        public sealed class CommandGroupModel : CommandModel
-        {
-            public CommandGroupModel(
-                string commandName,
-                IReadOnlyCollection<CommandModel> subCommands)
-            {
-                CommandName = commandName;
-                SubCommands = subCommands;
-            }
-
-            public string CommandName { get; }
-            public IReadOnlyCollection<CommandModel> SubCommands { get; }
         }
 
         public sealed class RootCommandModel : CommandModel

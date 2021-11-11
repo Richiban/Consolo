@@ -25,17 +25,13 @@ namespace Richiban.Cmdr.Transformers
                         .ToImmutableArray());
             }
 
-            if (tree.SubTrees.Any())
             {
                 var commandText = Utils.ToKebabCase(tree.CommandText);
+                var commandText = Utils.ToKebabCase(primaryName);
 
-                return new CommandModel.CommandGroupModel(
-                    commandText,
-                    tree.SubTrees.Select(tree1 => Map(tree1, isRoot: false))
-                        .ToImmutableArray());
-            }
-            else
-            {
+                var x = tree.SubTrees.Select(tree1 => Map(tree1, isRoot: false))
+                    .ToImmutableArray();
+
                 var methodModel = tree.MethodModel!;
 
                 var primaryName = methodModel switch
@@ -44,11 +40,9 @@ namespace Richiban.Cmdr.Transformers
                     { MethodName: var methodName } => methodName
                 };
 
-                var commandText = Utils.ToKebabCase(primaryName);
-
                 var commandParameterModels = MapCommandParameterModels(methodModel);
 
-                return new CommandModel.LeafCommandModel(
+                return new CommandModel.NormalCommandModel(
                     commandText,
                     methodModel.FullyQualifiedClassName,
                     methodModel.MethodName,
@@ -76,7 +70,7 @@ namespace Richiban.Cmdr.Transformers
 
             foreach (var methodModel in models)
             {
-                root[new ListWalker<string>(methodModel.GroupCommandPath)] = methodModel;
+                root.Set(new ListWalker<string>(methodModel.GroupCommandPath), methodModel);
             }
 
             return root;
@@ -125,34 +119,33 @@ namespace Richiban.Cmdr.Transformers
 
             public List<CommandTree> SubTrees { get; } = new();
 
-            public MethodModel this[in ListWalker<string> path]
+            public void Set(in ListWalker<string> pathWalker, MethodModel value)
             {
-                set
+                if (pathWalker.AtEnd)
                 {
-                    if (path.AtEnd)
-                    {
-                        SubTrees.Add(new CommandTree(value));
+                    SubTrees.Add(new CommandTree(value));
 
-                        return;
-                    }
-
-                    var (current, remaining) = path;
-                    var subTreeWasMatched = false;
-
-                    foreach (var tree in SubTrees.Where(t => t.CommandText == current))
-                    {
-                        subTreeWasMatched = true;
-
-                        tree[remaining] = value;
-                    }
-
-                    if (subTreeWasMatched)
-                    {
-                        return;
-                    }
-
-                    SubTrees.Add(new CommandTree(current) { [remaining] = value });
+                    return;
                 }
+
+                var (current, remaining) = pathWalker;
+                var subTreeWasMatched = false;
+
+                foreach (var tree in SubTrees.Where(t => t.CommandText == current))
+                {
+                    subTreeWasMatched = true;
+
+                    tree.Set(remaining, value);
+                }
+
+                if (subTreeWasMatched)
+                {
+                    return;
+                }
+
+                var newSubTree = new CommandTree(current);
+                newSubTree.Set(remaining, value);
+                SubTrees.Add(newSubTree);
             }
         }
     }

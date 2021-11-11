@@ -12,7 +12,7 @@ namespace Richiban.Cmdr
     [Generator]
     public class CmdrGenerator : ISourceGenerator
     {
-        private CmdrAttributeDefinition _cmdrAttribute;
+        private CmdrAttributeDefinition _cmdrAttribute = null!;
 
         public void Initialize(GeneratorInitializationContext context)
         {

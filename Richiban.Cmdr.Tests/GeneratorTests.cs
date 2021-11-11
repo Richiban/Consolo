@@ -33,7 +33,7 @@ namespace Richiban.Cmdr.Tests
         {
             var source = @"public static class TestClass
 {
-    [CmdrMethod]
+    [Cmdr]
     public static void TestMethod()
     {
     }
@@ -62,9 +62,9 @@ namespace Richiban.Cmdr.Tests
                 @"using System;
 
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-public class CmdrMethodAttribute : Attribute
+public class CmdrAttribute : Attribute
 {
-    public CmdrMethodAttribute(string name = null)
+    public CmdrAttribute(string name = null)
     {
         Name = name;
     }
@@ -81,7 +81,7 @@ namespace TestSamples
 {
     public class TestClass
     {
-        [CmdrMethod]
+        [Cmdr]
         public void TestMethod()
         {
         }
@@ -99,7 +99,7 @@ namespace TestSamples
             Assert.That(
                 diagnostic.GetMessage(),
                 Is.EqualTo(
-                    "Method TestSamples.TestClass.TestMethod() must be static in order to use the CmdrMethod attribute."));
+                    "Method TestSamples.TestClass.TestMethod() must be static in order to use the Cmdr attribute."));
         }
 
         [Test]
@@ -113,7 +113,7 @@ namespace TestSamples
 {
     public class TestClass
     {
-        [CmdrMethod]
+        [Cmdr]
         public static void TestMethod()
         {
         }
@@ -148,10 +148,9 @@ public static class Program
             testMethodCommand
         };
 
-        if (args.Length == 1 && (args[0] == ""--interactive"" || args[0] == ""-i""))
+        if (Repl.IsCall(args))
         {
-            var repl = new Repl(rootCommand, ""Select a command"");
-            repl.EnterLoop();
+            repl.EnterNewLoop(rootCommand, ""Select a command"");
 
             return 0;
         }
@@ -175,7 +174,7 @@ namespace TestSamples
 {
     public class TestClass
     {
-        [CmdrMethod(""explicit"")]
+        [Cmdr(""explicit"")]
         public static void TestMethod()
         {
         }
@@ -210,10 +209,9 @@ public static class Program
             testMethodCommand
         };
 
-        if (args.Length == 1 && (args[0] == ""--interactive"" || args[0] == ""-i""))
+        if (Repl.IsCall(args))
         {
-            var repl = new Repl(rootCommand, ""Select a command"");
-            repl.EnterLoop();
+            repl.EnterNewLoop(rootCommand, ""Select a command"");
 
             return 0;
         }
@@ -232,27 +230,27 @@ public static class Program
             var source = @"
 namespace TestSamples
 {
-    [CmdrMethod]
+    [Cmdr]
     public class OuterTest
     {
-        [CmdrMethod]
+        [Cmdr]
         public class InnerTest1
         {        
-            [CmdrMethod]
+            [Cmdr]
             public static void TestMethod1()
             {
             } 
 
-            [CmdrMethod]
+            [Cmdr]
             public static void TestMethod2(string arg1, string arg2)
             {
             }
         }
 
-        [CmdrMethod]
+        [Cmdr]
         public class InnerTest2
         {
-            [CmdrMethod]
+            [Cmdr]
             public static void TestMethod3()
             {
             }
@@ -269,67 +267,137 @@ namespace TestSamples
                 GetProgramSyntaxTree(outputCompilation).GetText().ToString();
 
             programSource.ShouldBe(
-                $@"using System;
+                @"using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using Richiban.Cmdr;
 
 public static class Program
-{{
+{
     public static int Main(string[] args)
-    {{
+    {
         var testMethod1Command = new Command(""test-method1"")
-        {{
-        }};
+        {
+        };
 
         testMethod1Command.Handler = CommandHandler.Create(TestSamples.OuterTest.InnerTest1.TestMethod1);
 
         var testMethod2Command = new Command(""test-method2"")
-        {{
+        {
             new Argument(""arg1"")
             ,
             new Argument(""arg2"")
-        }};
+        };
 
         testMethod2Command.Handler = CommandHandler.Create<System.String, System.String>(TestSamples.OuterTest.InnerTest1.TestMethod2);
 
         var testMethod3Command = new Command(""test-method3"")
-        {{
-        }};
+        {
+        };
 
         testMethod3Command.Handler = CommandHandler.Create(TestSamples.OuterTest.InnerTest2.TestMethod3);
 
         var rootCommand = new RootCommand()
-        {{
+        {
             new Command(""outer-test"")
-            {{
+            {
                 new Command(""inner-test1"")
-                {{
+                {
                     testMethod1Command
                     ,
                     testMethod2Command
-                }}
+                }
                 ,
                 new Command(""inner-test2"")
-                {{
+                {
                     testMethod3Command
-                }}
-            }}
-        }};
+                }
+            }
+        };
 
-        if (args.Length == 1 && (args[0] == ""--interactive"" || args[0] == ""-i""))
-        {{
-            var repl = new Repl(rootCommand, ""Select a command"");
-            repl.EnterLoop();
+        if (Repl.IsCall(args))
+        {
+            repl.EnterNewLoop(rootCommand, ""Select a command"");
 
             return 0;
-        }}
+        }
         else
-        {{
+        {
             return rootCommand.Invoke(args);
-        }}
-    }}
-}}
+        }
+    }
+}
+");
+        }
+
+        [Test]
+        public void EmptyCommandNameResultsInShortenedPath()
+        {
+            var source = @"
+using Richiban.Cmdr;
+using System;
+
+namespace TestSamples
+{
+    [Cmdr(""aaa"")
+    public class TestClass
+    {
+        [Cmdr("""")]
+        public static void TestMethodA()
+        {
+        }
+
+        [Cmdr(""bbb"")]
+        public static void TestMethodB()
+        {
+        }
+    }
+}
+";
+
+            var (compilation, diagnostics) = RunGenerator(source);
+
+            Assert.That(diagnostics, Is.Empty);
+
+            var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
+
+            programText.ShouldBe(
+                @"using System;
+using System.CommandLine;
+using System.CommandLine.Invocation;
+using Richiban.Cmdr;
+
+public static class Program
+{
+    public static int Main(string[] args)
+    {
+        var testClassCommand = new Command(""aaa"")
+        {
+            Handler = CommandHandler.Create(TestSamples.TestClass.TestMethodA);
+        };
+
+        testClassCommand.Add(new Command(""bbb"")
+        {
+            Handler = CommandHandler.Create(TestSamples.TestClass.TestMethodB)
+        });
+
+        var rootCommand = new RootCommand()
+        {
+            testClassCommand
+        };
+
+        if (Repl.IsCall(args))
+        {
+            Repl.EnterNewLoop(""Select a command"");
+
+            return 0;
+        }
+        else
+        {
+            return rootCommand.Invoke(args);
+        }
+    }
+}
 ");
         }
 
@@ -347,7 +415,7 @@ public static class Program
         private static SyntaxTree GetCmdrAttributeFile(Compilation outputCompilation)
         {
             return outputCompilation.SyntaxTrees.Single(
-                s => s.FilePath.EndsWith("CmdrMethodAttribute.g.cs"));
+                s => s.FilePath.EndsWith("CmdrAttribute.g.cs"));
         }
 
         private static SyntaxTree GetProgramSyntaxTree(Compilation outputCompilation)

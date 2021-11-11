@@ -36,7 +36,7 @@ namespace Richiban.Cmdr.Tests
             group.CommandName.ShouldBe("some-parent");
 
             var leaf = group.SubCommands.ShouldHaveSingleItem()
-                .ShouldBeOfType<CommandModel.LeafCommandModel>();
+                .ShouldBeOfType<CommandModel.NormalCommandModel>();
 
             leaf.CommandName.ShouldBe("shortcut");
             leaf.VariableName.ShouldBe("someFunctionCommand");
