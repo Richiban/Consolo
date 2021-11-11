@@ -9,10 +9,6 @@ namespace Richiban.Cmdr
 {
     internal class MethodModelBuilder
     {
-        private static readonly SymbolDisplayFormat SymbolDisplayFormat =
-            new(typeQualificationStyle: SymbolDisplayTypeQualificationStyle
-                .NameAndContainingTypesAndNamespaces);
-
         private readonly CmdrAttributeDefinition _cmdrAttributeDefinition;
 
         public MethodModelBuilder(CmdrAttributeDefinition cmdrAttributeDefinition)
@@ -22,14 +18,14 @@ namespace Richiban.Cmdr
 
         public IEnumerable<Result<MethodModelFailure, MethodModel>> BuildFrom(
             IEnumerable<IMethodSymbol?> qualifyingMethods) =>
-            qualifyingMethods.Choose(TryMapMethod);
+            qualifyingMethods.SelectNotNull(TryMapMethod);
 
         private Result<MethodModelFailure, MethodModel> TryMapMethod(
             IMethodSymbol? methodSymbol)
         {
             if (methodSymbol is null)
             {
-                return new MethodModelFailure($"Method not found", location: null);
+                return new MethodModelFailure("Method not found", location: null);
             }
 
             if (!methodSymbol.IsStatic)
@@ -42,12 +38,11 @@ namespace Richiban.Cmdr
             var parameters = methodSymbol.Parameters.Select(GetArgumentModel)
                 .ToImmutableArray();
 
-            var fullyQualifiedName =
-                GetFullyQualifiedTypeName(methodSymbol.ContainingType);
+            var fullyQualifiedName = methodSymbol.ContainingType.GetFullyQualifiedName();
 
             var commandPath = GetCommandPath(methodSymbol);
 
-            var parentNames = commandPath.Truncate(-1).ToList();
+            var parentNames = commandPath.Truncate(count: -1).ToList();
 
             var providedName = commandPath.LastOrDefault();
 
@@ -88,11 +83,13 @@ namespace Richiban.Cmdr
         private static string? GetConstructorArgument(AttributeData attributeData)
         {
             if (attributeData.ConstructorArguments.Length == 0)
+            {
                 return null;
+            }
 
             return attributeData.ConstructorArguments.First() switch
             {
-                { Kind: TypedConstantKind.Primitive } arg => (string?) arg.Value,
+                { Kind: TypedConstantKind.Primitive } arg => (string?)arg.Value,
                 _ => null
             };
         }
@@ -100,17 +97,13 @@ namespace Richiban.Cmdr
         private AttributeData? GetRelevantAttribute(ISymbol current)
         {
             return current.GetAttributes()
-                .SingleOrDefault(
-                    a => a.AttributeClass?.ToString() == _cmdrAttributeDefinition.FullyQualifiedName);
+                .SingleOrDefault(a => _cmdrAttributeDefinition.Matches(a.AttributeClass));
         }
-
-        private static string GetFullyQualifiedTypeName(ITypeSymbol containingType) =>
-            containingType.ToDisplayString(SymbolDisplayFormat);
 
         private static ArgumentModel GetArgumentModel(IParameterSymbol parameterSymbol)
         {
             var name = parameterSymbol.Name;
-            var type = GetFullyQualifiedTypeName(parameterSymbol.Type);
+            var type = parameterSymbol.Type.GetFullyQualifiedName();
             var isFlag = type == "System.Boolean";
 
             return new ArgumentModel(name, type, isFlag);

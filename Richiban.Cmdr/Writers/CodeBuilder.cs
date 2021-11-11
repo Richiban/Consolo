@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace Richiban.Cmdr.Generators
+namespace Richiban.Cmdr.Writers
 {
     internal class CodeBuilder
     {
@@ -23,12 +23,10 @@ namespace Richiban.Cmdr.Generators
                 {
                     return;
                 }
-                else
-                {
-                    _sb.AppendLine();
 
-                    return;
-                }
+                _sb.AppendLine();
+
+                return;
             }
 
             _sb.AppendLine(Indentation + line);
@@ -69,10 +67,7 @@ namespace Richiban.Cmdr.Generators
 
         public IDisposable Indent() => new Indenter(this);
 
-        public CommaSeparatedExpressionSyntax OpenExpressionList()
-        {
-            return new CommaSeparatedExpressionSyntax(this);
-        }
+        public CommaSeparatedExpressionSyntax OpenExpressionList() => new(this);
 
         private class Indenter : IDisposable
         {
@@ -92,19 +87,17 @@ namespace Richiban.Cmdr.Generators
 
         public class CommaSeparatedExpressionSyntax : IDisposable
         {
-            private bool _anyWritten;
             private readonly CodeBuilder _codeBuilder;
+            private bool _anyWritten;
             private bool _doneOne;
 
             public CommaSeparatedExpressionSyntax(CodeBuilder codeBuilder)
             {
                 _codeBuilder = codeBuilder;
-                _codeBuilder.IncreaseIndentation();
             }
 
             public void Dispose()
             {
-                _codeBuilder.DecreaseIndentation();
             }
 
             public void Append(string expression)
@@ -116,7 +109,7 @@ namespace Richiban.Cmdr.Generators
                 }
 
                 _codeBuilder.Append(expression);
-                
+
                 _anyWritten = true;
             }
 
@@ -131,8 +124,8 @@ namespace Richiban.Cmdr.Generators
                 _codeBuilder.AppendLine(expression);
                 _anyWritten = true;
             }
-            
-            public void DoneOne() => _doneOne = true;
+
+            public void Next() => _doneOne = true;
 
             public IDisposable Indent() => new Indenter(_codeBuilder);
         }

@@ -1,8 +1,10 @@
 ﻿using System;
-using System.Diagnostics;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Richiban.Cmdr.Models;
 using Richiban.Cmdr.Writers;
 
 namespace Richiban.Cmdr
@@ -10,40 +12,100 @@ namespace Richiban.Cmdr
     [Generator]
     public class CmdrGenerator : ISourceGenerator
     {
+        private CmdrAttributeDefinition _cmdrAttribute;
+
         public void Initialize(GeneratorInitializationContext context)
         {
+            _cmdrAttribute = new CmdrAttributeDefinition();
+
+            context.RegisterForSyntaxNotifications(
+                () => new CmdrSyntaxReceiver(_cmdrAttribute));
         }
 
         public void Execute(GeneratorExecutionContext context)
         {
+            var diagnostics = new CmdrDiagnostics(context);
+
             try
             {
-                var cmdrAttribute = new CmdrAttributeDefinition();
+                if (context.SyntaxReceiver is not CmdrSyntaxReceiver
+                {
+                    QualifyingMembers: { Count: > 0 }
+                } receiver)
+                {
+                    return;
+                }
 
-                new CmdrAttributeWriter(cmdrAttribute, context).WriteToContext();
-
-                var methods =
-                    new MethodModelContextBuilder(context, cmdrAttribute).Build();
-
-                new ProgramClassWriter(context, methods).WriteToContext();
-
-                new ReplWriter(context, cmdrAttribute).WriteToContext();
+                DoGeneration(context, diagnostics, receiver.QualifyingMembers);
             }
             catch (Exception ex)
             {
-                //Debugger.Launch();
+                diagnostics.ReportUnknownError(ex);
+            }
+        }
 
-                context.ReportDiagnostic(
-                    Diagnostic.Create(
-                        new DiagnosticDescriptor(
-                            id: "Cmdr0004",
-                            title: "Unhandled exception",
-                            messageFormat:
-                            $"There was an unhandled exception: {ex.Message}",
-                            category: "Cmdr",
-                            DiagnosticSeverity.Error,
-                            isEnabledByDefault: true),
-                        location: null));
+        private void DoGeneration(
+            GeneratorExecutionContext context,
+            CmdrDiagnostics cmdrDiagnostics,
+            List<MethodDeclarationSyntax> qualifyingMembers)
+        {
+            var cmdrAttributeFileGenerator =
+                new CmdrAttributeFileGenerator(_cmdrAttribute);
+
+            context.AddCodeFile(cmdrAttributeFileGenerator);
+            context.AddCodeFile(new ReplFileGenerator());
+
+            var options = ((CSharpCompilation)context.Compilation).SyntaxTrees[0]
+                .Options;
+
+            var attributeTree = CSharpSyntaxTree.ParseText(
+                cmdrAttributeFileGenerator.GetCode(),
+                (CSharpParseOptions)options);
+
+            var newCompilation =
+                context.Compilation.AddSyntaxTrees(attributeTree);
+
+            var candidateMethods =
+                new MethodScanner(newCompilation, _cmdrAttribute, cmdrDiagnostics)
+                    .GetCandidateMethods(qualifyingMembers);
+
+            var (methodModels, failures) = new MethodModelBuilder(_cmdrAttribute)
+                .BuildFrom(candidateMethods)
+                .SeparateResults();
+
+            cmdrDiagnostics.ReportMethodFailures(failures);
+
+            context.AddCodeFile(new ProgramClassFileGenerator(methodModels));
+        }
+
+        private class CmdrSyntaxReceiver : ISyntaxReceiver
+        {
+            private readonly CmdrAttributeDefinition _cmdrAttribute;
+
+            public CmdrSyntaxReceiver(CmdrAttributeDefinition cmdrAttribute)
+            {
+                _cmdrAttribute = cmdrAttribute;
+            }
+
+            internal List<MethodDeclarationSyntax> QualifyingMembers { get; } = new();
+
+            public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
+            {
+                if (syntaxNode is not MethodDeclarationSyntax method)
+                {
+                    return;
+                }
+
+                var attribute = method.AttributeLists.SelectMany(
+                        list => list.Attributes.Where(x => _cmdrAttribute.Matches(x)))
+                    .FirstOrDefault();
+
+                if (attribute is null)
+                {
+                    return;
+                }
+
+                QualifyingMembers.Add(method);
             }
         }
     }

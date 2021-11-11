@@ -4,7 +4,7 @@ namespace Richiban.Cmdr.Samples
 {
     public class SampleProgram
     {
-        [CmdrMethod("test")]
+        [CmdrMethod("update")]
         public static void UpdateStats(DateTime since, bool allowClobber)
         {
             Console.WriteLine(

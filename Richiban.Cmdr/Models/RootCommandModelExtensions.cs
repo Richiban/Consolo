@@ -3,10 +3,10 @@ using System.Collections.Generic;
 
 namespace Richiban.Cmdr.Models
 {
-    static class RootCommandModelExtensions
+    internal static class RootCommandModelExtensions
     {
-        public static IEnumerable<CommandModel.LeafCommandModel>
-            GetAllLeafCommandModels(this CommandModel.RootCommandModel root)
+        public static IEnumerable<CommandModel.LeafCommandModel> GetAllLeafCommandModels(
+            this CommandModel.RootCommandModel root)
         {
             foreach (var subCommand in root.SubCommands)
             {
@@ -33,8 +33,8 @@ namespace Richiban.Cmdr.Models
             }
         }
 
-        private static IEnumerable<CommandModel.LeafCommandModel>
-            GetAllLeafCommands(this CommandModel.CommandGroupModel group)
+        private static IEnumerable<CommandModel.LeafCommandModel> GetAllLeafCommands(
+            this CommandModel.CommandGroupModel group)
         {
             foreach (var subCommand in group.SubCommands)
             {

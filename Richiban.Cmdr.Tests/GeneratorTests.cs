@@ -1,22 +1,21 @@
 ﻿using System;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Moq;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NUnit.Framework;
 using Shouldly;
 
-namespace Richiban.Cmdr.Generator.Tests
+namespace Richiban.Cmdr.Tests
 {
     [TestFixture]
     class GeneratorTests
     {
         [Test]
-        public void CmdrAttributeFileTest()
+        public void CmdrAttributeIsNotOutputIfThereAreNoCandidateMethods()
         {
             var source = @"";
             var (outputCompilation, diagnostics) = RunGenerator(source);
@@ -25,27 +24,52 @@ namespace Richiban.Cmdr.Generator.Tests
 
             Assert.That(
                 outputCompilation.SyntaxTrees.Count,
-                Is.EqualTo(4),
-                "We expected four syntax trees: the original one plus the three we generated");
-            
+                Is.EqualTo(1),
+                $"We expected only the one syntax tree");
+        }
+
+        [Test]
+        public void CmdrAttributeFileTest()
+        {
+            var source = @"public static class TestClass
+{
+    [CmdrMethod]
+    public static void TestMethod()
+    {
+    }
+}
+";
+            var (outputCompilation, diagnostics) = RunGenerator(source);
+
+            Assert.That(diagnostics, Is.Empty);
+
+            {
+                var fileNames = string.Join(
+                    ",\n",
+                    outputCompilation.SyntaxTrees.Select(s => s.FilePath));
+
+                Assert.That(
+                    outputCompilation.SyntaxTrees.Count,
+                    Is.EqualTo(4),
+                    $"We expected four syntax trees: the original one plus the three we generated. Found: {fileNames}");
+            }
+
             var cmdrAttributeFile = GetCmdrAttributeFile(outputCompilation);
 
             var src = cmdrAttributeFile.GetText().ToString();
 
-            src.ShouldBe(@"using System;
+            src.ShouldBe(
+                @"using System;
 
-namespace Richiban.Cmdr
+[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+public class CmdrMethodAttribute : Attribute
 {
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
-    public class CmdrMethodAttribute1 : Attribute
+    public CmdrMethodAttribute(string name = null)
     {
-        public CmdrMethodAttribute1(string name)
-        {
-            Name = name;
-        }
-
-        public string Name { get; }
+        Name = name;
     }
+
+    public string Name { get; }
 }");
         }
 
@@ -57,7 +81,7 @@ namespace TestSamples
 {
     public class TestClass
     {
-        [Richiban.Cmdr.CmdrMethodAttribute]
+        [CmdrMethod]
         public void TestMethod()
         {
         }
@@ -75,18 +99,21 @@ namespace TestSamples
             Assert.That(
                 diagnostic.GetMessage(),
                 Is.EqualTo(
-                    "Method TestSamples.TestClass.TestMethod() must be static in order to use the Cmdr attribute."));
+                    "Method TestSamples.TestClass.TestMethod() must be static in order to use the CmdrMethod attribute."));
         }
 
         [Test]
-        public void StaticMethod()
+        public void StaticMethodResultsInCodeGeneration()
         {
             var source = @"
+using Richiban.Cmdr;
+using System;
+
 namespace TestSamples
 {
     public class TestClass
     {
-        [Richiban.Cmdr.CmdrMethodAttribute]
+        [CmdrMethod]
         public static void TestMethod()
         {
         }
@@ -94,9 +121,109 @@ namespace TestSamples
 }
 ";
 
-            var (_, diagnostics) = RunGenerator(source);
+            var (compilation, diagnostics) = RunGenerator(source);
 
             Assert.That(diagnostics, Is.Empty);
+
+            var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
+
+            programText.ShouldBe(
+                @"using System;
+using System.CommandLine;
+using System.CommandLine.Invocation;
+using Richiban.Cmdr;
+
+public static class Program
+{
+    public static int Main(string[] args)
+    {
+        var testMethodCommand = new Command(""test-method"")
+        {
+        };
+
+        testMethodCommand.Handler = CommandHandler.Create(TestSamples.TestClass.TestMethod);
+
+        var rootCommand = new RootCommand()
+        {
+            testMethodCommand
+        };
+
+        if (args.Length == 1 && (args[0] == ""--interactive"" || args[0] == ""-i""))
+        {
+            var repl = new Repl(rootCommand, ""Select a command"");
+            repl.EnterLoop();
+
+            return 0;
+        }
+        else
+        {
+            return rootCommand.Invoke(args);
+        }
+    }
+}
+");
+        }
+
+        [Test]
+        public void ExplicitNameChangesCommandName()
+        {
+            var source = @"
+using Richiban.Cmdr;
+using System;
+
+namespace TestSamples
+{
+    public class TestClass
+    {
+        [CmdrMethod(""explicit"")]
+        public static void TestMethod()
+        {
+        }
+    }
+}
+";
+
+            var (compilation, diagnostics) = RunGenerator(source);
+
+            Assert.That(diagnostics, Is.Empty);
+
+            var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
+
+            programText.ShouldBe(
+                @"using System;
+using System.CommandLine;
+using System.CommandLine.Invocation;
+using Richiban.Cmdr;
+
+public static class Program
+{
+    public static int Main(string[] args)
+    {
+        var testMethodCommand = new Command(""explicit"")
+        {
+        };
+
+        testMethodCommand.Handler = CommandHandler.Create(TestSamples.TestClass.TestMethod);
+
+        var rootCommand = new RootCommand()
+        {
+            testMethodCommand
+        };
+
+        if (args.Length == 1 && (args[0] == ""--interactive"" || args[0] == ""-i""))
+        {
+            var repl = new Repl(rootCommand, ""Select a command"");
+            repl.EnterLoop();
+
+            return 0;
+        }
+        else
+        {
+            return rootCommand.Invoke(args);
+        }
+    }
+}
+");
         }
 
         [Test]
@@ -105,27 +232,27 @@ namespace TestSamples
             var source = @"
 namespace TestSamples
 {
-    [Richiban.Cmdr.CmdrMethodAttribute]
+    [CmdrMethod]
     public class OuterTest
     {
-        [Richiban.Cmdr.CmdrMethodAttribute]
+        [CmdrMethod]
         public class InnerTest1
         {        
-            [Richiban.Cmdr.CmdrMethodAttribute]
+            [CmdrMethod]
             public static void TestMethod1()
             {
             } 
 
-            [Richiban.Cmdr.CmdrMethodAttribute]
+            [CmdrMethod]
             public static void TestMethod2(string arg1, string arg2)
             {
             }
         }
 
-        [Richiban.Cmdr.CmdrMethodAttribute]
+        [CmdrMethod]
         public class InnerTest2
         {
-            [Richiban.Cmdr.CmdrMethodAttribute]
+            [CmdrMethod]
             public static void TestMethod3()
             {
             }
@@ -138,9 +265,72 @@ namespace TestSamples
 
             Assert.That(diagnostics, Is.Empty);
 
-            var programSyntaxTree = GetProgramSyntaxTree(outputCompilation);
-            
-            Assert.Fail(programSyntaxTree.GetText().ToString());
+            var programSource =
+                GetProgramSyntaxTree(outputCompilation).GetText().ToString();
+
+            programSource.ShouldBe(
+                $@"using System;
+using System.CommandLine;
+using System.CommandLine.Invocation;
+using Richiban.Cmdr;
+
+public static class Program
+{{
+    public static int Main(string[] args)
+    {{
+        var testMethod1Command = new Command(""test-method1"")
+        {{
+        }};
+
+        testMethod1Command.Handler = CommandHandler.Create(TestSamples.OuterTest.InnerTest1.TestMethod1);
+
+        var testMethod2Command = new Command(""test-method2"")
+        {{
+            new Argument(""arg1"")
+            ,
+            new Argument(""arg2"")
+        }};
+
+        testMethod2Command.Handler = CommandHandler.Create<System.String, System.String>(TestSamples.OuterTest.InnerTest1.TestMethod2);
+
+        var testMethod3Command = new Command(""test-method3"")
+        {{
+        }};
+
+        testMethod3Command.Handler = CommandHandler.Create(TestSamples.OuterTest.InnerTest2.TestMethod3);
+
+        var rootCommand = new RootCommand()
+        {{
+            new Command(""outer-test"")
+            {{
+                new Command(""inner-test1"")
+                {{
+                    testMethod1Command
+                    ,
+                    testMethod2Command
+                }}
+                ,
+                new Command(""inner-test2"")
+                {{
+                    testMethod3Command
+                }}
+            }}
+        }};
+
+        if (args.Length == 1 && (args[0] == ""--interactive"" || args[0] == ""-i""))
+        {{
+            var repl = new Repl(rootCommand, ""Select a command"");
+            repl.EnterLoop();
+
+            return 0;
+        }}
+        else
+        {{
+            return rootCommand.Invoke(args);
+        }}
+    }}
+}}
+");
         }
 
         private static SyntaxTree GetOriginalSourceFile(Compilation outputCompilation)
@@ -162,7 +352,8 @@ namespace TestSamples
 
         private static SyntaxTree GetProgramSyntaxTree(Compilation outputCompilation)
         {
-            return outputCompilation.SyntaxTrees.Single(x => x.FilePath.EndsWith("Program.g.cs"));
+            return outputCompilation.SyntaxTrees.Single(
+                x => x.FilePath.EndsWith("Program.g.cs"));
         }
 
         private static (Compilation, ImmutableArray<Diagnostic>) RunGenerator(

@@ -4,27 +4,21 @@ using System.Linq;
 using Richiban.Cmdr.Models;
 using Richiban.Cmdr.Transformers;
 
-namespace Richiban.Cmdr.Generators
+namespace Richiban.Cmdr.Writers
 {
-    internal class ProgramClassCodeFileGenerator : ICodeFileGenerator
+    internal class ProgramClassFileGenerator : CodeFileGenerator
     {
         private readonly CodeBuilder _codeBuilder = new();
         private readonly CommandModel.RootCommandModel _commandModel;
 
-        public ProgramClassCodeFileGenerator(
-            IReadOnlyCollection<MethodModel> methodModels)
+        public ProgramClassFileGenerator(IReadOnlyCollection<MethodModel> methodModels)
         {
             _commandModel = new CommandModelTransformer().Transform(methodModels);
         }
 
-        public string GetCode()
-        {
-            WriteCodeLines();
+        public override string FileName => "Program.g.cs";
 
-            return _codeBuilder.ToString();
-        }
-
-        private void WriteCodeLines()
+        public override string GetCode()
         {
             _codeBuilder.AppendLines(
                 "using System;",
@@ -64,6 +58,8 @@ namespace Richiban.Cmdr.Generators
             }
 
             _codeBuilder.AppendLine("}");
+
+            return _codeBuilder.ToString();
         }
 
         private void WriteLeafCommandStatements(
@@ -76,7 +72,10 @@ namespace Richiban.Cmdr.Generators
 
                 _codeBuilder.AppendLine("{");
 
-                GetParametersString(leaf);
+                using (_codeBuilder.Indent())
+                {
+                    WriteParameterExpressions(leaf);
+                }
 
                 _codeBuilder.AppendLine("};");
                 _codeBuilder.AppendLine();
@@ -123,7 +122,7 @@ namespace Richiban.Cmdr.Generators
                     break;
                 case CommandModel.RootCommandModel:
                     throw new InvalidOperationException(
-                        $"Writing the root command as an expression is not supported");
+                        "Writing the root command as an expression is not supported");
                 default:
                     throw new InvalidOperationException(
                         $"Unknown {nameof(CommandModel)}: {_commandModel}");
@@ -135,11 +134,14 @@ namespace Richiban.Cmdr.Generators
             _codeBuilder.AppendLine("var rootCommand = new RootCommand()");
             _codeBuilder.AppendLine("{");
 
-            using (var expr = _codeBuilder.OpenExpressionList())
+            using (_codeBuilder.Indent())
             {
-                foreach (var subCommand in rootCommandModel.SubCommands)
+                using (var expr = _codeBuilder.OpenExpressionList())
                 {
-                    WriteCommandExpression(subCommand, expr);
+                    foreach (var subCommand in rootCommandModel.SubCommands)
+                    {
+                        WriteCommandExpression(subCommand, expr);
+                    }
                 }
             }
 
@@ -160,13 +162,13 @@ namespace Richiban.Cmdr.Generators
                     foreach (var commandModel in commandGroupModel.SubCommands)
                     {
                         WriteCommandExpression(commandModel, expr2);
-                        expr2.DoneOne();
+                        expr2.Next();
                     }
                 }
             }
 
             expr.AppendLine("}");
-            expr.DoneOne();
+            expr.Next();
         }
 
         private void WriteLeafExpression(
@@ -176,15 +178,14 @@ namespace Richiban.Cmdr.Generators
             expr.AppendLine(leafModel.VariableName);
         }
 
-        private void GetParametersString(CommandModel.LeafCommandModel leafModel)
+        private void WriteParameterExpressions(CommandModel.LeafCommandModel leafModel)
         {
-            using (var expr = _codeBuilder.OpenExpressionList())
+            using var expr = _codeBuilder.OpenExpressionList();
+
+            foreach (var leafModelParameter in leafModel.Parameters)
             {
-                foreach (var leafModelParameter in leafModel.Parameters)
-                {
-                    expr.AppendLine(ArgumentOrOptionToString(leafModelParameter));
-                    expr.DoneOne();
-                }
+                expr.AppendLine(GetArgumentOrOptionExpression(leafModelParameter));
+                expr.Next();
             }
         }
 
@@ -200,33 +201,25 @@ namespace Richiban.Cmdr.Generators
                 $"{leafModel.VariableName}.Handler = CommandHandler.Create{handlerTypeArguments}({leafModel.FullyQualifiedName});");
         }
 
-        private static string ArgumentOrOptionToString(
+        private static string GetArgumentOrOptionExpression(
             CommandParameterModel commandParameterModel)
         {
             switch (commandParameterModel)
             {
                 case CommandParameterModel.CommandPositionalParameterModel argument:
-                    return ArgumentToString(argument);
+                    return $@"new Argument(""{argument.Name}"")";
                 case CommandParameterModel.CommandFlagParameterModel option:
-                    return OptionToString(option);
+                    var aliases = new[] { option.Name[index: 0].ToString(), option.Name };
+
+                    var aliasesString = string.Join(
+                        ", ",
+                        aliases.Select(a => $"\"{a}\""));
+
+                    return $@"new Option(new string[] {{{aliasesString}}})";
                 default:
                     throw new InvalidOperationException(
                         $"Unknown {nameof(CommandParameterModel)}: {commandParameterModel}");
             }
-        }
-
-        private static string ArgumentToString(
-            CommandParameterModel.CommandPositionalParameterModel argumentModel) =>
-            $@"new Argument(""{argumentModel.Name}"")";
-
-        private static string OptionToString(
-            CommandParameterModel.CommandFlagParameterModel argumentModel)
-        {
-            var aliases = new[] { argumentModel.Name[0].ToString(), argumentModel.Name };
-
-            var aliasesString = string.Join(", ", aliases.Select(a => $"\"{a}\""));
-
-            return $@"new Option(new string[] {{{aliasesString}}})";
         }
     }
 }

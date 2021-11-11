@@ -1,10 +1,18 @@
-﻿namespace Richiban.Cmdr
+﻿using System;
+
+namespace Richiban.Cmdr
 {
     internal abstract class Result<TError, TSuccess>
     {
         private Result()
         {
         }
+
+        public static implicit operator Result<TError, TSuccess>(TSuccess success) =>
+            new Ok(success);
+
+        public static implicit operator Result<TError, TSuccess>(TError error) =>
+            new Error(error);
 
         public sealed class Ok : Result<TError, TSuccess>
         {
@@ -26,18 +34,8 @@
             {
                 _error = error;
             }
-            
-            public void Deconstruct(out TError error) => error = _error;
-        }
 
-        public static implicit operator Result<TError, TSuccess>(TSuccess success)
-        {
-            return new Ok(success);
-        }
-        
-        public static implicit operator Result<TError, TSuccess>(TError error)
-        {
-            return new Error(error);
+            public void Deconstruct(out TError error) => error = _error;
         }
     }
 }

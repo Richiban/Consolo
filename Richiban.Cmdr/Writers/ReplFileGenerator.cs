@@ -1,31 +1,12 @@
 ﻿using System;
-using System.Text;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
 
 namespace Richiban.Cmdr.Writers
 {
-    internal class ReplWriter
+    internal class ReplFileGenerator : CodeFileGenerator
     {
-        private readonly CmdrAttributeDefinition _cmdrAttributeDefinition;
-        private readonly GeneratorExecutionContext _context;
+        public override string FileName => "Repl.g.cs";
 
-        public ReplWriter(GeneratorExecutionContext context, CmdrAttributeDefinition cmdrAttributeDefinition)
-        {
-            _context = context;
-            _cmdrAttributeDefinition = cmdrAttributeDefinition;
-        }
-
-        public void WriteToContext()
-        {
-            var replClassText = GetReplClassText();
-
-            _context.AddSource(
-                "Repl.g.cs",
-                SourceText.From(replClassText, Encoding.UTF8));
-        }
-
-        private static string GetReplClassText() =>
+        public override string GetCode() =>
             @"using System;
 using System.Collections.Generic;
 using System.CommandLine;

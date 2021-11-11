@@ -1,10 +1,6 @@
 ﻿using System;
-using NUnit.Framework;
-using Richiban.Cmdr.Generators;
-using Richiban.Cmdr.Models;
-using Richiban.Cmdr.Writers;
 
-namespace Richiban.Cmdr.Generator.Tests
+namespace Richiban.Cmdr.Tests
 {
     // [TestFixture]
     // public class CommandModelWriterTests

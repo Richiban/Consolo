@@ -64,18 +64,18 @@ namespace Richiban.Cmdr.Models
 
         public int Count => _subsequent.Length + 1;
 
-        /// <summary>
-        ///  Gets the first item from the non-empty list
-        /// </summary>
-        /// <returns></returns>
-        public T First() => _first;
-
         public T this[int index] =>
             index switch
             {
                 1 => First(),
                 var i => _subsequent[i - 1]
             };
+
+        /// <summary>
+        ///     Gets the first item from the non-empty list
+        /// </summary>
+        /// <returns></returns>
+        public T First() => _first;
 
         public static implicit operator NonEmptyList<T>(T item) => new(item);
     }
