@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Richiban.Cmdr.Models;
+using Richiban.Cmdr.Utils;
 
 namespace Richiban.Cmdr
 {
@@ -50,12 +51,11 @@ namespace Richiban.Cmdr
                             case IErrorTypeSymbol errType:
                             {
                                 var candidateReason = errType.CandidateReason;
-                                var candidateSymbols = errType.CandidateSymbols;
 
                                 _diagnostics.ReportMethodFailure(
                                     new MethodModelFailure(
                                         $"There was a problem with attribute {errType.Name}: {candidateReason}",
-                                        location: null));
+                                        location: method.Locations.FirstOrDefault()));
 
                                 return false;
                             }

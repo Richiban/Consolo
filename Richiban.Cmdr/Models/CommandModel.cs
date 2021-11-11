@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Richiban.Cmdr.Utils;
 
 namespace Richiban.Cmdr.Models
 {
@@ -22,7 +23,7 @@ namespace Richiban.Cmdr.Models
                 Parameters = parameters;
                 SubCommands = subCommands;
                 FullyQualifiedName = $"{fullyQualifiedClassName}.{methodName}";
-                VariableName = $"{Utils.ToCamelCase(methodName)}Command";
+                VariableName = $"{StringUtils.ToCamelCase(methodName)}Command";
             }
 
             public string CommandName { get; }
