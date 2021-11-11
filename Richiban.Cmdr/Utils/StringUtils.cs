@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Text;
 
-namespace Richiban.Cmdr
+namespace Richiban.Cmdr.Utils
 {
-    public static class Utils
+    public static class StringUtils
     {
         public static string ToKebabCase(string text)
         {

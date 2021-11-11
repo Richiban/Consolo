@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Richiban.Cmdr.Models
+namespace Richiban.Cmdr.Utils
 {
     internal static class NonEmptyList
     {

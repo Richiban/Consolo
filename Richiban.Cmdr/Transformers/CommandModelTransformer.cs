@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Richiban.Cmdr.Models;
+using Richiban.Cmdr.Utils;
 
 namespace Richiban.Cmdr.Transformers
 {
@@ -27,7 +28,7 @@ namespace Richiban.Cmdr.Transformers
 
             if (tree.SubTrees.Any())
             {
-                var commandText = Utils.ToKebabCase(tree.CommandText);
+                var commandText = StringUtils.ToKebabCase(tree.CommandText);
 
                 return new CommandModel.CommandGroupModel(
                     commandText,
@@ -44,7 +45,7 @@ namespace Richiban.Cmdr.Transformers
                     { MethodName: var methodName } => methodName
                 };
 
-                var commandText = Utils.ToKebabCase(primaryName);
+                var commandText = StringUtils.ToKebabCase(primaryName);
 
                 var commandParameterModels = MapCommandParameterModels(methodModel);
 
@@ -62,9 +63,9 @@ namespace Richiban.Cmdr.Transformers
             CommandParameterModel transformParameter(ArgumentModel argumentModel) =>
                 argumentModel.IsFlag
                     ? new CommandParameterModel.CommandFlagParameterModel(
-                        Utils.ToKebabCase(argumentModel.Name))
+                        StringUtils.ToKebabCase(argumentModel.Name))
                     : new CommandParameterModel.CommandPositionalParameterModel(
-                        Utils.ToKebabCase(argumentModel.Name),
+                        StringUtils.ToKebabCase(argumentModel.Name),
                         argumentModel.FullyQualifiedTypeName);
 
             return treeMethodModel.Arguments.Select(transformParameter).ToArray();

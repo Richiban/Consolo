@@ -5,6 +5,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Richiban.Cmdr.Models;
+using Richiban.Cmdr.Transformers;
+using Richiban.Cmdr.Utils;
 using Richiban.Cmdr.Writers;
 
 namespace Richiban.Cmdr
@@ -12,11 +14,26 @@ namespace Richiban.Cmdr
     [Generator]
     public class CmdrGenerator : ISourceGenerator
     {
-        private CmdrAttributeDefinition _cmdrAttribute;
+        private CmdrAttributeDefinition _cmdrAttribute = null!;
 
         public void Initialize(GeneratorInitializationContext context)
         {
             _cmdrAttribute = new CmdrAttributeDefinition();
+
+            context.RegisterForPostInitialization(
+                x =>
+                {
+                    var cmdrAttributeFileGenerator =
+                        new CmdrAttributeFileGenerator(_cmdrAttribute);
+
+                    var replFileGenerator = new ReplFileGenerator();
+
+                    x.AddSource(
+                        cmdrAttributeFileGenerator.FileName,
+                        cmdrAttributeFileGenerator.GetCode());
+
+                    x.AddSource(replFileGenerator.FileName, replFileGenerator.GetCode());
+                });
 
             context.RegisterForSyntaxNotifications(
                 () => new CmdrSyntaxReceiver(_cmdrAttribute));
@@ -28,54 +45,30 @@ namespace Richiban.Cmdr
 
             try
             {
-                if (context.SyntaxReceiver is not CmdrSyntaxReceiver
-                {
-                    QualifyingMembers: { Count: > 0 }
-                } receiver)
+                if (context.SyntaxReceiver is not CmdrSyntaxReceiver receiver ||
+                    receiver.QualifyingMembers.Count == 0)
                 {
                     return;
                 }
 
-                DoGeneration(context, diagnostics, receiver.QualifyingMembers);
+                var candidateMethods =
+                    new MethodScanner(context.Compilation, _cmdrAttribute, diagnostics)
+                        .GetCandidateMethods(receiver.QualifyingMembers);
+
+                var (methodModels, failures) = new MethodModelBuilder(_cmdrAttribute)
+                    .BuildFrom(candidateMethods)
+                    .SeparateResults();
+
+                diagnostics.ReportMethodFailures(failures);
+
+                var a = new CommandModelTransformer().Transform(methodModels);
+                
+                context.AddCodeFile(new ProgramClassFileGenerator(methodModels));
             }
             catch (Exception ex)
             {
                 diagnostics.ReportUnknownError(ex);
             }
-        }
-
-        private void DoGeneration(
-            GeneratorExecutionContext context,
-            CmdrDiagnostics cmdrDiagnostics,
-            List<MethodDeclarationSyntax> qualifyingMembers)
-        {
-            var cmdrAttributeFileGenerator =
-                new CmdrAttributeFileGenerator(_cmdrAttribute);
-
-            context.AddCodeFile(cmdrAttributeFileGenerator);
-            context.AddCodeFile(new ReplFileGenerator());
-
-            var options = ((CSharpCompilation)context.Compilation).SyntaxTrees[0]
-                .Options;
-
-            var attributeTree = CSharpSyntaxTree.ParseText(
-                cmdrAttributeFileGenerator.GetCode(),
-                (CSharpParseOptions)options);
-
-            var newCompilation =
-                context.Compilation.AddSyntaxTrees(attributeTree);
-
-            var candidateMethods =
-                new MethodScanner(newCompilation, _cmdrAttribute, cmdrDiagnostics)
-                    .GetCandidateMethods(qualifyingMembers);
-
-            var (methodModels, failures) = new MethodModelBuilder(_cmdrAttribute)
-                .BuildFrom(candidateMethods)
-                .SeparateResults();
-
-            cmdrDiagnostics.ReportMethodFailures(failures);
-
-            context.AddCodeFile(new ProgramClassFileGenerator(methodModels));
         }
 
         private class CmdrSyntaxReceiver : ISyntaxReceiver

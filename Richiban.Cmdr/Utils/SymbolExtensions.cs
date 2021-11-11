@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.CodeAnalysis;
 
-namespace Richiban.Cmdr
+namespace Richiban.Cmdr.Utils
 {
     public static class SymbolExtensions
     {

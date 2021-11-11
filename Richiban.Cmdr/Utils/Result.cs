@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Richiban.Cmdr
+namespace Richiban.Cmdr.Utils
 {
     internal abstract class Result<TError, TSuccess>
     {

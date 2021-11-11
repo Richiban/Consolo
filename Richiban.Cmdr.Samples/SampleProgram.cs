@@ -2,9 +2,10 @@
 
 namespace Richiban.Cmdr.Samples
 {
+    [CmdrMethod("update")]
     public class SampleProgram
     {
-        [CmdrMethod("update")]
+        [CmdrMethod("stats")]
         public static void UpdateStats(DateTime since, bool allowClobber)
         {
             Console.WriteLine(

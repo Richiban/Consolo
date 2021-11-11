@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Richiban.Cmdr.Models;
+using Richiban.Cmdr.Utils;
 
 namespace Richiban.Cmdr
 {

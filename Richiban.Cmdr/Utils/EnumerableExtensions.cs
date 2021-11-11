@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
-namespace Richiban.Cmdr
+namespace Richiban.Cmdr.Utils
 {
     internal static class EnumerableExtensions
     {
