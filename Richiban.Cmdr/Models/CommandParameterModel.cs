@@ -22,9 +22,9 @@ namespace Richiban.Cmdr.Models
             }
         }
 
-        public sealed class CommandFlagParameterModel : CommandParameterModel
+        public sealed class CommandFlagModel : CommandParameterModel
         {
-            public CommandFlagParameterModel(string name) : base(name, "System.Boolean")
+            public CommandFlagModel(string name) : base(name, "System.Boolean")
             {
             }
         }

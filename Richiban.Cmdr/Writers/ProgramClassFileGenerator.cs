@@ -112,11 +112,8 @@ namespace Richiban.Cmdr.Writers
         {
             switch (commandModel)
             {
-                case CommandModel.CommandGroupModel group:
-                    WriteGroupExpression(group, expr);
-
-                    break;
                 case CommandModel.NormalCommandModel leaf:
+                    WriteGroupExpression(leaf, expr);
                     WriteLeafExpression(leaf, expr);
 
                     break;
@@ -149,7 +146,7 @@ namespace Richiban.Cmdr.Writers
         }
 
         private void WriteGroupExpression(
-            CommandModel.CommandGroupModel commandGroupModel,
+            CommandModel.NormalCommandModel commandGroupModel,
             CodeBuilder.CommaSeparatedExpressionSyntax expr)
         {
             expr.AppendLine($"new Command(\"{commandGroupModel.CommandName}\")");
@@ -182,23 +179,26 @@ namespace Richiban.Cmdr.Writers
         {
             using var expr = _codeBuilder.OpenExpressionList();
 
-            foreach (var leafModelParameter in normalModel.Parameters)
-            {
-                expr.AppendLine(GetArgumentOrOptionExpression(leafModelParameter));
-                expr.Next();
-            }
+            throw new NotImplementedException();
+            //
+            // foreach (var leafModelParameter in normalModel.Parameters)
+            // {
+            //     expr.AppendLine(GetArgumentOrOptionExpression(leafModelParameter));
+            //     expr.Next();
+            // }
         }
 
         private void WriteHandlerStatement(CommandModel.NormalCommandModel normalModel)
         {
-            var parameters = normalModel.Parameters;
-
-            var handlerTypeArguments = parameters.Count == 0
-                ? ""
-                : $"<{parameters.Select(a => a.FullyQualifiedTypeName).StringJoin(", ")}>";
-
-            _codeBuilder.AppendLine(
-                $"{normalModel.VariableName}.Handler = CommandHandler.Create{handlerTypeArguments}({normalModel.FullyQualifiedName});");
+            throw new NotImplementedException();
+            // var parameters = normalModel.Parameters;
+            //
+            // var handlerTypeArguments = parameters.Count == 0
+            //     ? ""
+            //     : $"<{parameters.Select(a => a.FullyQualifiedTypeName).StringJoin(", ")}>";
+            //
+            // _codeBuilder.AppendLine(
+            //     $"{normalModel.VariableName}.Handler = CommandHandler.Create{handlerTypeArguments}({normalModel.FullyQualifiedName});");
         }
 
         private static string GetArgumentOrOptionExpression(
@@ -208,7 +208,7 @@ namespace Richiban.Cmdr.Writers
             {
                 case CommandParameterModel.CommandPositionalParameterModel argument:
                     return $@"new Argument(""{argument.Name}"")";
-                case CommandParameterModel.CommandFlagParameterModel option:
+                case CommandParameterModel.CommandFlagModel option:
                     var aliases = new[] { option.Name[index: 0].ToString(), option.Name };
 
                     var aliasesString = string.Join(

@@ -2,6 +2,13 @@
 using System.Collections.Generic;
 using Richiban.Cmdr.Utils;
 
+namespace System.Runtime.CompilerServices
+{
+    public class IsExternalInit
+    {
+    }
+}
+
 namespace Richiban.Cmdr.Models
 {
     internal abstract class CommandModel
@@ -12,35 +19,42 @@ namespace Richiban.Cmdr.Models
 
         public sealed class NormalCommandModel : CommandModel
         {
-            public NormalCommandModel(
-                string commandName,
-                string fullyQualifiedClassName,
-                string methodName,
-                IReadOnlyCollection<CommandParameterModel> parameters,
-                IReadOnlyCollection<NormalCommandModel> subCommands)
+            public string? CommandName { get; init; }
+            public override CommandMethod? Method { get; set; }
+            public override List<NormalCommandModel> SubCommands { get; } = new();
+
+            public string VariableName
             {
-                CommandName = commandName;
-                Parameters = parameters;
-                SubCommands = subCommands;
-                FullyQualifiedName = $"{fullyQualifiedClassName}.{methodName}";
-                VariableName = $"{StringUtils.ToCamelCase(methodName)}Command";
+                get
+                {
+                    if (Method != null)
+                    {
+                        return StringUtils.ToCamelCase(Method.Name) + "Command";
+                    }
+
+                    if (CommandName != null)
+                    {
+                        return StringUtils.ToCamelCase(CommandName) + "Command";
+                    }
+
+                    return "unknownCommand";
+                }
             }
 
-            public string CommandName { get; }
-            public IReadOnlyCollection<CommandParameterModel> Parameters { get; }
-            public IReadOnlyCollection<NormalCommandModel> SubCommands { get; }
-            public string FullyQualifiedName { get; }
-            public string VariableName { get; }
+            public override string ToString() =>
+                $"Command({CommandName})[{SubCommands.Count}] => {{{Method?.ToString() ?? "<null>"}}}";
         }
 
         public sealed class RootCommandModel : CommandModel
         {
-            public RootCommandModel(IReadOnlyCollection<CommandModel> subCommands)
-            {
-                SubCommands = subCommands;
-            }
+            public override List<NormalCommandModel> SubCommands { get; } = new();
+            public override CommandMethod? Method { get; set; }
 
-            public IReadOnlyCollection<CommandModel> SubCommands { get; }
+            public override string ToString() =>
+                $"RootCommand[{SubCommands.Count}] => {{{Method?.ToString() ?? "<null>"}}}";
         }
+
+        public abstract List<NormalCommandModel> SubCommands { get; }
+        public abstract CommandMethod? Method { get; set; }
     }
 }

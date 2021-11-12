@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Richiban.Cmdr.Utils
@@ -32,18 +34,49 @@ namespace Richiban.Cmdr.Utils
             return sb.ToString();
         }
 
-        public static string ToCamelCase(string s)
+        public static string? ToCamelCase(string? s)
         {
-            if (string.IsNullOrEmpty(s))
+            if (s is null or "")
             {
                 return s;
             }
 
-            var arr = s.ToCharArray();
+            var goLower = true;
+            var goUpper = false;
 
-            arr[0] = char.ToLower(arr[0]);
+            IEnumerable<char> getChars()
+            {
+                foreach (var c in s)
+                {
+                    if (goLower)
+                    {
+                        yield return char.ToLower(c);
 
-            return new string(arr);
+                        goLower = false;
+                        goUpper = false;
+                    }
+                    else if (goUpper)
+                    {
+                        yield return char.ToUpper(c);
+
+                        goLower = false;
+                        goUpper = false;
+                    }
+                    else
+                    {
+                        if (c == '-')
+                        {
+                            goUpper = true;
+                        }
+                        else
+                        {
+                            yield return c;
+                        }
+                    }
+                }
+            }
+
+            return new string(getChars().ToArray());
         }
     }
 }

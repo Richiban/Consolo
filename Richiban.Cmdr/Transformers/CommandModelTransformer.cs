@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Data;
 using System.Linq;
 using Richiban.Cmdr.Models;
+using Richiban.Cmdr.Utils;
 
 namespace Richiban.Cmdr.Transformers
 {
@@ -11,70 +13,88 @@ namespace Richiban.Cmdr.Transformers
         public CommandModel.RootCommandModel Transform(
             IEnumerable<MethodModel> methodModels)
         {
-            var tree = Group(methodModels);
+            var root = new CommandModel.RootCommandModel();
 
-            return (CommandModel.RootCommandModel)Map(tree, isRoot: true);
-        }
-
-        private CommandModel Map(CommandTree tree, bool isRoot)
-        {
-            if (isRoot)
+            foreach (var methodModel in methodModels)
             {
-                return new CommandModel.RootCommandModel(
-                    tree.SubTrees.Select(tree1 => Map(tree1, isRoot: false))
-                        .ToImmutableArray());
-            }
-
-            {
-                var commandText = Utils.ToKebabCase(tree.CommandText);
-                var commandText = Utils.ToKebabCase(primaryName);
-
-                var x = tree.SubTrees.Select(tree1 => Map(tree1, isRoot: false))
-                    .ToImmutableArray();
-
-                var methodModel = tree.MethodModel!;
-
-                var primaryName = methodModel switch
-                {
-                    { ProvidedName: { } name } => name,
-                    { MethodName: var methodName } => methodName
-                };
-
-                var commandParameterModels = MapCommandParameterModels(methodModel);
-
-                return new CommandModel.NormalCommandModel(
-                    commandText,
-                    methodModel.FullyQualifiedClassName,
-                    methodModel.MethodName,
-                    commandParameterModels);
-            }
-        }
-
-        private static CommandParameterModel[] MapCommandParameterModels(
-            MethodModel treeMethodModel)
-        {
-            CommandParameterModel transformParameter(ArgumentModel argumentModel) =>
-                argumentModel.IsFlag
-                    ? new CommandParameterModel.CommandFlagParameterModel(
-                        Utils.ToKebabCase(argumentModel.Name))
-                    : new CommandParameterModel.CommandPositionalParameterModel(
-                        Utils.ToKebabCase(argumentModel.Name),
-                        argumentModel.FullyQualifiedTypeName);
-
-            return treeMethodModel.Arguments.Select(transformParameter).ToArray();
-        }
-
-        private CommandTree Group(IEnumerable<MethodModel> models)
-        {
-            var root = new CommandTree("");
-
-            foreach (var methodModel in models)
-            {
-                root.Set(new ListWalker<string>(methodModel.GroupCommandPath), methodModel);
+                Set(
+                    root,
+                    new ListWalker<string>(methodModel.GroupCommandPath),
+                    methodModel);
             }
 
             return root;
         }
+
+        private static void Set(
+            CommandModel commandModel,
+            in ListWalker<string> pathWalker,
+            MethodModel methodModel)
+        {
+            var currentName = methodModel.ProvidedName ?? pathWalker.Current;
+
+            if (pathWalker.AtEnd)
+            {
+                if (methodModel.ProvidedName == "")
+                {
+                    commandModel.Method = MapMethod(methodModel);
+
+                    return;
+                }
+
+                commandModel.SubCommands.Add(
+                    new CommandModel.NormalCommandModel
+                    {
+                        CommandName = currentName, 
+                        Method = MapMethod(methodModel)
+                    });
+
+                return;
+            }
+
+            var (current, remaining) = pathWalker;
+            var subTreeWasMatched = false;
+
+            foreach (var tree in commandModel.SubCommands.Where(
+                t => t.CommandName == current))
+            {
+                subTreeWasMatched = true;
+
+                Set(tree, remaining, methodModel);
+            }
+
+            if (subTreeWasMatched)
+            {
+                return;
+            }
+
+            var newSubTree = new CommandModel.NormalCommandModel
+            {
+                CommandName = StringUtils.ToKebabCase(current),
+            };
+
+            Set(newSubTree, remaining, methodModel);
+            commandModel.SubCommands.Add(newSubTree);
+        }
+
+        private static CommandMethod MapMethod(MethodModel methodModel) =>
+            new CommandMethod(
+                methodModel.FullyQualifiedClassName,
+                methodModel.MethodName,
+                MapParameters(methodModel.Arguments));
+
+        private static IReadOnlyCollection<CommandParameterModel> MapParameters(
+            IReadOnlyCollection<ArgumentModel> methodModelArguments)
+        {
+            return methodModelArguments.Select(MapParameter).ToList();
+        }
+
+        private static CommandParameterModel MapParameter(ArgumentModel arg) =>
+            arg.IsFlag
+                ? new CommandParameterModel.CommandFlagModel(arg.Name)
+                : new CommandParameterModel.CommandPositionalParameterModel(
+                    arg.Name,
+                    arg.FullyQualifiedTypeName);
 
         private readonly struct ListWalker<T>
         {
@@ -101,52 +121,42 @@ namespace Richiban.Cmdr.Transformers
             }
         }
 
-        private class CommandTree
-        {
-            public CommandTree(MethodModel methodModel)
-            {
-                MethodModel = methodModel;
-                CommandText = "";
-            }
-
-            public CommandTree(string commandText)
-            {
-                CommandText = commandText;
-            }
-
-            public MethodModel? MethodModel { get; }
-            public string CommandText { get; }
-
-            public List<CommandTree> SubTrees { get; } = new();
-
-            public void Set(in ListWalker<string> pathWalker, MethodModel value)
-            {
-                if (pathWalker.AtEnd)
-                {
-                    SubTrees.Add(new CommandTree(value));
-
-                    return;
-                }
-
-                var (current, remaining) = pathWalker;
-                var subTreeWasMatched = false;
-
-                foreach (var tree in SubTrees.Where(t => t.CommandText == current))
-                {
-                    subTreeWasMatched = true;
-
-                    tree.Set(remaining, value);
-                }
-
-                if (subTreeWasMatched)
-                {
-                    return;
-                }
-
-                var newSubTree = new CommandTree(current);
-                newSubTree.Set(remaining, value);
-                SubTrees.Add(newSubTree);
-            }
-        }
+        // private CommandModel.NormalCommandModel Map(CommandModel tree)
+        // {
+        //     var commandText = StringUtils.ToKebabCase(tree.Method);
+        //
+        //     var subCommands = tree.SubTrees.Select(Map).ToImmutableArray();
+        //
+        //     var method = MapMethod(tree.MethodModel);
+        //
+        //     return new CommandModel.NormalCommandModel(commandText, method, subCommands);
+        // }
+        //
+        // private static CommandMethod? MapMethod(MethodModel? treeMethodModel)
+        // {
+        //     if (treeMethodModel == null)
+        //         return null;
+        //
+        //     var commandParameterModels = MapCommandParameterModels(treeMethodModel);
+        //
+        //     return new CommandMethod(
+        //         treeMethodModel.FullyQualifiedClassName,
+        //         treeMethodModel.MethodName,
+        //         commandParameterModels);
+        // }
+        //
+        // private static CommandParameterModel[] MapCommandParameterModels(
+        //     MethodModel treeMethodModel)
+        // {
+        //     CommandParameterModel transformParameter(ArgumentModel argumentModel) =>
+        //         argumentModel.IsFlag
+        //             ? new CommandParameterModel.CommandFlagModel(
+        //                 StringUtils.ToKebabCase(argumentModel.Name))
+        //             : new CommandParameterModel.CommandPositionalParameterModel(
+        //                 StringUtils.ToKebabCase(argumentModel.Name),
+        //                 argumentModel.FullyQualifiedTypeName);
+        //
+        //     return treeMethodModel.Arguments.Select(transformParameter).ToArray();
+        // }
     }
 }
