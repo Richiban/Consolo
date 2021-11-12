@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Reflection;
+using System.Linq;
+using Shouldly;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NUnit.Framework;
-using Shouldly;
 
 namespace Richiban.Cmdr.Tests
 {
     [TestFixture]
-    class GeneratorTests
+    internal class GeneratorTests
     {
         [Test]
         public void CmdrAttributeFileTest()
@@ -25,6 +24,7 @@ namespace Richiban.Cmdr.Tests
     }
 }
 ";
+
             var (outputCompilation, diagnostics) = RunGenerator(source);
 
             Assert.That(diagnostics, Is.Empty);
@@ -36,7 +36,7 @@ namespace Richiban.Cmdr.Tests
 
                 Assert.That(
                     outputCompilation.SyntaxTrees.Count,
-                    Is.EqualTo(4),
+                    Is.EqualTo(expected: 4),
                     $"We expected four syntax trees: the original one plus the three we generated. Found: {fileNames}");
             }
 
@@ -77,7 +77,7 @@ namespace TestSamples
 
             var (_, diagnostics) = RunGenerator(source);
 
-            Assert.That(diagnostics, Has.Length.EqualTo(1));
+            Assert.That(diagnostics, Has.Length.EqualTo(expected: 1));
             var diagnostic = diagnostics.Single();
             Assert.That(diagnostic.Severity, Is.EqualTo(DiagnosticSeverity.Error));
             Assert.That(diagnostic.Id, Is.EqualTo("Cmdr0001"));
@@ -374,6 +374,60 @@ public static class Program
         {
             testMethodACommand
         };
+
+        if (Repl.IsCall(args))
+        {
+            Repl.EnterNewLoop(rootCommand, ""Select a command"");
+
+            return 0;
+        }
+        else
+        {
+            return rootCommand.Invoke(args);
+        }
+    }
+}
+");
+        }
+
+        [Test]
+        public void RootWithCommandHandlerTest()
+        {
+            var source = @"using Richiban.Cmdr;
+using System;
+
+namespace TestSamples
+{
+    public class RootContainer
+    {
+        [Cmdr("""")]
+        public static void RootMethod()
+        {
+        }
+    }
+}";
+
+            var (compilation, diagnostics) = RunGenerator(source);
+
+            Assert.That(diagnostics, Is.Empty);
+
+            var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
+
+            programText.ShouldBe(
+                @"using System;
+using System.CommandLine;
+using System.CommandLine.Invocation;
+using Richiban.Cmdr;
+
+public static class Program
+{
+    public static int Main(string[] args)
+    {
+        var rootCommand = new RootCommand()
+        {
+        };
+
+        rootCommand.Handler = CommandHandler.Create(TestSamples.RootContainer.RootMethod);
 
         if (Repl.IsCall(args))
         {
