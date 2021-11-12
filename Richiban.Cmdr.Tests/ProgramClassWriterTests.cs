@@ -61,7 +61,7 @@ public static class Program
             var rootCommand = new CommandModel.RootCommandModel();
 
             rootCommand.SubCommands.Add(
-                new CommandModel.NormalCommandModel
+                new CommandModel.SubCommandModel
                 {
                     CommandName = "some-function",
                     Method = new CommandMethod(
@@ -116,7 +116,7 @@ public static class Program
             var rootCommand = new CommandModel.RootCommandModel();
 
             rootCommand.SubCommands.Add(
-                new CommandModel.NormalCommandModel
+                new CommandModel.SubCommandModel
                 {
                     CommandName = "items",
                     Method =
@@ -126,7 +126,7 @@ public static class Program
                             new List<CommandParameterModel>()),
                     SubCommands =
                     {
-                        new CommandModel.NormalCommandModel
+                        new CommandModel.SubCommandModel
                         {
                             CommandName = "add",
                             Method = new CommandMethod(

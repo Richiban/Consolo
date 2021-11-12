@@ -5,7 +5,7 @@ namespace Richiban.Cmdr.Models
 {
     internal static class RootCommandModelExtensions
     {
-        public static IEnumerable<CommandModel.NormalCommandModel>
+        public static IEnumerable<CommandModel.SubCommandModel>
             GetDescendentCommands(this CommandModel root)
         {
             foreach (var subCommand in root.SubCommands)

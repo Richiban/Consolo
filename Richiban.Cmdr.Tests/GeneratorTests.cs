@@ -89,7 +89,7 @@ namespace TestSamples
         }
 
         [Test]
-        public void StaticMethodResultsInCodeGeneration()
+        public void StaticMethodWithAutoName()
         {
             var source = @"
 using Richiban.Cmdr;
@@ -442,6 +442,134 @@ public static class Program
     }
 }
 ");
+        }
+
+        [Test]
+        public void LargeExampleInvolvingNestedAttributesEmptyAttributesAndRootCommand()
+        {
+            var source = @"using System;
+
+namespace Richiban.Cmdr.Samples
+{
+    [Cmdr(""remote"")]
+    public class SampleProgram
+    {
+        [Cmdr("""")]
+        public static void ListRemotes()
+        {
+            Console.WriteLine(""Listing remotes"");
+        }
+            
+        [Cmdr(""remove"")]
+        public static void RemoveRemote(string remoteName)
+        {
+            Console.WriteLine(
+                $""Removing remote '{remoteName}'"");
+        }
+        
+        [Cmdr(""add"")]
+        public static void AddRemote(string remoteName, string url)
+        {
+            Console.WriteLine(
+                $""Adding remote '{remoteName}' with url '{url}'"");
+        }
+    }
+    
+    [Cmdr(""branch"")]
+    public class BranchActions
+    {
+        [Cmdr("""")]
+        public static void ListBranches()
+        {
+            Console.WriteLine(""Listing branches"");
+        }
+        
+        [Cmdr("""")]
+        public static void CreateBranches(string branchName)
+        {
+            Console.WriteLine($""Creating branch {branchName}"");
+        }
+    }
+    
+    public class Root
+    {
+        [Cmdr("""")]
+        public static void MainRoot()
+        {
+            Console.WriteLine(""In the root command"");
+        }
+    }
+}";
+
+            var (compilation, diagnostics) = RunGenerator(source);
+
+            Assert.That(diagnostics, Is.Empty);
+
+            var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
+
+            programText.ShouldBe(
+                @"using System;
+using System.CommandLine;
+using System.CommandLine.Invocation;
+using Richiban.Cmdr;
+
+public static class Program
+{
+    public static int Main(string[] args)
+    {
+        var createBranchesCommand = new Command(""branch"")
+        {
+            new Argument(""branchName"")
+        };
+
+        createBranchesCommand.Handler = CommandHandler.Create<System.String>(Richiban.Cmdr.Samples.BranchActions.CreateBranches);
+
+        var addRemoteCommand = new Command(""add"")
+        {
+            new Argument(""remoteName"")
+            ,
+            new Argument(""url"")
+        };
+
+        addRemoteCommand.Handler = CommandHandler.Create<System.String, System.String>(Richiban.Cmdr.Samples.SampleProgram.AddRemote);
+
+        var removeRemoteCommand = new Command(""remove"")
+        {
+            new Argument(""remoteName"")
+        };
+
+        removeRemoteCommand.Handler = CommandHandler.Create<System.String>(Richiban.Cmdr.Samples.SampleProgram.RemoveRemote);
+
+        var listRemotesCommand = new Command(""remote"")
+        {
+            removeRemoteCommand
+            ,
+            addRemoteCommand
+        };
+
+        listRemotesCommand.Handler = CommandHandler.Create(Richiban.Cmdr.Samples.SampleProgram.ListRemotes);
+
+        var rootCommand = new RootCommand()
+        {
+            listRemotesCommand
+            ,
+            createBranchesCommand
+        };
+
+        rootCommand.Handler = CommandHandler.Create(Richiban.Cmdr.Samples.Root.MainRoot);
+
+        if (Repl.IsCall(args))
+        {
+            Repl.EnterNewLoop(rootCommand, ""Select a command"");
+
+            return 0;
+        }
+        else
+        {
+            return rootCommand.Invoke(args);
+        }
+    }
+}");
         }
 
         private static SyntaxTree GetOriginalSourceFile(Compilation outputCompilation)

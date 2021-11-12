@@ -17,28 +17,24 @@ namespace Richiban.Cmdr.Models
         {
         }
 
-        public sealed class NormalCommandModel : CommandModel
+        public sealed class SubCommandModel : CommandModel
         {
             public string? CommandName { get; init; }
-            public override CommandMethod? Method { get; set; }
-            public override List<NormalCommandModel> SubCommands { get; } = new();
 
-            public override string VariableName
+            public override string GetVariableName()
             {
-                get
+                if (Method != null)
                 {
-                    if (Method != null)
-                    {
-                        return StringUtils.ToCamelCase(Method.Name) + "Command";
-                    }
-
-                    if (CommandName != null)
-                    {
-                        return StringUtils.ToCamelCase(CommandName) + "Command";
-                    }
-
-                    return "unknownCommand";
+                    return StringUtils.ToCamelCase(Method.Name) + "Command";
                 }
+
+                if (CommandName != null)
+                {
+                    return StringUtils.ToCamelCase(CommandName) + "Command";
+                }
+
+                throw new InvalidOperationException(
+                    "Neither the method nor the command name have been set on this object");
             }
 
             public override string ToString() =>
@@ -47,16 +43,14 @@ namespace Richiban.Cmdr.Models
 
         public sealed class RootCommandModel : CommandModel
         {
-            public override List<NormalCommandModel> SubCommands { get; } = new();
-            public override CommandMethod? Method { get; set; }
-            public override string VariableName => "rootCommand";
+            public override string GetVariableName() => "rootCommand";
 
             public override string ToString() =>
                 $"RootCommand[{SubCommands.Count}] => {{{Method?.ToString() ?? "<null>"}}}";
         }
 
-        public abstract List<NormalCommandModel> SubCommands { get; }
-        public abstract CommandMethod? Method { get; set; }
-        public abstract string VariableName { get; }
+        public List<SubCommandModel> SubCommands { get; } = new();
+        public CommandMethod? Method { get; set; }
+        public abstract string GetVariableName();
     }
 }

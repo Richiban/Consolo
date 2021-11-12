@@ -43,9 +43,9 @@ namespace Richiban.Cmdr.Transformers
                 }
 
                 commandModel.SubCommands.Add(
-                    new CommandModel.NormalCommandModel
+                    new CommandModel.SubCommandModel
                     {
-                        CommandName = currentName, 
+                        CommandName = StringUtils.ToKebabCase(currentName), 
                         Method = MapMethod(methodModel)
                     });
 
@@ -68,7 +68,7 @@ namespace Richiban.Cmdr.Transformers
                 return;
             }
 
-            var newSubTree = new CommandModel.NormalCommandModel
+            var newSubTree = new CommandModel.SubCommandModel
             {
                 CommandName = StringUtils.ToKebabCase(current),
             };

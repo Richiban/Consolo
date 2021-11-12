@@ -33,17 +33,17 @@ namespace Richiban.Cmdr.Tests
             actual.ShouldBeOfType<CommandModel.RootCommandModel>();
 
             var group = actual.SubCommands.ShouldHaveSingleItem()
-                .ShouldBeOfType<CommandModel.NormalCommandModel>();
+                .ShouldBeOfType<CommandModel.SubCommandModel>();
 
             group.CommandName.ShouldBe("some-parent");
-            group.VariableName.ShouldBe("someParentCommand");
+            @group.GetVariableName().ShouldBe("someParentCommand");
             group.Method.ShouldBeNull();
 
             var leaf = group.SubCommands.ShouldHaveSingleItem()
-                .ShouldBeOfType<CommandModel.NormalCommandModel>();
+                .ShouldBeOfType<CommandModel.SubCommandModel>();
 
             leaf.CommandName.ShouldBe("shortcut");
-            leaf.VariableName.ShouldBe("someFunctionCommand");
+            leaf.GetVariableName().ShouldBe("someFunctionCommand");
 
             var method = leaf.Method.ShouldNotBeNull();
             
@@ -81,7 +81,7 @@ namespace Richiban.Cmdr.Tests
             var root = sut.Transform(models);
 
             var group = root.SubCommands.ShouldHaveSingleItem()
-                .ShouldBeOfType<CommandModel.NormalCommandModel>();
+                .ShouldBeOfType<CommandModel.SubCommandModel>();
 
             group.CommandName.ShouldBe("remote");
             
@@ -89,7 +89,7 @@ namespace Richiban.Cmdr.Tests
             
             groupMethod.FullyQualifiedName.ShouldBe("GitNamespace.RemoteActions.ListRemotes");
             groupMethod.Parameters.ShouldBeEmpty();
-            group.VariableName.ShouldBe("listRemotesCommand");
+            @group.GetVariableName().ShouldBe("listRemotesCommand");
             
             var subCommand = group.SubCommands.ShouldHaveSingleItem();
 
@@ -99,7 +99,7 @@ namespace Richiban.Cmdr.Tests
             
             subCommandMethod.FullyQualifiedName.ShouldBe("GitNamespace.RemoteActions.CreateRemote");
             subCommandMethod.Parameters.ShouldHaveSingleItem();
-            subCommand.VariableName.ShouldBe("createRemoteCommand");
+            subCommand.GetVariableName().ShouldBe("createRemoteCommand");
             subCommand.SubCommands.ShouldBeEmpty();
         }
     }

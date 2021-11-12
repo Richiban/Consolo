@@ -66,7 +66,7 @@ namespace Richiban.Cmdr.Writers
                 .Where(x => x.Method != null).Reverse())
             {
                 _codeBuilder.AppendLine(
-                    $"var {command.VariableName} = new Command(\"{command.CommandName}\")");
+                    $"var {command.GetVariableName()} = new Command(\"{command.CommandName}\")");
 
                 _codeBuilder.AppendLine("{");
 
@@ -113,7 +113,7 @@ namespace Richiban.Cmdr.Writers
         }
 
         private void WriteCommandExpression(
-            CommandModel.NormalCommandModel commandModel,
+            CommandModel.SubCommandModel commandModel,
             CodeBuilder.CommaSeparatedExpressionSyntax expr)
         {
             if (commandModel.Method == null)
@@ -138,6 +138,7 @@ namespace Richiban.Cmdr.Writers
                     foreach (var subCommand in rootCommandModel.SubCommands)
                     {
                         WriteCommandExpression(subCommand, expr);
+                        expr.Next();
                     }
                 }
             }
@@ -152,7 +153,7 @@ namespace Richiban.Cmdr.Writers
         }
 
         private void WriteImmediateCommandExpression(
-            CommandModel.NormalCommandModel commandGroupModel,
+            CommandModel.SubCommandModel commandGroupModel,
             CodeBuilder.CommaSeparatedExpressionSyntax expr)
         {
             expr.AppendLine($"new Command(\"{commandGroupModel.CommandName}\")");
@@ -175,22 +176,22 @@ namespace Richiban.Cmdr.Writers
         }
 
         private void WriteVariableCommandExpression(
-            CommandModel.NormalCommandModel normalModel,
+            CommandModel.SubCommandModel subModel,
             CodeBuilder.CommaSeparatedExpressionSyntax expr)
         {
-            expr.AppendLine(normalModel.VariableName);
+            expr.AppendLine(subModel.GetVariableName());
         }
 
         private void WriteParameterExpressions(
-            CommandModel.NormalCommandModel normalModel,
+            CommandModel.SubCommandModel subModel,
             CodeBuilder.CommaSeparatedExpressionSyntax expr)
         {
-            if (normalModel.Method == null)
+            if (subModel.Method == null)
             {
                 return;
             }
 
-            foreach (var leafModelParameter in normalModel.Method.Parameters)
+            foreach (var leafModelParameter in subModel.Method.Parameters)
             {
                 expr.AppendLine(GetArgumentOrOptionExpression(leafModelParameter));
                 expr.Next();
@@ -213,7 +214,7 @@ namespace Richiban.Cmdr.Writers
             var fullyQualifiedName = normalModel.Method.FullyQualifiedName;
 
             _codeBuilder.AppendLine(
-                $"{normalModel.VariableName}.Handler = CommandHandler.Create{handlerTypeArguments}({fullyQualifiedName});");
+                $"{normalModel.GetVariableName()}.Handler = CommandHandler.Create{handlerTypeArguments}({fullyQualifiedName});");
         }
 
         private static string GetArgumentOrOptionExpression(
