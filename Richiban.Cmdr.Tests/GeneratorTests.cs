@@ -15,20 +15,6 @@ namespace Richiban.Cmdr.Tests
     class GeneratorTests
     {
         [Test]
-        public void CmdrAttributeIsNotOutputIfThereAreNoCandidateMethods()
-        {
-            var source = @"";
-            var (outputCompilation, diagnostics) = RunGenerator(source);
-
-            Assert.That(diagnostics, Is.Empty);
-
-            Assert.That(
-                outputCompilation.SyntaxTrees.Count,
-                Is.EqualTo(1),
-                $"We expected only the one syntax tree");
-        }
-
-        [Test]
         public void CmdrAttributeFileTest()
         {
             var source = @"public static class TestClass
@@ -150,7 +136,7 @@ public static class Program
 
         if (Repl.IsCall(args))
         {
-            repl.EnterNewLoop(rootCommand, ""Select a command"");
+            Repl.EnterNewLoop(rootCommand, ""Select a command"");
 
             return 0;
         }
@@ -211,7 +197,7 @@ public static class Program
 
         if (Repl.IsCall(args))
         {
-            repl.EnterNewLoop(rootCommand, ""Select a command"");
+            Repl.EnterNewLoop(rootCommand, ""Select a command"");
 
             return 0;
         }
@@ -371,24 +357,27 @@ public static class Program
 {
     public static int Main(string[] args)
     {
-        var testClassCommand = new Command(""aaa"")
+        var testMethodBCommand = new Command(""bbb"")
         {
-            Handler = CommandHandler.Create(TestSamples.TestClass.TestMethodA);
         };
 
-        testClassCommand.Add(new Command(""bbb"")
+        testMethodBCommand.Handler = CommandHandler.Create(TestSamples.TestClass.TestMethodB);
+
+        var testMethodACommand = new Command(""aaa"")
         {
-            Handler = CommandHandler.Create(TestSamples.TestClass.TestMethodB)
-        });
+            testMethodBCommand
+        };
+
+        testMethodACommand.Handler = CommandHandler.Create(TestSamples.TestClass.TestMethodA);
 
         var rootCommand = new RootCommand()
         {
-            testClassCommand
+            testMethodACommand
         };
 
         if (Repl.IsCall(args))
         {
-            Repl.EnterNewLoop(""Select a command"");
+            Repl.EnterNewLoop(rootCommand, ""Select a command"");
 
             return 0;
         }

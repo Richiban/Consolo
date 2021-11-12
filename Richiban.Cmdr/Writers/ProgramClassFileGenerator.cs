@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Richiban.Cmdr.Models;
-using Richiban.Cmdr.Transformers;
 using Richiban.Cmdr.Utils;
 
 namespace Richiban.Cmdr.Writers
@@ -12,9 +10,9 @@ namespace Richiban.Cmdr.Writers
         private readonly CodeBuilder _codeBuilder = new();
         private readonly CommandModel.RootCommandModel _commandModel;
 
-        public ProgramClassFileGenerator(IReadOnlyCollection<MethodModel> methodModels)
+        public ProgramClassFileGenerator(CommandModel.RootCommandModel commandModel)
         {
-            _commandModel = new CommandModelTransformer().Transform(methodModels);
+            _commandModel = commandModel;
         }
 
         public override string FileName => "Program.g.cs";
@@ -37,14 +35,12 @@ namespace Richiban.Cmdr.Writers
 
                 using (_codeBuilder.Indent())
                 {
-                    WriteLeafCommandStatements(_commandModel);
+                    WriteHandledCommandStatements(_commandModel);
                     WriteRootStatement(_commandModel);
 
                     _codeBuilder.AppendLine();
 
-                    _codeBuilder.AppendLines(
-                        "if (Repl.IsCall(args))",
-                        "{");
+                    _codeBuilder.AppendLines("if (Repl.IsCall(args))", "{");
 
                     WriteReplCall();
 
@@ -63,25 +59,35 @@ namespace Richiban.Cmdr.Writers
             return _codeBuilder.ToString();
         }
 
-        private void WriteLeafCommandStatements(
+        private void WriteHandledCommandStatements(
             CommandModel.RootCommandModel rootCommandModel)
         {
-            foreach (var leaf in rootCommandModel.GetAllLeafCommandModels())
+            foreach (var command in rootCommandModel.GetDescendentCommands()
+                .Where(x => x.Method != null).Reverse())
             {
                 _codeBuilder.AppendLine(
-                    $"var {leaf.VariableName} = new Command(\"{leaf.CommandName}\")");
+                    $"var {command.VariableName} = new Command(\"{command.CommandName}\")");
 
                 _codeBuilder.AppendLine("{");
 
                 using (_codeBuilder.Indent())
                 {
-                    WriteParameterExpressions(leaf);
+                    using (var expr = _codeBuilder.OpenExpressionList())
+                    {
+                        foreach (var subCommand in command.SubCommands)
+                        {
+                            WriteCommandExpression(subCommand, expr);
+                            expr.Next();
+                        }
+
+                        WriteParameterExpressions(command, expr);
+                    }
                 }
 
                 _codeBuilder.AppendLine("};");
                 _codeBuilder.AppendLine();
 
-                WriteHandlerStatement(leaf);
+                WriteHandlerStatement(command);
                 _codeBuilder.AppendLine();
             }
         }
@@ -107,22 +113,16 @@ namespace Richiban.Cmdr.Writers
         }
 
         private void WriteCommandExpression(
-            CommandModel commandModel,
+            CommandModel.NormalCommandModel commandModel,
             CodeBuilder.CommaSeparatedExpressionSyntax expr)
         {
-            switch (commandModel)
+            if (commandModel.Method == null)
             {
-                case CommandModel.NormalCommandModel leaf:
-                    WriteGroupExpression(leaf, expr);
-                    WriteLeafExpression(leaf, expr);
-
-                    break;
-                case CommandModel.RootCommandModel:
-                    throw new InvalidOperationException(
-                        "Writing the root command as an expression is not supported");
-                default:
-                    throw new InvalidOperationException(
-                        $"Unknown {nameof(CommandModel)}: {_commandModel}");
+                WriteImmediateCommandExpression(commandModel, expr);
+            }
+            else
+            {
+                WriteVariableCommandExpression(commandModel, expr);
             }
         }
 
@@ -143,9 +143,15 @@ namespace Richiban.Cmdr.Writers
             }
 
             _codeBuilder.AppendLine("};");
+
+            if (rootCommandModel.Method != null)
+            {
+                _codeBuilder.AppendLine();
+                WriteHandlerStatement(rootCommandModel);
+            }
         }
 
-        private void WriteGroupExpression(
+        private void WriteImmediateCommandExpression(
             CommandModel.NormalCommandModel commandGroupModel,
             CodeBuilder.CommaSeparatedExpressionSyntax expr)
         {
@@ -168,37 +174,46 @@ namespace Richiban.Cmdr.Writers
             expr.Next();
         }
 
-        private void WriteLeafExpression(
+        private void WriteVariableCommandExpression(
             CommandModel.NormalCommandModel normalModel,
             CodeBuilder.CommaSeparatedExpressionSyntax expr)
         {
             expr.AppendLine(normalModel.VariableName);
         }
 
-        private void WriteParameterExpressions(CommandModel.NormalCommandModel normalModel)
+        private void WriteParameterExpressions(
+            CommandModel.NormalCommandModel normalModel,
+            CodeBuilder.CommaSeparatedExpressionSyntax expr)
         {
-            using var expr = _codeBuilder.OpenExpressionList();
+            if (normalModel.Method == null)
+            {
+                return;
+            }
 
-            throw new NotImplementedException();
-            //
-            // foreach (var leafModelParameter in normalModel.Parameters)
-            // {
-            //     expr.AppendLine(GetArgumentOrOptionExpression(leafModelParameter));
-            //     expr.Next();
-            // }
+            foreach (var leafModelParameter in normalModel.Method.Parameters)
+            {
+                expr.AppendLine(GetArgumentOrOptionExpression(leafModelParameter));
+                expr.Next();
+            }
         }
 
-        private void WriteHandlerStatement(CommandModel.NormalCommandModel normalModel)
+        private void WriteHandlerStatement(CommandModel normalModel)
         {
-            throw new NotImplementedException();
-            // var parameters = normalModel.Parameters;
-            //
-            // var handlerTypeArguments = parameters.Count == 0
-            //     ? ""
-            //     : $"<{parameters.Select(a => a.FullyQualifiedTypeName).StringJoin(", ")}>";
-            //
-            // _codeBuilder.AppendLine(
-            //     $"{normalModel.VariableName}.Handler = CommandHandler.Create{handlerTypeArguments}({normalModel.FullyQualifiedName});");
+            if (normalModel.Method is null)
+            {
+                return;
+            }
+
+            var parameters = normalModel.Method.Parameters;
+
+            var handlerTypeArguments = parameters.Count == 0
+                ? ""
+                : $"<{parameters.Select(a => a.FullyQualifiedTypeName).StringJoin(", ")}>";
+
+            var fullyQualifiedName = normalModel.Method.FullyQualifiedName;
+
+            _codeBuilder.AppendLine(
+                $"{normalModel.VariableName}.Handler = CommandHandler.Create{handlerTypeArguments}({fullyQualifiedName});");
         }
 
         private static string GetArgumentOrOptionExpression(

@@ -5,7 +5,7 @@ namespace Richiban.Cmdr.Samples
     [Cmdr("remote")]
     public class SampleProgram
     {
-        [Cmdr("a")]
+        [Cmdr("")]
         public static void ListRemotes()
         {
             Console.WriteLine("Listing remotes");
@@ -16,6 +16,15 @@ namespace Richiban.Cmdr.Samples
         {
             Console.WriteLine(
                 $"Removing remote '{remoteName}'");
+        }
+    }
+
+    public class Root
+    {
+        [Cmdr("")]
+        public static void MainRoot()
+        {
+            Console.WriteLine("In the root command");
         }
     }
 }

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Richiban.Cmdr.Models;
 using Richiban.Cmdr.Transformers;
@@ -20,23 +19,27 @@ namespace Richiban.Cmdr
         {
             _cmdrAttribute = new CmdrAttributeDefinition();
 
-            context.RegisterForPostInitialization(
-                x =>
-                {
-                    var cmdrAttributeFileGenerator =
-                        new CmdrAttributeFileGenerator(_cmdrAttribute);
-
-                    var replFileGenerator = new ReplFileGenerator();
-
-                    x.AddSource(
-                        cmdrAttributeFileGenerator.FileName,
-                        cmdrAttributeFileGenerator.GetCode());
-
-                    x.AddSource(replFileGenerator.FileName, replFileGenerator.GetCode());
-                });
+            context.RegisterForPostInitialization(InjectStaticSourceFiles);
 
             context.RegisterForSyntaxNotifications(
                 () => new CmdrSyntaxReceiver(_cmdrAttribute));
+        }
+
+        private void InjectStaticSourceFiles(
+            GeneratorPostInitializationContext postInitializationContext)
+        {
+            var cmdrAttributeFileGenerator =
+                new CmdrAttributeFileGenerator(_cmdrAttribute);
+
+            var replFileGenerator = new ReplFileGenerator();
+
+            postInitializationContext.AddSource(
+                cmdrAttributeFileGenerator.FileName,
+                cmdrAttributeFileGenerator.GetCode());
+
+            postInitializationContext.AddSource(
+                replFileGenerator.FileName,
+                replFileGenerator.GetCode());
         }
 
         public void Execute(GeneratorExecutionContext context)
@@ -61,9 +64,10 @@ namespace Richiban.Cmdr
 
                 diagnostics.ReportMethodFailures(failures);
 
-                var a = new CommandModelTransformer().Transform(methodModels);
-                
-                context.AddCodeFile(new ProgramClassFileGenerator(methodModels));
+                var rootCommandModel =
+                    new CommandModelTransformer().Transform(methodModels);
+
+                context.AddCodeFile(new ProgramClassFileGenerator(rootCommandModel));
             }
             catch (Exception ex)
             {

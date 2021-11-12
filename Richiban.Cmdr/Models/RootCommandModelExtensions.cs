@@ -5,61 +5,18 @@ namespace Richiban.Cmdr.Models
 {
     internal static class RootCommandModelExtensions
     {
-        public static IEnumerable<CommandModel.NormalCommandModel> GetAllLeafCommandModels(
-            this CommandModel.RootCommandModel root)
+        public static IEnumerable<CommandModel.NormalCommandModel>
+            GetDescendentCommands(this CommandModel root)
         {
-            throw new NotImplementedException();
-            // foreach (var subCommand in root.SubCommands)
-            // {
-            //     switch (subCommand)
-            //     {
-            //         case CommandModel.CommandGroupModel subGroup:
-            //         {
-            //             foreach (var pair in subGroup.GetAllLeafCommands())
-            //             {
-            //                 yield return pair;
-            //             }
-            //
-            //             break;
-            //         }
-            //         case CommandModel.NormalCommandModel leafCommand:
-            //         {
-            //             yield return leafCommand;
-            //
-            //             break;
-            //         }
-            //         default:
-            //             throw new InvalidOperationException("WAT");
-            //     }
-            // }
-        }
+            foreach (var subCommand in root.SubCommands)
+            {
+                yield return subCommand;
 
-        // private static IEnumerable<CommandModel.NormalCommandModel> GetAllLeafCommands(
-        //     this CommandModel.CommandGroupModel group)
-        // {
-        //     foreach (var subCommand in group.SubCommands)
-        //     {
-        //         switch (subCommand)
-        //         {
-        //             case CommandModel.CommandGroupModel subGroup:
-        //             {
-        //                 foreach (var pair in subGroup.GetAllLeafCommands())
-        //                 {
-        //                     yield return pair;
-        //                 }
-        //
-        //                 break;
-        //             }
-        //             case CommandModel.NormalCommandModel leafCommand:
-        //             {
-        //                 yield return leafCommand;
-        //
-        //                 break;
-        //             }
-        //             default:
-        //                 throw new InvalidOperationException("WAT2");
-        //         }
-        //     }
-        // }
+                foreach (var subCommandSubCommand in GetDescendentCommands(subCommand))
+                {
+                    yield return (subCommandSubCommand);
+                }
+            }
+        }
     }
 }

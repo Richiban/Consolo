@@ -23,7 +23,7 @@ namespace Richiban.Cmdr.Models
             public override CommandMethod? Method { get; set; }
             public override List<NormalCommandModel> SubCommands { get; } = new();
 
-            public string VariableName
+            public override string VariableName
             {
                 get
                 {
@@ -49,6 +49,7 @@ namespace Richiban.Cmdr.Models
         {
             public override List<NormalCommandModel> SubCommands { get; } = new();
             public override CommandMethod? Method { get; set; }
+            public override string VariableName => "rootCommand";
 
             public override string ToString() =>
                 $"RootCommand[{SubCommands.Count}] => {{{Method?.ToString() ?? "<null>"}}}";
@@ -56,5 +57,6 @@ namespace Richiban.Cmdr.Models
 
         public abstract List<NormalCommandModel> SubCommands { get; }
         public abstract CommandMethod? Method { get; set; }
+        public abstract string VariableName { get; }
     }
 }
