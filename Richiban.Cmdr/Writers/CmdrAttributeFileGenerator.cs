@@ -16,17 +16,21 @@ namespace Richiban.Cmdr.Writers
         public override string FileName { get; }
 
         public override string GetCode() =>
-            @$"using System;
+            $$"""
+            using System;
 
-[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-public class {_cmdrAttributeDefinition.LongName} : Attribute
-{{
-    public {_cmdrAttributeDefinition.LongName}(string name = null)
-    {{
-        Name = name;
-    }}
+            namespace Cmdr;
 
-    public string Name {{ get; }}
-}}";
+            [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+            public class {{_cmdrAttributeDefinition.LongName}} : Attribute
+            {
+                public {{_cmdrAttributeDefinition.LongName}}(string name = null)
+                {
+                    Name = name;
+                }
+
+                public string Name { get; }
+            }
+            """;
     }
 }

@@ -1,9 +1,10 @@
 ﻿using System;
+using Cmdr;
 
 namespace Richiban.Cmdr.Samples
 {
     [Cmdr("remote")]
-    public class SampleProgram
+    public class RemoteActions
     {
         [Cmdr("")]
         public static void ListRemotes()
@@ -39,6 +40,16 @@ namespace Richiban.Cmdr.Samples
         public static void CreateBranches(string branchName)
         {
             Console.WriteLine($"Creating branch {branchName}");
+        }
+    }
+
+    [Cmdr("checkout")]
+    public class CheckoutActions
+    {
+        [Cmdr("")]
+        public static void CheckoutBranch(string branchName)
+        {
+            Console.WriteLine($"Checking out branch {branchName}");
         }
     }
     
