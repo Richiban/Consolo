@@ -5,12 +5,9 @@ namespace Richiban.Cmdr.Writers
 {
     internal class CmdrAttributeFileGenerator : CodeFileGenerator
     {
-        private readonly CmdrAttributeDefinition _cmdrAttributeDefinition;
-
-        public CmdrAttributeFileGenerator(CmdrAttributeDefinition cmdrAttributeDefinition)
+        public CmdrAttributeFileGenerator()
         {
-            _cmdrAttributeDefinition = cmdrAttributeDefinition;
-            FileName = $"{_cmdrAttributeDefinition.LongName}.g.cs";
+            FileName = $"{CmdrAttributeDefinition.LongName}.g.cs";
         }
 
         public override string FileName { get; }
@@ -27,9 +24,9 @@ namespace Richiban.Cmdr.Writers
                 | AttributeTargets.Parameter,
                 Inherited = false,
                 AllowMultiple = false)]
-            public class {{_cmdrAttributeDefinition.LongName}} : Attribute
+            public class {{CmdrAttributeDefinition.LongName}} : Attribute
             {
-                public {{_cmdrAttributeDefinition.LongName}}(string name = null)
+                public {{CmdrAttributeDefinition.LongName}}(string name = null)
                 {
                     Name = name;
                 }

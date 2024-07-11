@@ -13,23 +13,19 @@ namespace Richiban.Cmdr
     [Generator]
     public class CmdrGenerator : ISourceGenerator
     {
-        private CmdrAttributeDefinition _cmdrAttribute = null!;
-
         public void Initialize(GeneratorInitializationContext context)
         {
-            _cmdrAttribute = new CmdrAttributeDefinition();
-
             context.RegisterForPostInitialization(InjectStaticSourceFiles);
 
             context.RegisterForSyntaxNotifications(
-                () => new CmdrSyntaxReceiver(_cmdrAttribute));
+                () => new CmdrSyntaxReceiver());
         }
 
         private void InjectStaticSourceFiles(
             GeneratorPostInitializationContext postInitializationContext)
         {
             var cmdrAttributeFileGenerator =
-                new CmdrAttributeFileGenerator(_cmdrAttribute);
+                new CmdrAttributeFileGenerator();
 
             var replFileGenerator = new ReplFileGenerator();
 
@@ -55,10 +51,10 @@ namespace Richiban.Cmdr
                 }
 
                 var candidateMethods =
-                    new MethodScanner(context.Compilation, _cmdrAttribute, diagnostics)
+                    new MethodScanner(context.Compilation, diagnostics)
                         .GetCandidateMethods(receiver.QualifyingMembers);
 
-                var (methodModels, failures) = new MethodModelBuilder(_cmdrAttribute)
+                var (methodModels, failures) = new MethodModelBuilder()
                     .BuildFrom(candidateMethods)
                     .SeparateResults();
 
@@ -77,13 +73,6 @@ namespace Richiban.Cmdr
 
         private class CmdrSyntaxReceiver : ISyntaxReceiver
         {
-            private readonly CmdrAttributeDefinition _cmdrAttribute;
-
-            public CmdrSyntaxReceiver(CmdrAttributeDefinition cmdrAttribute)
-            {
-                _cmdrAttribute = cmdrAttribute;
-            }
-
             internal List<MethodDeclarationSyntax> QualifyingMembers { get; } = new();
 
             public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
@@ -94,7 +83,7 @@ namespace Richiban.Cmdr
                 }
 
                 var attribute = method.AttributeLists.SelectMany(
-                        list => list.Attributes.Where(x => _cmdrAttribute.Matches(x)))
+                        list => list.Attributes.Where(x => CmdrAttributeDefinition.Matches(x)))
                     .FirstOrDefault();
 
                 if (attribute is null)

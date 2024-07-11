@@ -11,17 +11,14 @@ namespace Richiban.Cmdr
 {
     internal class MethodScanner
     {
-        private readonly CmdrAttributeDefinition _cmdrAttributeDefinition;
         private readonly Compilation _compilation;
         private readonly CmdrDiagnostics _diagnostics;
 
         public MethodScanner(
             Compilation compilation,
-            CmdrAttributeDefinition cmdrAttributeDefinition,
             CmdrDiagnostics diagnostics)
         {
             _compilation = compilation;
-            _cmdrAttributeDefinition = cmdrAttributeDefinition;
             _diagnostics = diagnostics;
         }
 
@@ -60,7 +57,7 @@ namespace Richiban.Cmdr
                                 return false;
                             }
                             case var attributeClass:
-                                return _cmdrAttributeDefinition.Matches(attributeClass);
+                                return CmdrAttributeDefinition.Matches(attributeClass);
                         }
                     });
     }

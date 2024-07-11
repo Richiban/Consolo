@@ -230,7 +230,7 @@ namespace Richiban.Cmdr.Writers
                                         : $"""
                             new Argument<{argument.FullyQualifiedTypeName}>(
                                 name: "{argument.Name}",
-                                description: "{argument.DefaultValue}: {argument.Description}",
+                                description: "{argument.Description}",
                                 getDefaultValue: () => {argument.DefaultValue ?? "default"})
                             """,
                 CommandParameterModel.CommandFlagModel option => 

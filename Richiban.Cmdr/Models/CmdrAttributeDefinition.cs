@@ -4,16 +4,16 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Richiban.Cmdr.Models;
 
-internal class CmdrAttributeDefinition
+internal static class CmdrAttributeDefinition
 {
-    public string Namespace => "Richiban.Cmdr";
-    public string ShortName => "Cmdr";
-    public string LongName => $"{ShortName}Attribute";
-    public string FullyQualifiedName => $"{Namespace}.{LongName}";
+    public static string Namespace => "Richiban.Cmdr";
+    public static string ShortName => "Cmdr";
+    public static string LongName => $"{ShortName}Attribute";
+    public static string FullyQualifiedName => $"{Namespace}.{LongName}";
 
-    public bool Matches(INamedTypeSymbol? attrClass) => attrClass?.Name == LongName;
+    public static bool Matches(INamedTypeSymbol? attrClass) => attrClass?.Name == LongName;
 
-    public bool Matches(AttributeSyntax attr)
+    public static bool Matches(AttributeSyntax attr)
     {
         var attrName = attr.Name.ToString();
 

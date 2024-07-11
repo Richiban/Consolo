@@ -10,13 +10,6 @@ namespace Richiban.Cmdr;
 
 internal class MethodModelBuilder
 {
-    private readonly CmdrAttributeDefinition _cmdrAttributeDefinition;
-
-    public MethodModelBuilder(CmdrAttributeDefinition cmdrAttributeDefinition)
-    {
-        _cmdrAttributeDefinition = cmdrAttributeDefinition;
-    }
-
     public IEnumerable<Result<MethodModelFailure, MethodModel>> BuildFrom(
         IEnumerable<IMethodSymbol?> qualifyingMethods) =>
         qualifyingMethods.SelectNotNull(TryMapMethod);
@@ -32,7 +25,7 @@ internal class MethodModelBuilder
         if (!methodSymbol.IsStatic)
         {
             return new MethodModelFailure(
-                $"Method {methodSymbol} must be static in order to use the {_cmdrAttributeDefinition.ShortName} attribute.",
+                $"Method {methodSymbol} must be static in order to use the {CmdrAttributeDefinition.ShortName} attribute.",
                 methodSymbol.Locations.FirstOrDefault());
         }
 
@@ -42,44 +35,17 @@ internal class MethodModelBuilder
         var fullyQualifiedName = methodSymbol.ContainingType.GetFullyQualifiedName();
 
         var commandPath = GetCommandPath(methodSymbol);
-        var description = GetDescription(methodSymbol);
         var parentNames = commandPath.Truncate(count: -1).ToList();
 
-        var providedName = commandPath.LastOrDefault();
+        var lastPathItem = commandPath.LastOrDefault();
 
         return new MethodModel(
             methodSymbol.Name,
-            providedName.Name,
+            lastPathItem.Name,
             parentNames,
             fullyQualifiedName,
             parameters,
-            description);
-    }
-
-    private string? GetDescription(IMethodSymbol methodSymbol)
-    {
-        if (GetRelevantAttribute(methodSymbol) is { } attr)
-        {
-            if (GetAttributePropertySet(attr) is { } propValue)
-            {
-                return propValue;
-            }
-        }
-
-        return null;
-    }
-
-    private string? GetDescription(IParameterSymbol parameterSymbol)
-    {
-        if (GetRelevantAttribute(parameterSymbol) is { } attr)
-        {
-            if (GetAttributePropertySet(attr) is { } propValue)
-            {
-                return propValue;
-            }
-        }
-        
-        return null;
+            lastPathItem.Description);
     }
 
     private ImmutableList<CommandPathItem> GetCommandPath(ISymbol symbol)
@@ -88,16 +54,9 @@ internal class MethodModelBuilder
 
         while (symbol != null)
         {
-            if (GetRelevantAttribute(symbol) is { } attr)
+            if (AttributeUsageUtils.GetUsage(symbol) is { } attr)
             {
-                var pathItemName = 
-                    GetConstructorArgument(attr) is { } arg
-                        ? arg
-                        : symbol.Name;
-
-                var description = GetAttributePropertySet(attr);
-
-                path.Add(new (pathItemName, description));
+                path.Add(new (attr?.Names.LastOrDefault() ?? symbol.Name, attr?.Description));
             }
 
             symbol = symbol.ContainingType;
@@ -106,54 +65,17 @@ internal class MethodModelBuilder
         path.Reverse();
 
         return path.ToImmutable();
-    }
-
-    private static string? GetConstructorArgument(AttributeData attributeData)
-    {
-        if (attributeData.ConstructorArguments.Length == 0)
-        {
-            return null;
-        }
-
-        return attributeData.ConstructorArguments.First() switch
-        {
-            { Kind: TypedConstantKind.Primitive } arg => (string?)arg.Value,
-            _ => null
-        };
-    }
-
-    private static string? GetAttributePropertySet(AttributeData attributeData)
-    {
-        if (attributeData.NamedArguments.Length == 0)
-        {
-            return null;
-        }
-
-        return attributeData.NamedArguments.First() switch
-        {
-            ("Description", { Kind: TypedConstantKind.Primitive } arg) => (string?)arg.Value,
-            _ => null
-        };
-    }
-
-    private AttributeData? GetRelevantAttribute(ISymbol current)
-    {
-        return current.GetAttributes()
-            .SingleOrDefault(a => _cmdrAttributeDefinition.Matches(a.AttributeClass));
-    }
+    }    
 
     private ArgumentModel GetArgumentModel(IParameterSymbol parameterSymbol)
     {
-        var name = parameterSymbol.Name;
-        
-        if (GetRelevantAttribute(parameterSymbol) is { } attr && GetConstructorArgument(attr) is { } arg)
-        {
-            name = arg;
-        }
+        var attr = AttributeUsageUtils.GetUsage(parameterSymbol);
 
+        var name = attr?.Names?.LastOrDefault() is {} lastName ? lastName : parameterSymbol.Name;
+        
         var type = parameterSymbol.Type.GetFullyQualifiedName();
         var isFlag = type == "System.Boolean";
-        var description = GetDescription(parameterSymbol);
+        var description = attr?.Description;
         var isRequired = !parameterSymbol.HasExplicitDefaultValue;
         var defaultValue =
             parameterSymbol.HasExplicitDefaultValue
