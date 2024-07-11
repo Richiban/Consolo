@@ -18,6 +18,7 @@ namespace Richiban.Cmdr.Writers
 
             namespace Cmdr;
 
+            #nullable enable
             [AttributeUsage(
                 AttributeTargets.Method 
                 | AttributeTargets.Class
@@ -35,6 +36,8 @@ namespace Richiban.Cmdr.Writers
 
                 public string? Description { get; set; }
             }
+            
+            #nullable disable
             """;
     }
 }
