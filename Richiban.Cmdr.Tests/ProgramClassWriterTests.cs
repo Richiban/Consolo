@@ -132,15 +132,17 @@ public static class Program
                             Method = new CommandMethod(
                                 "ItemActions",
                                 "AddItem",
-                                new CommandParameterModel[]
-                                {
+                                [
                                     new CommandParameterModel.
                                         CommandPositionalParameterModel(
                                             "itemName",
-                                            "System.String"),
+                                            "System.String",
+                                            true,
+                                            null,
+                                            "test description"),
                                     new CommandParameterModel.
-                                        CommandFlagModel("allowClobber")
-                                })
+                                        CommandFlagModel("allowClobber", "test description")
+                                ])
                         }
                     }
                 });

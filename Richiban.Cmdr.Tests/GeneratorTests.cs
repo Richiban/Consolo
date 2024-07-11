@@ -600,12 +600,11 @@ public static class Program
         {
             var inputCompilation = CSharpCompilation.Create(
                 "compilation",
-                new[] { CSharpSyntaxTree.ParseText(source) },
-                new[]
-                {
+                [CSharpSyntaxTree.ParseText(source)],
+                [
                     MetadataReference.CreateFromFile(
                         typeof(Binder).GetTypeInfo().Assembly.Location)
-                },
+                ],
                 new CSharpCompilationOptions(OutputKind.ConsoleApplication));
 
             var generator = new CmdrGenerator();

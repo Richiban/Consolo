@@ -66,7 +66,7 @@ namespace Richiban.Cmdr.Writers
                 .Where(x => x.Method != null).Reverse())
             {
                 _codeBuilder.AppendLine(
-                    $"var {command.GetVariableName()} = new Command(\"{command.CommandName}\")");
+                    $"var {command.GetVariableName()} = new Command(\"{command.CommandName}\", description: \"{command.Description}\")");
 
                 _codeBuilder.AppendLine("{");
 
@@ -156,7 +156,7 @@ namespace Richiban.Cmdr.Writers
             CommandModel.SubCommandModel commandGroupModel,
             CodeBuilder.CommaSeparatedExpressionSyntax expr)
         {
-            expr.AppendLine($"new Command(\"{commandGroupModel.CommandName}\")");
+            expr.AppendLine($"new Command(\"{commandGroupModel.CommandName}\", description: \"{commandGroupModel.Description}\")");
             expr.AppendLine("{");
 
             using (expr.Indent())
@@ -218,23 +218,36 @@ namespace Richiban.Cmdr.Writers
         }
 
         private static string GetArgumentOrOptionExpression(
-            CommandParameterModel commandParameterModel)
-        {
-            switch (commandParameterModel)
+            CommandParameterModel commandParameterModel) =>
+            commandParameterModel switch
             {
-                case CommandParameterModel.CommandPositionalParameterModel argument:
-                    return $@"new Argument(""{argument.Name}"")";
-                case CommandParameterModel.CommandFlagModel option:
-                    var aliases = new[] { option.Name[index: 0].ToString(), option.Name };
+                CommandParameterModel.CommandPositionalParameterModel argument => argument.IsRequired
+                                        ? $"""
+                            new Argument<{argument.FullyQualifiedTypeName}>(
+                                name: "{argument.Name}",
+                                description: "{argument.Description}")
+                            """
+                                        : $"""
+                            new Argument<{argument.FullyQualifiedTypeName}>(
+                                name: "{argument.Name}",
+                                description: "{argument.DefaultValue}: {argument.Description}",
+                                getDefaultValue: () => {argument.DefaultValue ?? "default"})
+                            """,
+                CommandParameterModel.CommandFlagModel option => 
+                    $$"""
+                    new Option(new [] {"-{{option.Name[index: 0]}}", "--{{option.Name}}"}, description: "{{option.Description}}")
+                    """,
+                _ => throw new UnknownCommandParameterModelException(commandParameterModel),
+            };
 
-                    var aliasesString = string.Join(
-                        ", ",
-                        aliases.Select(a => $"\"{a}\""));
+        private class UnknownCommandParameterModelException : Exception 
+        {
+            public UnknownCommandParameterModelException(CommandParameterModel commandParameterModel) 
+                : base(GetMessage(commandParameterModel)) { }
 
-                    return $@"new Option(new string[] {{{aliasesString}}})";
-                default:
-                    throw new InvalidOperationException(
-                        $"Unknown {nameof(CommandParameterModel)}: {commandParameterModel}");
+            private static string GetMessage(CommandParameterModel commandParameterModel) 
+            {
+                return $"Unknown {nameof(CommandParameterModel)}: {commandParameterModel}";
             }
         }
     }

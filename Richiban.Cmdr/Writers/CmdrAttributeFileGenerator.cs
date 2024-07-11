@@ -21,7 +21,12 @@ namespace Richiban.Cmdr.Writers
 
             namespace Cmdr;
 
-            [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+            [AttributeUsage(
+                AttributeTargets.Method 
+                | AttributeTargets.Class
+                | AttributeTargets.Parameter,
+                Inherited = false,
+                AllowMultiple = false)]
             public class {{_cmdrAttributeDefinition.LongName}} : Attribute
             {
                 public {{_cmdrAttributeDefinition.LongName}}(string name = null)
@@ -30,6 +35,8 @@ namespace Richiban.Cmdr.Writers
                 }
 
                 public string Name { get; }
+
+                public string? Description { get; set; }
             }
             """;
     }

@@ -1,24 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Richiban.Cmdr.Models
+namespace Richiban.Cmdr.Models;
+
+internal record CommandMethod(
+        string FullyQualifiedClassName,
+        string MethodName,
+        IReadOnlyCollection<CommandParameterModel> Parameters)
 {
-    internal class CommandMethod
-    {
-        public CommandMethod(
-            string fullyQualifiedClassName,
-            string methodName,
-            IReadOnlyCollection<CommandParameterModel> parameters)
-        {
-            Parameters = parameters;
-            Name = methodName;
-            FullyQualifiedName = $"{fullyQualifiedClassName}.{methodName}";
-        }
-
-        public IReadOnlyCollection<CommandParameterModel> Parameters { get; }
-        public string FullyQualifiedName { get; }
-        public string Name { get; }
-
-        public override string ToString() => FullyQualifiedName;
-    }
+    public string FullyQualifiedName { get; } = $"{FullyQualifiedClassName}.{MethodName}";
 }

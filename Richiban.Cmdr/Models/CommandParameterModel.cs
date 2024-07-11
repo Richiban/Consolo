@@ -1,32 +1,47 @@
 ﻿using System;
+using System.ComponentModel;
 
-namespace Richiban.Cmdr.Models
+namespace Richiban.Cmdr.Models;
+
+public abstract class CommandParameterModel
 {
-    public abstract class CommandParameterModel
+    private CommandParameterModel(
+        string name,
+        string fullyQualifiedTypeName,
+        bool isRequired,
+        string? defaultValue,
+        string? description)
     {
-        private CommandParameterModel(string name, string fullyQualifiedTypeName)
+        Name = name;
+        FullyQualifiedTypeName = fullyQualifiedTypeName;
+        IsRequired = isRequired;
+        DefaultValue = defaultValue;
+        Description = description;
+    }
+
+    public string Name { get; }
+    public string FullyQualifiedTypeName { get; }
+    public bool IsRequired { get; }
+    public string? DefaultValue { get; }
+    public string? Description { get; }
+
+    public sealed class CommandPositionalParameterModel : CommandParameterModel
+    {
+        public CommandPositionalParameterModel(
+            string name,
+            string fullyQualifiedTypeName,
+            bool isRequired,
+            string? defaultValue,
+            string? description) : base(name, fullyQualifiedTypeName, isRequired, defaultValue, description)
         {
-            Name = name;
-            FullyQualifiedTypeName = fullyQualifiedTypeName;
         }
+    }
 
-        public string Name { get; }
-        public string FullyQualifiedTypeName { get; }
-
-        public sealed class CommandPositionalParameterModel : CommandParameterModel
+    public sealed class CommandFlagModel : CommandParameterModel
+    {
+        public CommandFlagModel(string name, string? description) 
+            : base(name, "System.Boolean", isRequired: false, defaultValue: "false", description)
         {
-            public CommandPositionalParameterModel(
-                string name,
-                string fullyQualifiedTypeName) : base(name, fullyQualifiedTypeName)
-            {
-            }
-        }
-
-        public sealed class CommandFlagModel : CommandParameterModel
-        {
-            public CommandFlagModel(string name) : base(name, "System.Boolean")
-            {
-            }
         }
     }
 }

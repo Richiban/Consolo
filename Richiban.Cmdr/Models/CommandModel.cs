@@ -2,13 +2,6 @@
 using System.Collections.Generic;
 using Richiban.Cmdr.Utils;
 
-namespace System.Runtime.CompilerServices
-{
-    public class IsExternalInit
-    {
-    }
-}
-
 namespace Richiban.Cmdr.Models
 {
     internal abstract class CommandModel
@@ -20,12 +13,13 @@ namespace Richiban.Cmdr.Models
         public sealed class SubCommandModel : CommandModel
         {
             public string? CommandName { get; init; }
+            public string? Description { get; init; }
 
             public override string GetVariableName()
             {
                 if (Method != null)
                 {
-                    return StringUtils.ToCamelCase(Method.Name) + "Command";
+                    return StringUtils.ToCamelCase(Method.MethodName) + "Command";
                 }
 
                 if (CommandName != null)
@@ -33,7 +27,7 @@ namespace Richiban.Cmdr.Models
                     return StringUtils.ToCamelCase(CommandName) + "Command";
                 }
 
-                throw new InvalidOperationException(
+                throw new InvalidCommandDefinitionException(
                     "Neither the method nor the command name have been set on this object");
             }
 
@@ -52,5 +46,12 @@ namespace Richiban.Cmdr.Models
         public List<SubCommandModel> SubCommands { get; } = new();
         public CommandMethod? Method { get; set; }
         public abstract string GetVariableName();
+
+        private class InvalidCommandDefinitionException : Exception
+        {
+            public InvalidCommandDefinitionException(string message) : base(message)
+            {
+            }
+        }
     }
 }

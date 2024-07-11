@@ -45,8 +45,9 @@ namespace Richiban.Cmdr.Transformers
                 commandModel.SubCommands.Add(
                     new CommandModel.SubCommandModel
                     {
-                        CommandName = StringUtils.ToKebabCase(currentName), 
-                        Method = MapMethod(methodModel)
+                        CommandName = StringUtils.ToKebabCase(currentName),
+                        Method = MapMethod(methodModel),
+                        Description = methodModel.Description,
                     });
 
                 return;
@@ -71,6 +72,7 @@ namespace Richiban.Cmdr.Transformers
             var newSubTree = new CommandModel.SubCommandModel
             {
                 CommandName = StringUtils.ToKebabCase(current),
+                Description = "Hmm"
             };
 
             Set(newSubTree, remaining, methodModel);
@@ -91,10 +93,15 @@ namespace Richiban.Cmdr.Transformers
 
         private static CommandParameterModel MapParameter(ArgumentModel arg) =>
             arg.IsFlag
-                ? new CommandParameterModel.CommandFlagModel(arg.Name)
+                ? new CommandParameterModel.CommandFlagModel(
+                    arg.Name,
+                    arg.Description)
                 : new CommandParameterModel.CommandPositionalParameterModel(
                     arg.Name,
-                    arg.FullyQualifiedTypeName);
+                    arg.FullyQualifiedTypeName,
+                    arg.IsRequired,
+                    arg.DefaultValue,
+                    arg.Description);
 
         private readonly struct ListWalker<T>
         {

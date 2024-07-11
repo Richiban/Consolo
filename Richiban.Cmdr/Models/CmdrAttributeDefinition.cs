@@ -2,22 +2,21 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Richiban.Cmdr.Models
+namespace Richiban.Cmdr.Models;
+
+internal class CmdrAttributeDefinition
 {
-    internal class CmdrAttributeDefinition
+    public string Namespace => "Richiban.Cmdr";
+    public string ShortName => "Cmdr";
+    public string LongName => $"{ShortName}Attribute";
+    public string FullyQualifiedName => $"{Namespace}.{LongName}";
+
+    public bool Matches(INamedTypeSymbol? attrClass) => attrClass?.Name == LongName;
+
+    public bool Matches(AttributeSyntax attr)
     {
-        public string Namespace => "Richiban.Cmdr";
-        public string ShortName => "Cmdr";
-        public string LongName => $"{ShortName}Attribute";
-        public string FullyQualifiedName => $"{Namespace}.{LongName}";
+        var attrName = attr.Name.ToString();
 
-        public bool Matches(INamedTypeSymbol? attrClass) => attrClass?.Name == LongName;
-
-        public bool Matches(AttributeSyntax attr)
-        {
-            var attrName = attr.Name.ToString();
-
-            return attrName == LongName || attrName == ShortName;
-        }
+        return attrName == LongName || attrName == ShortName;
     }
 }

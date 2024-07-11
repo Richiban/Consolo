@@ -21,9 +21,10 @@ namespace Richiban.Cmdr.Tests
                 new MethodModel(
                     methodName: "SomeFunction",
                     providedName: "shortcut",
-                    groupCommandPath: new[] { "SomeParent" },
+                    groupCommandPath: ["SomeParent"],
                     fullyQualifiedClassName: "SomeNamespace.SomeClass",
-                    arguments: new ArgumentModel[] { })
+                    arguments: [],
+                    description: null)
             };
 
             var sut = new CommandModelTransformer();
@@ -59,21 +60,26 @@ namespace Richiban.Cmdr.Tests
                 new MethodModel(
                     methodName: "ListRemotes",
                     providedName: "",
-                    groupCommandPath: new[] { "remote" },
+                    groupCommandPath: ["remote"],
                     fullyQualifiedClassName: "GitNamespace.RemoteActions",
-                    arguments: new ArgumentModel[] { }),
+                    arguments: [],
+                    description: null),
                 new MethodModel(
                     methodName: "CreateRemote",
                     providedName: "add",
-                    groupCommandPath: new[] { "remote" },
+                    groupCommandPath: ["remote"],
                     fullyQualifiedClassName: "GitNamespace.RemoteActions",
-                    arguments: new ArgumentModel[]
-                    {
+                    arguments:
+                    [
                         new ArgumentModel(
                             "remoteName",
                             "System.String",
-                            isFlag: false)
-                    })
+                            IsFlag: false,
+                            IsRequired: true,
+                            DefaultValue: null,
+                            Description: null),
+                    ],
+                    description: null)
             };
 
             var sut = new CommandModelTransformer();

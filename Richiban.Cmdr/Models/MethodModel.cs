@@ -11,16 +11,19 @@ namespace Richiban.Cmdr.Models
             string? providedName,
             IReadOnlyList<string> groupCommandPath,
             string fullyQualifiedClassName,
-            IReadOnlyCollection<ArgumentModel> arguments)
+            IReadOnlyCollection<ArgumentModel> arguments,
+            string? description)
         {
             MethodName = methodName;
             ProvidedName = providedName;
             GroupCommandPath = groupCommandPath;
             Arguments = arguments;
             FullyQualifiedClassName = fullyQualifiedClassName;
+            Description = description;
         }
 
         public string FullyQualifiedClassName { get; }
+        public string? Description { get; }
         public string MethodName { get; }
         public string? ProvidedName { get; }
         public IReadOnlyList<string> GroupCommandPath { get; }

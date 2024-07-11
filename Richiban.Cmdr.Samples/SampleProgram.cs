@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using Cmdr;
 
 namespace Richiban.Cmdr.Samples
@@ -19,8 +20,8 @@ namespace Richiban.Cmdr.Samples
                 $"Removing remote '{remoteName}'");
         }
         
-        [Cmdr("add")]
-        public static void AddRemote(string remoteName, Uri url)
+        [Cmdr("add", Description = "Adds a remote to the repository")]
+        public static void AddRemote(string remoteName, Uri url, [Cmdr(Description = "Allow overwriting existing")] bool allowClobber = false)
         {
             Console.WriteLine(
                 $"Adding remote '{remoteName}' with URI: '{url}'");
@@ -52,6 +53,16 @@ namespace Richiban.Cmdr.Samples
             Console.WriteLine($"Checking out branch {branchName}");
         }
     }
+
+    [Cmdr("log")]
+    public class LogActions
+    {
+        [Cmdr("")]
+        public static void ShowLog(int logItemCount = 1)
+        {
+            Console.WriteLine($"Showing {logItemCount} log items");
+        }
+    }
     
     public class Root
     {
@@ -59,6 +70,12 @@ namespace Richiban.Cmdr.Samples
         public static void MainRoot()
         {
             Console.WriteLine("Welcome to the pseudo-Git application!");
+        }
+
+        [Cmdr("test", Description = "This is a test command!")]
+        public static void Test(bool flag)
+        {
+            Console.WriteLine($"This is a test command: {flag}");
         }
     }
 }

@@ -6,108 +6,161 @@ using Microsoft.CodeAnalysis;
 using Richiban.Cmdr.Models;
 using Richiban.Cmdr.Utils;
 
-namespace Richiban.Cmdr
+namespace Richiban.Cmdr;
+
+internal class MethodModelBuilder
 {
-    internal class MethodModelBuilder
+    private readonly CmdrAttributeDefinition _cmdrAttributeDefinition;
+
+    public MethodModelBuilder(CmdrAttributeDefinition cmdrAttributeDefinition)
     {
-        private readonly CmdrAttributeDefinition _cmdrAttributeDefinition;
+        _cmdrAttributeDefinition = cmdrAttributeDefinition;
+    }
 
-        public MethodModelBuilder(CmdrAttributeDefinition cmdrAttributeDefinition)
+    public IEnumerable<Result<MethodModelFailure, MethodModel>> BuildFrom(
+        IEnumerable<IMethodSymbol?> qualifyingMethods) =>
+        qualifyingMethods.SelectNotNull(TryMapMethod);
+
+    private Result<MethodModelFailure, MethodModel> TryMapMethod(
+        IMethodSymbol? methodSymbol)
+    {
+        if (methodSymbol is null)
         {
-            _cmdrAttributeDefinition = cmdrAttributeDefinition;
+            return new MethodModelFailure("Method not found", location: null);
         }
 
-        public IEnumerable<Result<MethodModelFailure, MethodModel>> BuildFrom(
-            IEnumerable<IMethodSymbol?> qualifyingMethods) =>
-            qualifyingMethods.SelectNotNull(TryMapMethod);
-
-        private Result<MethodModelFailure, MethodModel> TryMapMethod(
-            IMethodSymbol? methodSymbol)
+        if (!methodSymbol.IsStatic)
         {
-            if (methodSymbol is null)
-            {
-                return new MethodModelFailure("Method not found", location: null);
-            }
-
-            if (!methodSymbol.IsStatic)
-            {
-                return new MethodModelFailure(
-                    $"Method {methodSymbol} must be static in order to use the {_cmdrAttributeDefinition.ShortName} attribute.",
-                    methodSymbol.Locations.FirstOrDefault());
-            }
-
-            var parameters = methodSymbol.Parameters.Select(GetArgumentModel)
-                .ToImmutableArray();
-
-            var fullyQualifiedName = methodSymbol.ContainingType.GetFullyQualifiedName();
-
-            var commandPath = GetCommandPath(methodSymbol);
-
-            var parentNames = commandPath.Truncate(count: -1).ToList();
-
-            var providedName = commandPath.LastOrDefault();
-
-            return new MethodModel(
-                methodSymbol.Name,
-                providedName,
-                parentNames,
-                fullyQualifiedName,
-                parameters);
+            return new MethodModelFailure(
+                $"Method {methodSymbol} must be static in order to use the {_cmdrAttributeDefinition.ShortName} attribute.",
+                methodSymbol.Locations.FirstOrDefault());
         }
 
-        private ImmutableList<string> GetCommandPath(ISymbol symbol)
-        {
-            var path = ImmutableList.CreateBuilder<string>();
+        var parameters = methodSymbol.Parameters.Select(GetArgumentModel)
+            .ToImmutableArray();
 
-            while (symbol != null)
+        var fullyQualifiedName = methodSymbol.ContainingType.GetFullyQualifiedName();
+
+        var commandPath = GetCommandPath(methodSymbol);
+        var description = GetDescription(methodSymbol);
+        var parentNames = commandPath.Truncate(count: -1).ToList();
+
+        var providedName = commandPath.LastOrDefault();
+
+        return new MethodModel(
+            methodSymbol.Name,
+            providedName,
+            parentNames,
+            fullyQualifiedName,
+            parameters,
+            description);
+    }
+
+    private string? GetDescription(IMethodSymbol methodSymbol)
+    {
+        if (GetRelevantAttribute(methodSymbol) is { } attr)
+        {
+            if (GetAttributePropertySet(attr) is { } propValue)
             {
-                if (GetRelevantAttribute(symbol) is { } attr)
+                return propValue;
+            }
+        }
+
+        return null;
+    }
+
+    private string? GetDescription(IParameterSymbol parameterSymbol)
+    {
+        if (GetRelevantAttribute(parameterSymbol) is { } attr)
+        {
+            if (GetAttributePropertySet(attr) is { } propValue)
+            {
+                return propValue;
+            }
+            return "TODO: No prop";
+        }
+
+        return "TODO: No attr";
+    }
+
+    private ImmutableList<string> GetCommandPath(ISymbol symbol)
+    {
+        var path = ImmutableList.CreateBuilder<string>();
+
+        while (symbol != null)
+        {
+            if (GetRelevantAttribute(symbol) is { } attr)
+            {
+                if (GetConstructorArgument(attr) is { } arg)
                 {
-                    if (GetConstructorArgument(attr) is { } arg)
-                    {
-                        path.Add(arg);
-                    }
-                    else
-                    {
-                        path.Add(symbol.Name);
-                    }
+                    path.Add(arg);
                 }
-
-                symbol = symbol.ContainingType;
+                else
+                {
+                    path.Add(symbol.Name);
+                }
             }
 
-            path.Reverse();
-
-            return path.ToImmutable();
+            symbol = symbol.ContainingType;
         }
 
-        private static string? GetConstructorArgument(AttributeData attributeData)
+        path.Reverse();
+
+        return path.ToImmutable();
+    }
+
+    private static string? GetConstructorArgument(AttributeData attributeData)
+    {
+        if (attributeData.ConstructorArguments.Length == 0)
         {
-            if (attributeData.ConstructorArguments.Length == 0)
-            {
-                return null;
-            }
-
-            return attributeData.ConstructorArguments.First() switch
-            {
-                { Kind: TypedConstantKind.Primitive } arg => (string?)arg.Value,
-                _ => null
-            };
+            return null;
         }
 
-        private AttributeData? GetRelevantAttribute(ISymbol current)
+        return attributeData.ConstructorArguments.First() switch
         {
-            return current.GetAttributes()
-                .SingleOrDefault(a => _cmdrAttributeDefinition.Matches(a.AttributeClass));
-        }
+            { Kind: TypedConstantKind.Primitive } arg => (string?)arg.Value,
+            _ => null
+        };
+    }
 
-        private static ArgumentModel GetArgumentModel(IParameterSymbol parameterSymbol)
+    private static string? GetAttributePropertySet(AttributeData attributeData)
+    {
+        if (attributeData.NamedArguments.Length == 0)
         {
-            var name = parameterSymbol.Name;
-            var type = parameterSymbol.Type.GetFullyQualifiedName();
-            var isFlag = type == "System.Boolean";
-
-            return new ArgumentModel(name, type, isFlag);
+            return null;
         }
+
+        return attributeData.NamedArguments.First() switch
+        {
+            ("Description", { Kind: TypedConstantKind.Primitive } arg) => (string?)arg.Value,
+            _ => null
+        };
+    }
+
+    private AttributeData? GetRelevantAttribute(ISymbol current)
+    {
+        return current.GetAttributes()
+            .SingleOrDefault(a => _cmdrAttributeDefinition.Matches(a.AttributeClass));
+    }
+
+    private ArgumentModel GetArgumentModel(IParameterSymbol parameterSymbol)
+    {
+        var name = parameterSymbol.Name;
+        var type = parameterSymbol.Type.GetFullyQualifiedName();
+        var isFlag = type == "System.Boolean";
+        var description = GetDescription(parameterSymbol);
+        var isRequired = !parameterSymbol.HasExplicitDefaultValue;
+        var defaultValue =
+            parameterSymbol.HasExplicitDefaultValue
+            ? SourceValueUtils.SourceValue(parameterSymbol.ExplicitDefaultValue)
+            : null;
+
+        return new ArgumentModel(
+            name,
+            type,
+            isFlag,
+            IsRequired: isRequired,
+            DefaultValue: defaultValue,
+            Description: description);
     }
 }

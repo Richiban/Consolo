@@ -41,9 +41,9 @@ namespace Richiban.Cmdr
             _context.ReportDiagnostic(
                 Diagnostic.Create(
                     new DiagnosticDescriptor(
-                        "Cmdr0004",
+                        "Cmdr0000",
                         "Unhandled exception",
-                        $"There was an unhandled exception: {ex.Message}",
+                        $"There was an unhandled exception ({ex.GetType()}): {ex.Message}, {ex.StackTrace}",
                         "Cmdr",
                         DiagnosticSeverity.Error,
                         isEnabledByDefault: true),
