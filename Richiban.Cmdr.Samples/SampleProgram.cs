@@ -21,10 +21,13 @@ namespace Richiban.Cmdr.Samples
         }
         
         [Cmdr("add", Description = "Adds a remote to the repository")]
-        public static void AddRemote(string remoteName, Uri url, [Cmdr(Description = "Allow overwriting existing!")] bool allowClobber = false)
+        public static void AddRemote(
+            string remoteName,
+            Uri url,
+            [Cmdr("overwrite", Description = "Allow overwriting existing")] bool allowClobber = false)
         {
             Console.WriteLine(
-                $"Adding remote '{remoteName}' with URI: '{url}'");
+                $"Adding remote '{remoteName}' with URI: '{url}'. Allow clobber: {allowClobber}");
         }
     }
     

@@ -145,6 +145,12 @@ internal class MethodModelBuilder
     private ArgumentModel GetArgumentModel(IParameterSymbol parameterSymbol)
     {
         var name = parameterSymbol.Name;
+        
+        if (GetRelevantAttribute(parameterSymbol) is { } attr && GetConstructorArgument(attr) is { } arg)
+        {
+            name = arg;
+        }
+
         var type = parameterSymbol.Type.GetFullyQualifiedName();
         var isFlag = type == "System.Boolean";
         var description = GetDescription(parameterSymbol);
