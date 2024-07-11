@@ -21,14 +21,14 @@ namespace Richiban.Cmdr.Samples
         }
         
         [Cmdr("add", Description = "Adds a remote to the repository")]
-        public static void AddRemote(string remoteName, Uri url, [Cmdr(Description = "Allow overwriting existing")] bool allowClobber = false)
+        public static void AddRemote(string remoteName, Uri url, [Cmdr(Description = "Allow overwriting existing!")] bool allowClobber = false)
         {
             Console.WriteLine(
                 $"Adding remote '{remoteName}' with URI: '{url}'");
         }
     }
     
-    [Cmdr("branch")]
+    [Cmdr("branch", Description = "Branch management commands")]
     public class BranchActions
     {
         [Cmdr("")]
@@ -72,7 +72,7 @@ namespace Richiban.Cmdr.Samples
             Console.WriteLine("Welcome to the pseudo-Git application!");
         }
 
-        [Cmdr("test", Description = "This is a test command!")]
+        [Cmdr("test", Description = "This is a test command")]
         public static void Test(bool flag)
         {
             Console.WriteLine($"This is a test command: {flag}");

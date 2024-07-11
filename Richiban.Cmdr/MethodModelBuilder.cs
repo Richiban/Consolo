@@ -49,7 +49,7 @@ internal class MethodModelBuilder
 
         return new MethodModel(
             methodSymbol.Name,
-            providedName,
+            providedName.Name,
             parentNames,
             fullyQualifiedName,
             parameters,
@@ -77,28 +77,27 @@ internal class MethodModelBuilder
             {
                 return propValue;
             }
-            return "TODO: No prop";
         }
-
-        return "TODO: No attr";
+        
+        return null;
     }
 
-    private ImmutableList<string> GetCommandPath(ISymbol symbol)
+    private ImmutableList<CommandPathItem> GetCommandPath(ISymbol symbol)
     {
-        var path = ImmutableList.CreateBuilder<string>();
+        var path = ImmutableList.CreateBuilder<CommandPathItem>();
 
         while (symbol != null)
         {
             if (GetRelevantAttribute(symbol) is { } attr)
             {
-                if (GetConstructorArgument(attr) is { } arg)
-                {
-                    path.Add(arg);
-                }
-                else
-                {
-                    path.Add(symbol.Name);
-                }
+                var pathItemName = 
+                    GetConstructorArgument(attr) is { } arg
+                        ? arg
+                        : symbol.Name;
+
+                var description = GetAttributePropertySet(attr);
+
+                path.Add(new (pathItemName, description));
             }
 
             symbol = symbol.ContainingType;

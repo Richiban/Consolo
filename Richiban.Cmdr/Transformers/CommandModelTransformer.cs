@@ -19,7 +19,7 @@ namespace Richiban.Cmdr.Transformers
             {
                 Set(
                     root,
-                    new ListWalker<string>(methodModel.GroupCommandPath),
+                    new ListWalker<CommandPathItem>(methodModel.GroupCommandPath),
                     methodModel);
             }
 
@@ -28,10 +28,10 @@ namespace Richiban.Cmdr.Transformers
 
         private static void Set(
             CommandModel commandModel,
-            in ListWalker<string> pathWalker,
+            in ListWalker<CommandPathItem> pathWalker,
             MethodModel methodModel)
         {
-            var currentName = methodModel.ProvidedName ?? pathWalker.Current;
+            var currentName = methodModel.ProvidedName ?? pathWalker.Current.Name;
 
             if (pathWalker.AtEnd)
             {
@@ -57,7 +57,7 @@ namespace Richiban.Cmdr.Transformers
             var subTreeWasMatched = false;
 
             foreach (var tree in commandModel.SubCommands.Where(
-                t => t.CommandName == current))
+                t => t.CommandName == current.Name))
             {
                 subTreeWasMatched = true;
 
@@ -71,8 +71,8 @@ namespace Richiban.Cmdr.Transformers
 
             var newSubTree = new CommandModel.SubCommandModel
             {
-                CommandName = StringUtils.ToKebabCase(current),
-                Description = "Hmm"
+                CommandName = StringUtils.ToKebabCase(current.Name),
+                Description = current.Description,
             };
 
             Set(newSubTree, remaining, methodModel);
@@ -127,43 +127,5 @@ namespace Richiban.Cmdr.Transformers
                 next = Next;
             }
         }
-
-        // private CommandModel.NormalCommandModel Map(CommandModel tree)
-        // {
-        //     var commandText = StringUtils.ToKebabCase(tree.Method);
-        //
-        //     var subCommands = tree.SubTrees.Select(Map).ToImmutableArray();
-        //
-        //     var method = MapMethod(tree.MethodModel);
-        //
-        //     return new CommandModel.NormalCommandModel(commandText, method, subCommands);
-        // }
-        //
-        // private static CommandMethod? MapMethod(MethodModel? treeMethodModel)
-        // {
-        //     if (treeMethodModel == null)
-        //         return null;
-        //
-        //     var commandParameterModels = MapCommandParameterModels(treeMethodModel);
-        //
-        //     return new CommandMethod(
-        //         treeMethodModel.FullyQualifiedClassName,
-        //         treeMethodModel.MethodName,
-        //         commandParameterModels);
-        // }
-        //
-        // private static CommandParameterModel[] MapCommandParameterModels(
-        //     MethodModel treeMethodModel)
-        // {
-        //     CommandParameterModel transformParameter(ArgumentModel argumentModel) =>
-        //         argumentModel.IsFlag
-        //             ? new CommandParameterModel.CommandFlagModel(
-        //                 StringUtils.ToKebabCase(argumentModel.Name))
-        //             : new CommandParameterModel.CommandPositionalParameterModel(
-        //                 StringUtils.ToKebabCase(argumentModel.Name),
-        //                 argumentModel.FullyQualifiedTypeName);
-        //
-        //     return treeMethodModel.Arguments.Select(transformParameter).ToArray();
-        // }
     }
 }

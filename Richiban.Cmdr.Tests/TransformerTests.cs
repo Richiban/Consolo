@@ -21,7 +21,7 @@ namespace Richiban.Cmdr.Tests
                 new MethodModel(
                     methodName: "SomeFunction",
                     providedName: "shortcut",
-                    groupCommandPath: ["SomeParent"],
+                    groupCommandPath: [ new ("SomeParent", null)],
                     fullyQualifiedClassName: "SomeNamespace.SomeClass",
                     arguments: [],
                     description: null)
@@ -60,14 +60,14 @@ namespace Richiban.Cmdr.Tests
                 new MethodModel(
                     methodName: "ListRemotes",
                     providedName: "",
-                    groupCommandPath: ["remote"],
+                    groupCommandPath: [new ("remote", null)],
                     fullyQualifiedClassName: "GitNamespace.RemoteActions",
                     arguments: [],
                     description: null),
                 new MethodModel(
                     methodName: "CreateRemote",
                     providedName: "add",
-                    groupCommandPath: ["remote"],
+                    groupCommandPath: [new ("remote", null)],
                     fullyQualifiedClassName: "GitNamespace.RemoteActions",
                     arguments:
                     [
