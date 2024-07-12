@@ -25,14 +25,14 @@ namespace Richiban.Cmdr.Writers
                 | AttributeTargets.Parameter,
                 Inherited = false,
                 AllowMultiple = false)]
-            public class {{CmdrAttributeDefinition.LongName}} : Attribute
+            internal class {{CmdrAttributeDefinition.LongName}} : Attribute
             {
-                public {{CmdrAttributeDefinition.LongName}}(string name = null)
+                public {{CmdrAttributeDefinition.LongName}}(string? name = null)
                 {
                     Name = name;
                 }
 
-                public string Name { get; }
+                public string? Name { get; }
 
                 public string? Description { get; set; }
             }

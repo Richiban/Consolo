@@ -27,15 +27,9 @@ namespace Richiban.Cmdr
             var cmdrAttributeFileGenerator =
                 new CmdrAttributeFileGenerator();
 
-            var replFileGenerator = new ReplFileGenerator();
-
             postInitializationContext.AddSource(
                 cmdrAttributeFileGenerator.FileName,
                 cmdrAttributeFileGenerator.GetCode());
-
-            postInitializationContext.AddSource(
-                replFileGenerator.FileName,
-                replFileGenerator.GetCode());
         }
 
         public void Execute(GeneratorExecutionContext context)

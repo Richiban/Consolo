@@ -1,12 +1,17 @@
 ﻿using System;
 using Cmdr;
 
-[Cmdr("greet", Description = "A collection of commands for greeting people and pets")]
-class Greeter
+namespace Richiban.Cmdr.Samples;
+
+class Program
 {
-    [Cmdr("", Description = "Greets a person.")]
-    public static void GreetPerson([Cmdr(Description = "The name of the person you would like to greet")] string? name = "stranger")
+    /// <summary>
+    /// This is an XML comment
+    /// </summary>
+    /// <param name="name">The XML comment for the name</param>
+    [Cmdr("greet")]
+    public static void GreetPerson(string name)
     {
-        Console.WriteLine($"Hello, {name}!");
+        Console.WriteLine($"Hello, {name}");
     }
 }

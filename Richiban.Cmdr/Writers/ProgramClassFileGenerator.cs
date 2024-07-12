@@ -22,39 +22,16 @@ namespace Richiban.Cmdr.Writers
             _codeBuilder.AppendLines(
                 "using System;",
                 "using System.CommandLine;",
-                "using System.CommandLine.Invocation;",
-                "using Richiban.Cmdr;");
+                "using System.CommandLine.Invocation;");
 
             _codeBuilder.AppendLine();
 
-            _codeBuilder.AppendLines("public static class Program", "{");
+            WriteHandledCommandStatements(_commandModel);
+            WriteRootStatement(_commandModel);
 
-            using (_codeBuilder.Indent())
-            {
-                _codeBuilder.AppendLines("public static int Main(string[] args)", "{");
+            WriteRootCommandCall();
 
-                using (_codeBuilder.Indent())
-                {
-                    WriteHandledCommandStatements(_commandModel);
-                    WriteRootStatement(_commandModel);
-
-                    _codeBuilder.AppendLine();
-
-                    _codeBuilder.AppendLines("if (Repl.IsCall(args))", "{");
-
-                    WriteReplCall();
-
-                    _codeBuilder.AppendLine("}", "else", "{");
-
-                    WriteRootCommandCall();
-
-                    _codeBuilder.AppendLine("}");
-                }
-
-                _codeBuilder.AppendLine("}");
-            }
-
-            _codeBuilder.AppendLine("}");
+            _codeBuilder.AppendLine();
 
             return _codeBuilder.ToString();
         }
@@ -70,18 +47,15 @@ namespace Richiban.Cmdr.Writers
 
                 _codeBuilder.AppendLine("{");
 
-                using (_codeBuilder.Indent())
+                using (var expr = _codeBuilder.OpenExpressionList())
                 {
-                    using (var expr = _codeBuilder.OpenExpressionList())
+                    foreach (var subCommand in command.SubCommands)
                     {
-                        foreach (var subCommand in command.SubCommands)
-                        {
-                            WriteCommandExpression(subCommand, expr);
-                            expr.Next();
-                        }
-
-                        WriteParameterExpressions(command, expr);
+                        WriteCommandExpression(subCommand, expr);
+                        expr.Next();
                     }
+
+                    WriteParameterExpressions(command, expr);
                 }
 
                 _codeBuilder.AppendLine("};");
@@ -94,22 +68,8 @@ namespace Richiban.Cmdr.Writers
 
         private void WriteRootCommandCall()
         {
-            using (_codeBuilder.Indent())
-            {
-                _codeBuilder.AppendLine("return rootCommand.Invoke(args);");
-            }
-        }
-
-        private void WriteReplCall()
-        {
-            using (_codeBuilder.Indent())
-            {
-                _codeBuilder.AppendLine(
-                    "Repl.EnterNewLoop(rootCommand, \"Select a command\");");
-
-                _codeBuilder.AppendLine();
-                _codeBuilder.AppendLine("return 0;");
-            }
+            _codeBuilder.AppendLine();
+            _codeBuilder.AppendLine("return rootCommand.Invoke(args);");
         }
 
         private void WriteCommandExpression(
@@ -131,17 +91,15 @@ namespace Richiban.Cmdr.Writers
             _codeBuilder.AppendLine("var rootCommand = new RootCommand()");
             _codeBuilder.AppendLine("{");
 
-            using (_codeBuilder.Indent())
+            using (var expr = _codeBuilder.OpenExpressionList())
             {
-                using (var expr = _codeBuilder.OpenExpressionList())
+                foreach (var subCommand in rootCommandModel.SubCommands)
                 {
-                    foreach (var subCommand in rootCommandModel.SubCommands)
-                    {
-                        WriteCommandExpression(subCommand, expr);
-                        expr.Next();
-                    }
+                    WriteCommandExpression(subCommand, expr);
+                    expr.Next();
                 }
             }
+            
 
             _codeBuilder.AppendLine("};");
 
@@ -159,15 +117,12 @@ namespace Richiban.Cmdr.Writers
             expr.AppendLine($"new Command(\"{commandGroupModel.CommandName}\", description: \"{commandGroupModel.Description}\")");
             expr.AppendLine("{");
 
-            using (expr.Indent())
+            using (var expr2 = _codeBuilder.OpenExpressionList())
             {
-                using (var expr2 = _codeBuilder.OpenExpressionList())
+                foreach (var commandModel in commandGroupModel.SubCommands)
                 {
-                    foreach (var commandModel in commandGroupModel.SubCommands)
-                    {
-                        WriteCommandExpression(commandModel, expr2);
-                        expr2.Next();
-                    }
+                    WriteCommandExpression(commandModel, expr2);
+                    expr2.Next();
                 }
             }
 
@@ -224,28 +179,28 @@ namespace Richiban.Cmdr.Writers
                 CommandParameterModel.CommandPositionalParameterModel argument => argument.IsRequired
                                         ? $"""
                             new Argument<{argument.FullyQualifiedTypeName}>(
-                                name: "{argument.Name}",
-                                description: "{argument.Description}")
+                                    name: "{argument.Name}",
+                                    description: "{argument.Description}")
                             """
                                         : $"""
                             new Argument<{argument.FullyQualifiedTypeName}>(
-                                name: "{argument.Name}",
-                                description: "{argument.Description}",
-                                getDefaultValue: () => {argument.DefaultValue ?? "default"})
+                                    name: "{argument.Name}",
+                                    description: "{argument.Description}",
+                                    getDefaultValue: () => {argument.DefaultValue ?? "default"})
                             """,
-                CommandParameterModel.CommandFlagModel option => 
+                CommandParameterModel.CommandFlagModel option =>
                     $$"""
                     new Option(new [] {"-{{option.Name[index: 0]}}", "--{{option.Name}}"}, description: "{{option.Description}}")
                     """,
                 _ => throw new UnknownCommandParameterModelException(commandParameterModel),
             };
 
-        private class UnknownCommandParameterModelException : Exception 
+        private class UnknownCommandParameterModelException : Exception
         {
-            public UnknownCommandParameterModelException(CommandParameterModel commandParameterModel) 
+            public UnknownCommandParameterModelException(CommandParameterModel commandParameterModel)
                 : base(GetMessage(commandParameterModel)) { }
 
-            private static string GetMessage(CommandParameterModel commandParameterModel) 
+            private static string GetMessage(CommandParameterModel commandParameterModel)
             {
                 return $"Unknown {nameof(CommandParameterModel)}: {commandParameterModel}";
             }

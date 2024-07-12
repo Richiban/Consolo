@@ -5,6 +5,7 @@
         <RootNamespace>Richiban.Cmdr.Samples</RootNamespace>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
 
     <PropertyGroup>

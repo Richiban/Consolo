@@ -88,16 +88,26 @@ namespace Richiban.Cmdr.Writers
         public class CommaSeparatedExpressionSyntax : IDisposable
         {
             private readonly CodeBuilder _codeBuilder;
+            private readonly IDisposable _indenter;
             private bool _anyWritten;
             private bool _doneOne;
+            private bool _isDisposed;
 
             public CommaSeparatedExpressionSyntax(CodeBuilder codeBuilder)
             {
                 _codeBuilder = codeBuilder;
+                _indenter = codeBuilder.Indent();
             }
 
             public void Dispose()
             {
+                if (_isDisposed)
+                {
+                    return;
+                }
+                
+                _indenter.Dispose();
+                _isDisposed = true;
             }
 
             public void Append(string expression)
