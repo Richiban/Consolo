@@ -1,469 +1,202 @@
-# Introduction
+Cmdr
+====
 
-This project is a command line argument parser for .NET. Its purpose is to be incredibly easy to use.
+Cmdr is a source generator designed to work in conjunction with the [`System.CommandLine`](https://www.nuget.org/packages/System.CommandLine) library to make it super easy to define command line interfaces in C#.
 
-Most libraries on the subject are just for parsing the arguments to your executable. Something like
+# Background
 
-```csharp
-var options = SomeLibrary.Parse<MyOptions>();
-```
+The [`System.CommandLine`](https://www.nuget.org/packages/System.CommandLine) library has many things going for it; once you've defined your commands you get a lot of functionality for free, such as help text, tab completion, and argument parsing. However, defining commands can be a bit verbose, especially if you have a lot of them. Cmdr aims to make defining commands as easy as possible by generating the necessary code for you, based simply on your defining methods and decorating them with the `Cmdr` attribute. `Cmdr` will then take care of the rest!
 
-The problem with this is twofold: first, you must then write the branching logic yourself to execute whatever logic you
-want based on what was set on your options object and second, this has no support for _verbs_ at the command line (more
-on that later).
+# Installation
 
-My goal with Richiban.Cmdr was to create a library that felt--as much as possible--as if you could simple call your C#
-methods directly from the command line. For example, if I have a method called `ProcessItems` that takes two arguments:
-an `int batchSize` and a `bool waitBetweenBatches` then I want to write absolutely as little code as I possibly can
-apart from:
-
-```csharp
-public class Program
-{
-    public static void Main(string[] args)
-    {
-        // ... Some magic parsing that I don't care about!
-    }
-
-    public void ProcessItems(int batchSize, bool waitBetweenBatches = false)
-    {
-        // ... Implementation goes here
-    }
-}
-```
-
-I should then be able to call it like this:
-
-```batchfile
-myApp.exe 1000 /waitBetweenBatches
-```
-
-Well, I feel that this has been achieved with Richiban.Cmdr; this example would be implemented like this:
-
-```csharp
-using Richiban.Cmdr;
-
-public class Program
-{
-    public static void Main(string[] args) => CommandLine.Execute(args);
-
-    [CommandLine]
-    public void ProcessItems(int batchSize, bool waitBetweenBatches = false)
-    {
-        // ... Implementation goes here
-    }
-}
-```
-
-which can, indeed, be called like this:
-
-```batchfile
-myApp.exe 1000 /waitBetweenBatches
-```
-
-As you can, once I've installed the Richiban.Cmdr NuGet package I've had to write almost no code to make the method
-callable from the command line.
-
-Multiple methods can be tagged. All that matters is that the command line arguments have unique names‡.
-
-```csharp
-public class Program
-{
-    public static void Main(string[] args) => CommandLine.Execute(args);
-
-    [CommandLine]
-    public void ProcessItems(int batchSize, bool waitBetweenBatches = false)
-    {
-        // ... Implementation goes here
-    }
-
-    [CommandLine]
-    public void WriteToLogFile(string contents)
-    {
-        // ... Implementation goes here
-    }
-}
-```
-
-> ‡For more complicated scenarios (i.e. when you have a lot of methods) see the section on _verbs_ below.
-
-## What are some of the features of Richiban.Cmdr?
-
-### It supports Unix-style, Windows-style and Powershell-style argument passing
-
-Unix-style looks like this:
-
-```sh
-someApp --paramA=valueA --flag1
-```
-
-Windows-style looks like this:
-
-```batchfile
-someApp.exe /paramA:valueA /flag1
-```
-
-Powershell-style looks like this:
-
-```powershell
-someApp -paramA valueA -flag1
-```
-
-These are all supported out of the box†, and can even be mixed and matched (although this is not recommended). For
-example, this is perfectly acceptable:
-
-```
-someApp.exe /paramA:valueA --flag1 -paramB:valueB
-```
-
-> †Note: On Unix systems (or, more accurately, systems where `/` is the path separator) the Windows-style parameter name parsing is disabled; this is due to the ambiguity with path
-> arguments
-
-### The order of supplied arguments doesn't matter (if names are given)
-
-```sh
-myApp --paramA=valueA --paramB=valueB
-```
-
-and
-
-```sh
-myApp --paramB=valueB --paramA=valueA
-```
-
-are considered equal, because the names have been given; i.e. the order is not important because it's unambiguous. Note
-that if you don't give the names:
-
-```sh
-myApp valueB valueA
-```
-
-then it still works, but the order is now important.
-
-### Verbs are supported
-
-We're getting into more advanced terratory now. Let's look at an example from the command line reference for Git:
-
-```sh
-git remote add origin http://example.com/project.git
-```
-
-In the example above, the tokens `remote` and `add` are _verbs_, and `origin` and `http://example.com/project.git` are
-the arguments. Richiban.Cmdr supports verbs! Since, technically, only the last of these tokens is really a verb we call
-them _routes_. This example with two route parts and two arguments would look like this:
-
-```csharp
-[CommandLine, Route("remote", "add")]
-public void AddRemote(string remoteName, Uri remoteUri)
-{
-    // ... Implementation goes here
-}
-```
-
-> Note that here we have an argument of type `Uri`. See [Argument types are converted].
-
-For the purposes of code organisation and not repeating oneself, you can also put route attributes on the containing
-class. So, instead of having to write:
-
-```csharp
-class MyRemoteActions
-{
-	[CommandLine, Route("remote", "add")]
-	public void AddRemote(...) 
-	{ ... }
-
-	[CommandLine, Route("remote", "remove")]
-	public void RemoveRemote(...)
-	{ ... }
-
-	[CommandLine, Route("remote", "rename")]
-	public void RemoveRemote(...)
-	{ ... }
-}
-```
-
-you can instead write:
-
-```csharp
-[Route("remote")]
-class MyRemoteActions
-{
-	[CommandLine, Route("add")]
-	public void AddRemote(...)
-	{ ... }
-
-	[CommandLine, Route("remove")]
-	public void RemoveRemote(...)
-	{ ... }
-
-	[CommandLine, Route("rename")]
-	public void RenameRemote(...) =>
-	{ ... }
-}
-```
-
-Note also that you can infer the route name by using the route attribute bare, like so:
-
-```csharp
-[CommandLine, Route]
-public void MyAction()
-{
-	// This method will respond to the "MyAction" route (case-insensitive)
-}
-```
-
-### Argument types are converted
-
-Note that arguments do not have to be strings.
-
-The rule is that arguments must either:
-
-* Be of type `string`
-* implement `IConvertible` (the conversion is done by `Convert.ChangeType(...)`)
-* have a constructor that takes a `string` or `string[]` as argument
-* be of an Enum type (then the conversion is done by `Enum.Parse(...)`)
-
-Some example types that work out of the box:
-
-* string
-* bool
-* int
-* Uri
-* FileInfo and many more
-
-### Compatible with dependency injection frameworks
-
-It would be pretty ugly if your methods were nicely reachable from the command line, but they all looked like this:
-
-```csharp
-public class SomeClass
-{
-    [CommandLine, Route("method1")]
-    public void Method1(string argument)
-    {
-        var serviceA = ObjectContainer.Instance.Resolve<ServiceA>();
-        var serviceB = ObjectContainer.Instance.Resolve<ServiceB>();
-        var serviceC = ObjectContainer.Instance.Resolve<ServiceC>();
-
-        // ... Implementation goes here
-    }
-}
-```
-
-Wouldn't it be much better if proper dependency injection like this was possible instead?
-
-```csharp
-public class SomeClass
-{
-    private readonly ServiceA _serviceA;
-    private readonly ServiceB _serviceB;
-    private readonly ServiceC _serviceC;
-
-    public SomeClass(ServiceA serviceA, ServiceB serviceB, ServiceC serviceC) =>
-        (_serviceA, _serviceB, _serviceC) = (serviceA, serviceB, serviceC);
-
-    [CommandLine, Route("method1")]
-    public void Method1(string argument)
-    {
-        // ... Implementation goes here
-    }
-}
-```
-
-Well, it is easy with Richiban.Cmdr! First, we note that there is an overload of `CommandLine.Execute` that takes
-a `CommandLineConfiguration` object. Let's look at the
-`CommandLineConfiguration` type:
-
-```csharp
-    public class CommandLineConfiguration
-    {
-        public Action<string> HelpOutput { get; set; }
-
-        public Func<Type, object> ObjectFactory { get; set; }
-
-        public Assembly AssemblyToScan { get; set; }
-
-        public static CommandLineConfiguration GetDefault() => ...
-    }
-```
-
-Of interest is the `ObjectFactory` property. It's a `Func<Type, object>`, which is the most generic possible definition
-of a factory (it's a function that takes a `Type` as argument and returns an `object`). The `ObjectFactory` property has
-a setter, so we can provide whatever implementation we want. Since it's a `Func` we don't even have to implement an
-interface, we can simply configure like this:
-
-```csharp
-public static void Main(string[] args)
-{
-    // Instantiate our favourite DI container. CastleWindsor is only an example; it could be anything.
-    var container = new WindsorContainer();
-
-    var config = CommandLineConfiguration.GetDefault();
-    config.ObjectFactory = container.Resolve;
-
-    CommandLine.Execute(config, args);
-}
-```
-
-### Automatic help
-
-One of Richiban.Cmdr's best features is its ability to auto generate help for the users of your command line app.
-
-For example, let's assume we have the following application:
-
-```csharp
-[CommandLine, Route("method1")]
-public void Method1(string someArgument, bool someFlag = false)
-{
-    //...
-}
-```
-
-But, when it comes time to use this app, our user can't quite remember the order of arguments or their exact names.
-Using the auto-help feature, they can enter:
+To get working with `Cmdr`, simply install the `Cmdr` and `System.CommandLine` packages in your console application:
 
 ```bash
-> myapp method1 -?
+dotnet add package System.CommandLine
+dotnet add package Cmdr
 ```
 
-or
+Or, alternatively, add the following to your `csproj` file:
+
+```xml
+    <ItemGroup>
+        <PackageReference Include="Cmdr"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="System.CommandLine"
+                          Version="2.0.0-beta1.21308.1" />
+    </ItemGroup>
+```
+
+> Note that to make use of Cmdr you must not have a `Main` method or top-level statements in your application. This is because Cmdr will generate these for you.
+
+If you want your XML comments to flow through to the generated code, you will need to add the following to your `csproj` file:
+
+```xml
+    <PropertyGroup>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+```
+
+# A Hello World example
+
+What you write:
+
+```cs
+using System;
+using Cmdr;
+
+namespace Richiban.Cmdr.Samples;
+
+class Program
+{
+    /// <summary>
+    /// A function that can greet a person by name.
+    /// 
+    /// Use it to say Hello!
+    /// </summary>
+    /// <param name="name">The name of the person you would like to greet</param>
+    [Cmdr("greet")]
+    public static void GreetPerson(string name)
+    {
+        Console.WriteLine($"Hello, {name}");
+    }
+}
+```
+
+What gets generated:
+
+```cs
+using System;
+using System.CommandLine;
+using System.CommandLine.Invocation;
+
+var greetPersonCommand = new Command("greet", description: "A function that can greet a person by name.\n    \n    Use it to say Hello!")
+{
+    new Argument<System.String>(
+        name: "name",
+        description: "The name of the person you would like to greet")
+};
+
+greetPersonCommand.Handler = CommandHandler.Create<System.String>(Richiban.Cmdr.Samples.Program.GreetPerson);
+
+var rootCommand = new RootCommand()
+{
+    greetPersonCommand
+};
+
+return rootCommand.Invoke(args);
+```
+
+We can then call our application with the `greet` command:
+
+```bash
+> sample-app greet Alex
+Hello, Alex!
+```
+
+Note that we also get the auto-generated help from System.CommandLine, with the XML comments for the method and its parameters flowing through to the generated code:
 
 ```
-> myapp help method1
+> sample-app greet --help
+greet
+  A function that can greet a person by name.
+
+      Use it to say Hello!
+
+Usage:
+  Richiban.Cmdr.Samples [options] greet <name>
+
+Arguments:
+  <name>  The name of the person you would like to greet
+
+Options:
+  -?, -h, --help  Show help and usage information
 ```
 
-and they will see the following:
+# More complex examples
 
+You can define commands with multiple arguments, options, and subcommands. Here's an example of a command that uses an optional parameter:
+
+```cs
+using System;
+using Cmdr;
+
+namespace Richiban.Cmdr.Samples;
+
+class Program
+{
+    /// <summary>
+    /// A function that can greet a person by name, with an optional title.
+    /// 
+    /// Use it to say Hello!
+    /// </summary>
+    /// <param name="name">The name of the person you would like to greet</param>
+    /// <param name="title">The title of the person you would like to greet</param>
+    [Cmdr("greet")]
+    public static void GreetPersonWithTitle(string name, string title = "Mr")
+    {
+        Console.WriteLine($"Hello, {title} {name}");
+    }
+}
 ```
-Help for method1:
-    myapp method1 <someArgument> [--someFlag]
+
+Let's see the help that we get for this command:
+
+```bash
+> sample-app greet --help
+greet
+  A function that can greet a person by name, with an optional title.
+
+      Use it to say Hello!
+
+Usage:
+  Richiban.Cmdr.Samples [options] greet <name> [<title>]
+
+Arguments:
+  <name>   The name of the person you would like to greet
+  <title>  The title of the person you would like to greet [default: Mr]
+
+Options:
+  -?, -h, --help  Show help and usage information
 ```
 
-> Note the `--` prefix to `someFlag`. Since there isn't a 'correct' way of writing flags or named arguments in Richiban.Cmdr, a best guess is made when writing auto-help. Currently this is relies on the path separator for your system, so on Windows this would appear as: `myapp method1 <someArgument> [/someFlag]`.
+We can see how it looks when we make use of "options" or "flags" in our command:
 
-If the user calls `help` and the arguments they have supplied are ambiguous then auto-help will be displayed for all
-routes that even partially match what they did supply.
-
-#### XML comments from your methods and classes will appear in auto-help
-
-Auto help can even pick out your XML comments! (Don't forget to enable the export of your XML comments in your project
-file).
-
-Let's say we have the following method:
-
-```csharp
+```cs
 /// <summary>
-/// This is a comment for my method.
+/// A function that greets a person with the appropriate formality
 /// </summary>
-/// <param name="param1">The first parameter</param>
-/// <param name="param2">The second parameter</param>
-/// <param name="someFlag">A flag that does something interesting</param>
-[CommandLine, Route("method")]
-public void MyMethod(string param1, FileInfo param2, [ShortForm('f')] bool someFlag = false)
+/// <param name="name">The name of the person you would like to greet</param>
+/// <param name="formal">"true" means the person will be greeted very formally</param>
+[Cmdr("greet")]
+public static void GreetPersonWithTitle(string name, bool formal)
 {
-	//...
+    if (formal)
+    {
+        Console.WriteLine($"Good day to you, {name}!");
+    }
+    else
+    {
+        Console.WriteLine($"Hey, {name}!");
+    }
 }
 ```
 
-This method will then appear in help as follows:
-
 ```
-Richiban.Cmdr.Samples.exe method <param1> <param2> [-f|--someFlag]
-    This is a comment for my method.
+greet
+  A function that greets a person with the appropriate formality
 
-    Parameters:
-        <param1> The first parameter
+Usage:
+  Richiban.Cmdr.Samples [options] greet <name>
 
-        <param2> The second parameter. Type: System.IO.FileInfo
+Arguments:
+  <name>  The name of the person you would like to greet
 
-        [-f|--someFlag] A flag that does something interesting
+Options:
+  -f, --formal    "true" means the person will be greeted very formally
+  -?, -h, --help  Show help and usage information
 ```
-
-Note that because the type for parameter `param2` is 'interesting' (i.e. it isn't a `string` or `bool`)
-auto help has automatically noted the type here in the comments.
-
-### Alternative names and short forms
-
-Parameters on the command line, by default, get the name they have in the method definition. If you would like to
-override this, use the `ParameterName` attribute. This attribute has a convenient `IncludeOriginal` property that you
-can set if you want to include the original name in addition to the one provided.
-
-```csharp
-[CommandLine]
-public void MyMethod([ParameterName("my-param")] string param1)
-{
-	//...
-}
-```
-
-A related (but slightly deeper) topic is that of _short forms_. A short form looks like a single-character parameter
-name but it behaves slightly differently:
-
-```csharp
-[CommandLine]
-public void MyMethod(
-	[ShortForm('a')] bool paramA = false,
-	[ShortForm('b')] bool paramB = false,
-	[ShortForm('c')] bool paramC = false
-)
-{
-	//...
-}
-```
-
-Firstly, a shortform does not replace the original parameter name; it is usable in addition (to flip this behaviour set
-the `DisallowLongForm` property on the `ShortForm` attribute in question).
-
-Secondly, shortforms can be _collapsed_. So, as well as providing them as if they were just single-character names:
-
-```bash
-> myapp -a -b -c
-```
-
-you can also supply them in collapsed form:
-
-```bash
-> myapp -abc
-```
-
-This works even with Windows- (and Powershell-) style parameters:
-
-```bash
-> myapp /abc
-```
-
-Note that, since short forms are additional names by default, you will see that in the auto-help for your application:
-
-```bash
-myapp [-a|--paramA] [-b|--paramB] [-c|--paramC] 
-```
-
-> NB A short form can only be used on a _flag_ parameter, i.e. one of `boolean` type.
-
-### Array and `params` array parameters
-
-Parameters can also be array types, and can also be marked with the `params` keyword.
-
-```csharp
-public void MyAction(string firstParam, string secondParam, params string[] everythingElse)
-{
-	//...
-}
-```
-
-For any array parameter you can specify a name more than once at the command line:
-
-```bash
-> myapp 1 2 -everythingElse 3 -everythingElse 3 -everythingElse 3
-```
-
-If using `params` then this parameter will hoover up all remaining (unnamed) arguments:
-
-```bash
-> myapp 1 2 3 4 5 6 # firstParam = 1, secondParam = 2, everythingElse = [3, 4, 5, 6, 7]
-```
-
--------
-That's about it for the readme. Please feel free to read the issues in this project to see what's coming further down
-the road or, if you dream up more features for Richiban.Cmdr, post an issue of your own. I also welcome (expected) PRs
-so contact me before starting any work.

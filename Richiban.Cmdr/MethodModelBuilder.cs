@@ -72,7 +72,7 @@ internal class MethodModelBuilder
         var paramComments = memberElement.Elements("param")
             .ToDictionary(
                 el => el.Attribute("name")?.Value ?? "",
-                el => el.Value);
+                el => SourceValueUtils.EscapeCSharpString(el.Value));
 
         summary = SourceValueUtils.EscapeCSharpString(summary?.Trim());
 
