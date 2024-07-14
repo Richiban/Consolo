@@ -1,9 +1,10 @@
-﻿namespace Richiban.Cmdr.Models;
+﻿namespace Richiban.Cmdr;
 
-internal record ArgumentModel(
+internal record ParameterModel(
     string Name,
     string FullyQualifiedTypeName,
     bool IsFlag,
     bool IsRequired,
-    string? DefaultValue,
-    string? Description);
+    Option<string> DefaultValue,
+    Option<string> Description,
+    Option<string> ShortForm);

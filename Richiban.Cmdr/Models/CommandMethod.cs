@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Richiban.Cmdr.Models;
+namespace Richiban.Cmdr;
 
 internal record CommandMethod(
         string FullyQualifiedClassName,

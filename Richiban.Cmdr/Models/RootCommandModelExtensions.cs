@@ -1,21 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Richiban.Cmdr.Models
-{
-    internal static class RootCommandModelExtensions
-    {
-        public static IEnumerable<CommandModel.SubCommandModel>
-            GetDescendentCommands(this CommandModel root)
-        {
-            foreach (var subCommand in root.SubCommands)
-            {
-                yield return subCommand;
+namespace Richiban.Cmdr;
 
-                foreach (var subCommandSubCommand in GetDescendentCommands(subCommand))
-                {
-                    yield return (subCommandSubCommand);
-                }
+internal static class RootCommandModelExtensions
+{
+    public static IEnumerable<CommandModel.SubCommandModel>
+        GetDescendentCommands(this CommandModel root)
+    {
+        foreach (var subCommand in root.SubCommands)
+        {
+            yield return subCommand;
+
+            foreach (var subCommandSubCommand in GetDescendentCommands(subCommand))
+            {
+                yield return (subCommandSubCommand);
             }
         }
     }

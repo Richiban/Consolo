@@ -2,78 +2,77 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
-namespace Richiban.Cmdr.Utils
+namespace Richiban.Cmdr;
+internal static class EnumerableExtensions
 {
-    internal static class EnumerableExtensions
+    public static string
+        StringJoin<T>(this IEnumerable<T> source, string separator) =>
+        string.Join(separator, source);
+
+    public static ResultWithDiagnostics<IReadOnlyCollection<TResult>>
+         CollectResults<TResult>(
+            this IEnumerable<ResultWithDiagnostics<Option<TResult>>> source)
+            where TResult : class
     {
-        public static IEnumerable<TResult> SelectNotNull<T, TResult>(
-            this IEnumerable<T> source,
-            Func<T, TResult?> selector)
-        {
-            foreach (var item in source)
-            {
-                var chosen = selector(item);
+        var results = ImmutableArray.CreateBuilder<TResult>();
+        var diagnostics = ImmutableArray.CreateBuilder<DiagnosticModel>();
 
-                if (chosen is not null)
-                {
-                    yield return chosen;
-                }
+        foreach (var result in source)
+        {
+            if (result.Result.IsSome(out var value))
+            {
+                results.Add(value);
             }
+
+            diagnostics.AddRange(result.Diagnostics);
         }
 
-        public static string
-            StringJoin<T>(this IEnumerable<T> source, string separator) =>
-            string.Join(separator, source);
+        return new(results.ToImmutable(), diagnostics.ToImmutable());
+    }
 
-        public static (ImmutableArray<TSuccess> Successes, ImmutableArray<TError> Failures
-            ) SeparateResults<TSuccess, TError>(
-                this IEnumerable<Result<TError, TSuccess>> source)
+    public static ResultWithDiagnostics<IReadOnlyCollection<TResult>>
+         CollectResults<TResult>(
+            this IEnumerable<ResultWithDiagnostics<TResult>> source)
+            where TResult : class
+    {
+        var results = ImmutableArray.CreateBuilder<TResult>();
+        var diagnostics = ImmutableArray.CreateBuilder<DiagnosticModel>();
+
+        foreach (var result in source)
         {
-            var successes = ImmutableArray.CreateBuilder<TSuccess>();
-            var failures = ImmutableArray.CreateBuilder<TError>();
+            results.Add(result.Result);
 
-            foreach (var item in source)
-            {
-                switch (item)
-                {
-                    case Result<TError, TSuccess>.Ok(var success):
-                        successes.Add(success);
-
-                        break;
-
-                    case Result<TError, TSuccess>.Error(var failure):
-                        failures.Add(failure);
-
-                        break;
-                }
-            }
-
-            return (successes.ToImmutable(), failures.ToImmutable());
+            diagnostics.AddRange(result.Diagnostics);
         }
 
-        public static IEnumerable<T> Truncate<T>(
-            this IReadOnlyCollection<T> source,
-            int count)
+        return new(results.ToImmutable(), diagnostics.ToImmutable());
+    }
+
+    public static IEnumerable<T> Truncate<T>(
+        this IReadOnlyCollection<T> source,
+        int count)
+    {
+        var toTake = count switch
         {
-            var toTake = count switch
-            {
-                >= 0 => count,
-                < 0 => source.Count + count
-            };
+            >= 0 => count,
+            < 0 => source.Count + count
+        };
 
-            if (toTake == 0)
-            {
-                yield break;
-            }
+        if (toTake == 0)
+        {
+            yield break;
+        }
 
-            using var e = source.GetEnumerator();
+        using var e = source.GetEnumerator();
 
-            while (toTake-- > 0)
-            {
-                e.MoveNext();
+        while (toTake-- > 0)
+        {
+            e.MoveNext();
 
-                yield return e.Current;
-            }
+            yield return e.Current;
         }
     }
+
+    public static string StringJoin(this IEnumerable<string> source, string separator) =>
+        string.Join(separator, source);
 }

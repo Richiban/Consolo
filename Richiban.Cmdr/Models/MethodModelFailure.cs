@@ -1,17 +1,6 @@
 ﻿using System;
 using Microsoft.CodeAnalysis;
 
-namespace Richiban.Cmdr.Models
-{
-    internal class MethodModelFailure
-    {
-        public MethodModelFailure(string message, Location? location)
-        {
-            Message = message;
-            Location = location;
-        }
+namespace Richiban.Cmdr;
 
-        public string Message { get; }
-        public Location? Location { get; }
-    }
-}
+record DiagnosticModel(string Message, Location? Location, DiagnosticSeverity Severity);

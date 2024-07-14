@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Richiban.Cmdr;
 
@@ -13,13 +14,8 @@ public static class SourceValueUtils
             _ => value.ToString() ?? "null"
         };
 
-    internal static string? EscapeCSharpString(string? str)
+    internal static string EscapeCSharpString(string str)
     {
-        if (str == null)
-        {
-            return null;
-        }
-
         var sb = new StringBuilder();
 
         foreach (char c in str)

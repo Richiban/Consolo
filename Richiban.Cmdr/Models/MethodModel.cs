@@ -1,33 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 
-namespace Richiban.Cmdr.Models;
+namespace Richiban.Cmdr;
 
-internal class MethodModel
+record MethodModel
 {
-    public MethodModel(
-        string methodName,
-        string? providedName,
-        IReadOnlyList<CommandPathItem> groupCommandPath,
-        string fullyQualifiedClassName,
-        IReadOnlyCollection<ArgumentModel> arguments,
-        string? description)
-    {
-        MethodName = methodName;
-        ProvidedName = providedName;
-        GroupCommandPath = groupCommandPath;
-        Arguments = arguments;
-        FullyQualifiedClassName = fullyQualifiedClassName;
-        Description = description;
-    }
-
-    public string FullyQualifiedClassName { get; }
-    public string? Description { get; }
-    public string MethodName { get; }
-    public string? ProvidedName { get; }
-    public IReadOnlyList<CommandPathItem> GroupCommandPath { get; }
-    public IReadOnlyCollection<ArgumentModel> Arguments { get; }
+    public string FullyQualifiedClassName { get; init; }
+    public Option<string> Description { get; init; }
+    public string MethodName { get; init; }
+    public Option<string> ProvidedName { get; init; }
+    public IReadOnlyList<CommandPathItem> GroupCommandPath { get; init; }
+    public IReadOnlyCollection<ParameterModel> Parameters { get; init; }
 }
-
-public record CommandPathItem(string Name, string? Description);

@@ -1,6 +1,6 @@
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using Richiban.Cmdr.Models;
 
 namespace Richiban.Cmdr;
 
@@ -17,18 +17,14 @@ public static class AttributeUsageUtils
         }
 
         var names = attributeData.ConstructorArguments
-            .Select(arg => arg.Value?.ToString()!)
-            .Where(arg => arg != null)
-            .ToArray();
-
-        var description = attributeData.NamedArguments
-            .FirstOrDefault(kvp => kvp.Key == "Description")
-            .Value.Value?.ToString();
+            .SelectMany(arg => arg.Values.Select(val => val.Value?.ToString())
+            .Where(val => val is not null))
+            .ToImmutableArray();
 
         var shortForm = attributeData.NamedArguments
             .FirstOrDefault(kvp => kvp.Key == "ShortForm")
             .Value.Value?.ToString();
 
-        return new CmdrAttributeUsage(names, description, shortForm);
+        return new CmdrAttributeUsage(names, shortForm);
     }
 }

@@ -2,7 +2,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Richiban.Cmdr.Models;
+namespace Richiban.Cmdr;
 
 internal static class CmdrAttributeDefinition
 {

@@ -1,10 +1,9 @@
 ﻿using System;
 
-namespace Richiban.Cmdr.Writers
+namespace Richiban.Cmdr;
+
+abstract class CodeFileGenerator
 {
-    internal abstract class CodeFileGenerator
-    {
-        public abstract string FileName { get; }
-        public abstract string GetCode();
-    }
+    public abstract string FileName { get; }
+    public abstract string GetCode();
 }

@@ -3,84 +3,63 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using Richiban.Cmdr.Models;
-using Richiban.Cmdr.Utils;
-using System.Xml.Linq;
 
 namespace Richiban.Cmdr;
 
 internal class MethodModelBuilder
 {
-    public IEnumerable<Result<MethodModelFailure, MethodModel>> BuildFrom(
-        IEnumerable<IMethodSymbol?> qualifyingMethods) =>
-        qualifyingMethods.SelectNotNull(TryMapMethod);
+    public ResultWithDiagnostics<IReadOnlyCollection<MethodModel>> BuildFrom(
+        IEnumerable<IMethodSymbol?> qualifyingMethods) => qualifyingMethods
+            .Select(TryMapMethod)
+            .CollectResults();
 
-    private Result<MethodModelFailure, MethodModel> TryMapMethod(
+    private ResultWithDiagnostics<Option<MethodModel>> TryMapMethod(
         IMethodSymbol? methodSymbol)
     {
         if (methodSymbol is null)
         {
-            return new MethodModelFailure("Method not found", location: null);
+            return ResultWithDiagnostics.DiagnosticOnly<MethodModel>(
+                new DiagnosticModel("Method not found",
+                Location: null,
+                Severity: DiagnosticSeverity.Error));
         }
 
         if (!methodSymbol.IsStatic)
         {
-            return new MethodModelFailure(
-                $"Method {methodSymbol} must be static in order to use the {CmdrAttributeDefinition.ShortName} attribute.",
-                methodSymbol.Locations.FirstOrDefault());
+            return ResultWithDiagnostics.DiagnosticOnly<MethodModel>(
+                new DiagnosticModel(
+                    $"Method {methodSymbol} must be static in order to use the {CmdrAttributeDefinition.ShortName} attribute.",
+                    methodSymbol.Locations.FirstOrDefault(),
+                    Severity: DiagnosticSeverity.Error));
         }
 
-        var xmlComments = GetXmlComments(methodSymbol);
+        var xmlComments = XmlCommentModelBuilder.GetXmlComments(methodSymbol);
 
-        var parameters = methodSymbol.Parameters
-            .Select(GetArgumentModel)
-            .Select(model => model with
-            {
-                Description = xmlComments?.Params.TryGetValue(model.Name, out var v) == true ? v : model.Description
-            })
-            .ToImmutableArray();
+        var parameterResults = methodSymbol.Parameters
+            .Select(p => GetArgumentModel(p, xmlComments.Result))
+            .CollectResults();
 
         var fullyQualifiedName = methodSymbol.ContainingType.GetFullyQualifiedName();
 
         var commandPath = GetCommandPath(methodSymbol);
         var parentNames = commandPath.Truncate(count: -1).ToList();
-
         var lastPathItem = commandPath.LastOrDefault();
 
-        return new MethodModel(
-            methodSymbol.Name,
-            lastPathItem.Name,
-            parentNames,
-            fullyQualifiedName,
-            parameters,
-            xmlComments?.Summary ?? lastPathItem.Description);
-    }
+        // TODO remove this if nothing else added
+        List<DiagnosticModel> diagnostics = [
+            ..parameterResults.Diagnostics
+        ];
 
-    private static XmlCommentModel? GetXmlComments(ISymbol symbol)
-    {
-        var xmlString = symbol.GetDocumentationCommentXml();
-
-        if (xmlString is null or "")
-        {
-            return null;
-        }
-
-        var doc = XDocument.Parse(xmlString);
-        var memberElement = doc.Element("member");
-        var summary = memberElement.Element("summary").Value;
-
-        var paramComments = memberElement.Elements("param")
-            .ToDictionary(
-                el => el.Attribute("name")?.Value ?? "",
-                el => SourceValueUtils.EscapeCSharpString(el.Value));
-
-        summary = SourceValueUtils.EscapeCSharpString(summary?.Trim());
-
-        return new XmlCommentModel
-        {
-            Summary = summary,
-            Params = paramComments
-        };
+        return new ResultWithDiagnostics<Option<MethodModel>>(
+            new MethodModel {
+                MethodName = methodSymbol.Name,
+                ProvidedName = lastPathItem.Name,
+                FullyQualifiedClassName = fullyQualifiedName,
+                GroupCommandPath = parentNames,
+                Parameters = parameterResults.Result,
+                Description = xmlComments.Result.FlatMap(x => x.Summary)
+            },
+            diagnostics);
     }
 
     private ImmutableList<CommandPathItem> GetCommandPath(ISymbol symbol)
@@ -91,7 +70,21 @@ internal class MethodModelBuilder
         {
             if (AttributeUsageUtils.GetUsage(symbol) is { } attr)
             {
-                path.Add(new(attr?.Names.LastOrDefault() ?? symbol.Name, attr?.Description));
+                var commandName = attr.Names.LastOrDefault() ?? symbol.Name;
+                var xmlComment = XmlCommentModelBuilder.GetXmlComments(symbol)
+                    .Result.FlatMap(r => r.Summary);
+
+                if (commandName == "" && path is { Count: > 0 }) 
+                {
+                    var parent = path.Last();
+                    path.RemoveAt(path.Count - 1);
+                    path.Add(new CommandPathItem(parent.Name, xmlComment));
+                }
+                else
+                {
+                    path.Add(new(commandName, xmlComment));
+                }
+
             }
 
             symbol = symbol.ContainingType;
@@ -102,27 +95,44 @@ internal class MethodModelBuilder
         return path.ToImmutable();
     }
 
-    private ArgumentModel GetArgumentModel(IParameterSymbol parameterSymbol)
+    private ResultWithDiagnostics<ParameterModel> GetArgumentModel(
+        IParameterSymbol parameterSymbol,
+        Option<XmlCommentModel> methodXmlComments)
     {
         var attr = AttributeUsageUtils.GetUsage(parameterSymbol);
+        var diagnostics = new List<DiagnosticModel>();
 
-        var name = attr?.Names?.LastOrDefault() is { } lastName ? lastName : parameterSymbol.Name;
+        if (attr is {Names: { Count: > 1 and var count }})
+        {
+            diagnostics.Add(
+                new DiagnosticModel(
+                    $"Parameter {parameterSymbol.Name} has {count} names specified in the attribute; parameters can only specify one.",
+                    Location: parameterSymbol.Locations.FirstOrDefault(),
+                    Severity: DiagnosticSeverity.Error));
+        }
+
+        var name = attr?.Names?.FirstOrDefault() ?? parameterSymbol.Name;
 
         var type = parameterSymbol.Type.GetFullyQualifiedName();
         var isFlag = type == "System.Boolean";
-        var description = attr?.Description;
         var isRequired = !parameterSymbol.HasExplicitDefaultValue;
         var defaultValue =
             parameterSymbol.HasExplicitDefaultValue
             ? SourceValueUtils.SourceValue(parameterSymbol.ExplicitDefaultValue)
             : null;
+        var xmlComment = methodXmlComments.FlatMap(x => x[name]);
+        var shortForm = attr?.ShortForm;
 
-        return new ArgumentModel(
-            name,
-            type,
-            isFlag,
-            IsRequired: isRequired,
-            DefaultValue: defaultValue,
-            Description: description);
+        return new ResultWithDiagnostics<ParameterModel>(
+            new ParameterModel(
+                name,
+                type,
+                isFlag,
+                IsRequired: isRequired,
+                DefaultValue: defaultValue,
+                Description: xmlComment,
+                ShortForm: shortForm),
+            diagnostics
+        );
     }
 }

@@ -1,209 +1,211 @@
 ﻿using System;
 using System.Linq;
-using Richiban.Cmdr.Models;
-using Richiban.Cmdr.Utils;
 
-namespace Richiban.Cmdr.Writers
+namespace Richiban.Cmdr;
+
+internal class ProgramClassFileGenerator : CodeFileGenerator
 {
-    internal class ProgramClassFileGenerator : CodeFileGenerator
+    private readonly CodeBuilder _codeBuilder = new();
+    private readonly CommandModel.RootCommandModel _commandModel;
+
+    public ProgramClassFileGenerator(CommandModel.RootCommandModel commandModel)
     {
-        private readonly CodeBuilder _codeBuilder = new();
-        private readonly CommandModel.RootCommandModel _commandModel;
+        _commandModel = commandModel;
+    }
 
-        public ProgramClassFileGenerator(CommandModel.RootCommandModel commandModel)
+    public override string FileName => "Program.g.cs";
+
+    public override string GetCode()
+    {
+        _codeBuilder.AppendLines(
+            "using System;",
+            "using System.CommandLine;",
+            "using System.CommandLine.Invocation;");
+
+        _codeBuilder.AppendLine();
+
+        WriteHandledCommandStatements(_commandModel);
+        WriteRootStatement(_commandModel);
+
+        WriteRootCommandCall();
+
+        _codeBuilder.AppendLine();
+
+        return _codeBuilder.ToString();
+    }
+
+    private void WriteHandledCommandStatements(
+        CommandModel.RootCommandModel rootCommandModel)
+    {
+        foreach (var command in rootCommandModel.GetDescendentCommands()
+            .Where(x => x.Method != null).Reverse())
         {
-            _commandModel = commandModel;
-        }
+            _codeBuilder.AppendLine(
+                $"var {command.GetVariableName()} = new Command(\"{command.CommandName}\", description: \"{command.Description}\")");
 
-        public override string FileName => "Program.g.cs";
-
-        public override string GetCode()
-        {
-            _codeBuilder.AppendLines(
-                "using System;",
-                "using System.CommandLine;",
-                "using System.CommandLine.Invocation;");
-
-            _codeBuilder.AppendLine();
-
-            WriteHandledCommandStatements(_commandModel);
-            WriteRootStatement(_commandModel);
-
-            WriteRootCommandCall();
-
-            _codeBuilder.AppendLine();
-
-            return _codeBuilder.ToString();
-        }
-
-        private void WriteHandledCommandStatements(
-            CommandModel.RootCommandModel rootCommandModel)
-        {
-            foreach (var command in rootCommandModel.GetDescendentCommands()
-                .Where(x => x.Method != null).Reverse())
-            {
-                _codeBuilder.AppendLine(
-                    $"var {command.GetVariableName()} = new Command(\"{command.CommandName}\", description: \"{command.Description}\")");
-
-                _codeBuilder.AppendLine("{");
-
-                using (var expr = _codeBuilder.OpenExpressionList())
-                {
-                    foreach (var subCommand in command.SubCommands)
-                    {
-                        WriteCommandExpression(subCommand, expr);
-                        expr.Next();
-                    }
-
-                    WriteParameterExpressions(command, expr);
-                }
-
-                _codeBuilder.AppendLine("};");
-                _codeBuilder.AppendLine();
-
-                WriteHandlerStatement(command);
-                _codeBuilder.AppendLine();
-            }
-        }
-
-        private void WriteRootCommandCall()
-        {
-            _codeBuilder.AppendLine();
-            _codeBuilder.AppendLine("return rootCommand.Invoke(args);");
-        }
-
-        private void WriteCommandExpression(
-            CommandModel.SubCommandModel commandModel,
-            CodeBuilder.CommaSeparatedExpressionSyntax expr)
-        {
-            if (commandModel.Method == null)
-            {
-                WriteImmediateCommandExpression(commandModel, expr);
-            }
-            else
-            {
-                WriteVariableCommandExpression(commandModel, expr);
-            }
-        }
-
-        private void WriteRootStatement(CommandModel.RootCommandModel rootCommandModel)
-        {
-            _codeBuilder.AppendLine("var rootCommand = new RootCommand()");
             _codeBuilder.AppendLine("{");
 
             using (var expr = _codeBuilder.OpenExpressionList())
             {
-                foreach (var subCommand in rootCommandModel.SubCommands)
+                foreach (var subCommand in command.SubCommands)
                 {
                     WriteCommandExpression(subCommand, expr);
                     expr.Next();
                 }
+
+                WriteParameterExpressions(command, expr);
             }
-            
 
             _codeBuilder.AppendLine("};");
+            _codeBuilder.AppendLine();
 
-            if (rootCommandModel.Method != null)
-            {
-                _codeBuilder.AppendLine();
-                WriteHandlerStatement(rootCommandModel);
-            }
+            WriteHandlerStatement(command);
+            _codeBuilder.AppendLine();
         }
+    }
 
-        private void WriteImmediateCommandExpression(
-            CommandModel.SubCommandModel commandGroupModel,
-            CodeBuilder.CommaSeparatedExpressionSyntax expr)
+    private void WriteRootCommandCall()
+    {
+        _codeBuilder.AppendLine();
+        _codeBuilder.AppendLine("return rootCommand.Invoke(args);");
+    }
+
+    private void WriteCommandExpression(
+        CommandModel.SubCommandModel commandModel,
+        CodeBuilder.CommaSeparatedExpressionSyntax expr)
+    {
+        if (commandModel.Method == null)
         {
-            expr.AppendLine($"new Command(\"{commandGroupModel.CommandName}\", description: \"{commandGroupModel.Description}\")");
-            expr.AppendLine("{");
-
-            using (var expr2 = _codeBuilder.OpenExpressionList())
-            {
-                foreach (var commandModel in commandGroupModel.SubCommands)
-                {
-                    WriteCommandExpression(commandModel, expr2);
-                    expr2.Next();
-                }
-            }
-
-            expr.AppendLine("}");
-            expr.Next();
+            WriteImmediateCommandExpression(commandModel, expr);
         }
-
-        private void WriteVariableCommandExpression(
-            CommandModel.SubCommandModel subModel,
-            CodeBuilder.CommaSeparatedExpressionSyntax expr)
+        else
         {
-            expr.AppendLine(subModel.GetVariableName());
+            WriteVariableCommandExpression(commandModel, expr);
         }
+    }
 
-        private void WriteParameterExpressions(
-            CommandModel.SubCommandModel subModel,
-            CodeBuilder.CommaSeparatedExpressionSyntax expr)
+    private void WriteRootStatement(CommandModel.RootCommandModel rootCommandModel)
+    {
+        _codeBuilder.AppendLine("var rootCommand = new RootCommand()");
+        _codeBuilder.AppendLine("{");
+
+        using (var expr = _codeBuilder.OpenExpressionList())
         {
-            if (subModel.Method == null)
+            foreach (var subCommand in rootCommandModel.SubCommands)
             {
-                return;
-            }
-
-            foreach (var leafModelParameter in subModel.Method.Parameters)
-            {
-                expr.AppendLine(GetArgumentOrOptionExpression(leafModelParameter));
+                WriteCommandExpression(subCommand, expr);
                 expr.Next();
             }
         }
 
-        private void WriteHandlerStatement(CommandModel normalModel)
+
+        _codeBuilder.AppendLine("};");
+
+        if (rootCommandModel.Method != null)
         {
-            if (normalModel.Method is null)
+            _codeBuilder.AppendLine();
+            WriteHandlerStatement(rootCommandModel);
+        }
+    }
+
+    private void WriteImmediateCommandExpression(
+        CommandModel.SubCommandModel commandGroupModel,
+        CodeBuilder.CommaSeparatedExpressionSyntax expr)
+    {
+        expr.AppendLine($"new Command(\"{commandGroupModel.CommandName}\", description: \"{commandGroupModel.Description}\")");
+        expr.AppendLine("{");
+
+        using (var expr2 = _codeBuilder.OpenExpressionList())
+        {
+            foreach (var commandModel in commandGroupModel.SubCommands)
             {
-                return;
+                WriteCommandExpression(commandModel, expr2);
+                expr2.Next();
             }
-
-            var parameters = normalModel.Method.Parameters;
-
-            var handlerTypeArguments = parameters.Count == 0
-                ? ""
-                : $"<{parameters.Select(a => a.FullyQualifiedTypeName).StringJoin(", ")}>";
-
-            var fullyQualifiedName = normalModel.Method.FullyQualifiedName;
-
-            _codeBuilder.AppendLine(
-                $"{normalModel.GetVariableName()}.Handler = CommandHandler.Create{handlerTypeArguments}({fullyQualifiedName});");
         }
 
-        private static string GetArgumentOrOptionExpression(
-            CommandParameterModel commandParameterModel) =>
-            commandParameterModel switch
-            {
-                CommandParameterModel.CommandPositionalParameterModel argument => argument.IsRequired
-                                        ? $"""
-                            new Argument<{argument.FullyQualifiedTypeName}>(
-                                    name: "{argument.Name}",
-                                    description: "{argument.Description}")
-                            """
-                                        : $"""
-                            new Argument<{argument.FullyQualifiedTypeName}>(
-                                    name: "{argument.Name}",
-                                    description: "{argument.Description}",
-                                    getDefaultValue: () => {argument.DefaultValue ?? "default"})
-                            """,
-                CommandParameterModel.CommandFlagModel option =>
-                    $$"""
-                    new Option(new [] {"-{{option.Name[index: 0]}}", "--{{option.Name}}"}, description: "{{option.Description}}")
-                    """,
-                _ => throw new UnknownCommandParameterModelException(commandParameterModel),
-            };
+        expr.AppendLine("}");
+        expr.Next();
+    }
 
-        private class UnknownCommandParameterModelException : Exception
+    private void WriteVariableCommandExpression(
+        CommandModel.SubCommandModel subModel,
+        CodeBuilder.CommaSeparatedExpressionSyntax expr)
+    {
+        expr.AppendLine(subModel.GetVariableName());
+    }
+
+    private void WriteParameterExpressions(
+        CommandModel.SubCommandModel subModel,
+        CodeBuilder.CommaSeparatedExpressionSyntax expr)
+    {
+        if (subModel.Method == null)
         {
-            public UnknownCommandParameterModelException(CommandParameterModel commandParameterModel)
-                : base(GetMessage(commandParameterModel)) { }
+            return;
+        }
 
-            private static string GetMessage(CommandParameterModel commandParameterModel)
-            {
-                return $"Unknown {nameof(CommandParameterModel)}: {commandParameterModel}";
-            }
+        foreach (var leafModelParameter in subModel.Method.Parameters)
+        {
+            expr.AppendLine(GetArgumentOrOptionExpression(leafModelParameter));
+            expr.Next();
+        }
+    }
+
+    private void WriteHandlerStatement(CommandModel normalModel)
+    {
+        if (normalModel.Method is null)
+        {
+            return;
+        }
+
+        var parameters = normalModel.Method.Parameters;
+
+        var handlerTypeArguments = parameters.Count == 0
+            ? ""
+            : $"<{parameters.Select(a => a.FullyQualifiedTypeName).StringJoin(", ")}>";
+
+        var fullyQualifiedName = normalModel.Method.FullyQualifiedName;
+
+        _codeBuilder.AppendLine(
+            $"{normalModel.GetVariableName()}.Handler = CommandHandler.Create{handlerTypeArguments}({fullyQualifiedName});");
+    }
+
+    private static string GetArgumentOrOptionExpression(
+        CommandParameterModel commandParameterModel) =>
+        commandParameterModel switch
+        {
+            CommandParameterModel.CommandPositionalParameterModel { IsRequired: true } argument =>
+                $"""
+                new Argument<{argument.FullyQualifiedTypeName}>(
+                        name: "{argument.Name}",
+                        description: "{argument.Description}")
+                """,
+            CommandParameterModel.CommandPositionalParameterModel argument =>
+                $"""
+                new Argument<{argument.FullyQualifiedTypeName}>(
+                        name: "{argument.Name}",
+                        description: "{argument.Description}",
+                        getDefaultValue: () => {argument.DefaultValue | "default"})
+                """,
+            CommandParameterModel.CommandFlagModel { ShortForm: { HasValue: false } } option =>
+                $$"""
+                new Option(new [] {"--{{option.Name}}"}, description: "{{option.Description}}")
+                """,
+            CommandParameterModel.CommandFlagModel option =>
+                $$"""
+                new Option(new [] {"-{{option.ShortForm}}", "--{{option.Name}}"}, description: "{{option.Description}}")
+                """,
+            _ => throw new UnknownCommandParameterModelException(commandParameterModel),
+        };
+
+    private class UnknownCommandParameterModelException : Exception
+    {
+        public UnknownCommandParameterModelException(CommandParameterModel commandParameterModel)
+            : base(GetMessage(commandParameterModel)) { }
+
+        private static string GetMessage(CommandParameterModel commandParameterModel)
+        {
+            return $"Unknown {nameof(CommandParameterModel)}: {commandParameterModel}";
         }
     }
 }

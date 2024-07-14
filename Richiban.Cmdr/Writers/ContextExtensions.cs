@@ -3,15 +3,14 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Richiban.Cmdr.Writers
+namespace Richiban.Cmdr;
+
+internal static class ContextExtensions
 {
-    internal static class ContextExtensions
-    {
-        public static void AddCodeFile(
-            this GeneratorExecutionContext context,
-            CodeFileGenerator codeFileGenerator) =>
-            context.AddSource(
-                codeFileGenerator.FileName,
-                SourceText.From(codeFileGenerator.GetCode(), Encoding.UTF8));
-    }
+    public static void AddCodeFile(
+        this GeneratorExecutionContext context,
+        CodeFileGenerator codeFileGenerator) =>
+        context.AddSource(
+            codeFileGenerator.FileName,
+            SourceText.From(codeFileGenerator.GetCode(), Encoding.UTF8));
 }

@@ -172,8 +172,8 @@ We can see how it looks when we make use of "options" or "flags" in our command:
 /// </summary>
 /// <param name="name">The name of the person you would like to greet</param>
 /// <param name="formal">"true" means the person will be greeted very formally</param>
-[Cmdr("greet")]
-public static void GreetPersonWithTitle(string name, bool formal)
+[Cmdr("greet", Description = "Test")]
+public static void GreetPersonWithTitle(string name, [Cmd(Description = "Extraneous description!")] bool formal)
 {
     if (formal)
     {

@@ -1,143 +1,142 @@
 ﻿using System;
 using System.Text;
 
-namespace Richiban.Cmdr.Writers
+namespace Richiban.Cmdr;
+
+internal class CodeBuilder
 {
-    internal class CodeBuilder
+    private readonly StringBuilder _sb = new();
+    private int _indentationLevel;
+
+    private string Indentation => new(c: ' ', 4 * _indentationLevel);
+
+    public void AppendLine()
     {
-        private readonly StringBuilder _sb = new();
-        private int _indentationLevel;
+        AppendLine("", ignoreBlank: false);
+    }
 
-        private string Indentation => new(c: ' ', 4 * _indentationLevel);
-
-        public void AppendLine()
+    public void AppendLine(string line, bool ignoreBlank = true)
+    {
+        if (string.IsNullOrWhiteSpace(line))
         {
-            AppendLine("", ignoreBlank: false);
-        }
-
-        public void AppendLine(string line, bool ignoreBlank = true)
-        {
-            if (string.IsNullOrWhiteSpace(line))
+            if (ignoreBlank)
             {
-                if (ignoreBlank)
-                {
-                    return;
-                }
-
-                _sb.AppendLine();
-
                 return;
             }
 
-            _sb.AppendLine(Indentation + line);
+            _sb.AppendLine();
+
+            return;
         }
 
-        public void AppendLines(string line1, string line2)
+        _sb.AppendLine(Indentation + line);
+    }
+
+    public void AppendLines(string line1, string line2)
+    {
+        AppendLine(line1);
+        AppendLine(line2);
+    }
+
+    public void AppendLines(params string[] lines)
+    {
+        foreach (var line in lines)
         {
-            AppendLine(line1);
-            AppendLine(line2);
+            AppendLine(line);
         }
+    }
 
-        public void AppendLines(params string[] lines)
+    public void AppendLine(string line1, string line2, string line3)
+    {
+        AppendLine(line1);
+        AppendLine(line2);
+        AppendLine(line3);
+    }
+
+    public void Append(string text)
+    {
+        _sb.Append(text);
+    }
+
+    private void IncreaseIndentation() => _indentationLevel++;
+
+    private void DecreaseIndentation() =>
+        _indentationLevel = Math.Max(_indentationLevel - 1, val2: 0);
+
+    public override string ToString() => _sb.ToString();
+
+    public IDisposable Indent() => new Indenter(this);
+
+    public CommaSeparatedExpressionSyntax OpenExpressionList() => new(this);
+
+    private class Indenter : IDisposable
+    {
+        private readonly CodeBuilder _codeBuilder;
+
+        public Indenter(CodeBuilder codeBuilder)
         {
-            foreach (var line in lines)
-            {
-                AppendLine(line);
-            }
+            _codeBuilder = codeBuilder;
+            _codeBuilder.IncreaseIndentation();
         }
 
-        public void AppendLine(string line1, string line2, string line3)
+        public void Dispose()
         {
-            AppendLine(line1);
-            AppendLine(line2);
-            AppendLine(line3);
+            _codeBuilder.DecreaseIndentation();
         }
+    }
 
-        public void Append(string text)
+    public class CommaSeparatedExpressionSyntax : IDisposable
+    {
+        private readonly CodeBuilder _codeBuilder;
+        private readonly IDisposable _indenter;
+        private bool _anyWritten;
+        private bool _doneOne;
+        private bool _isDisposed;
+
+        public CommaSeparatedExpressionSyntax(CodeBuilder codeBuilder)
         {
-            _sb.Append(text);
+            _codeBuilder = codeBuilder;
+            _indenter = codeBuilder.Indent();
         }
 
-        private void IncreaseIndentation() => _indentationLevel++;
-
-        private void DecreaseIndentation() =>
-            _indentationLevel = Math.Max(_indentationLevel - 1, val2: 0);
-
-        public override string ToString() => _sb.ToString();
-
-        public IDisposable Indent() => new Indenter(this);
-
-        public CommaSeparatedExpressionSyntax OpenExpressionList() => new(this);
-
-        private class Indenter : IDisposable
+        public void Dispose()
         {
-            private readonly CodeBuilder _codeBuilder;
-
-            public Indenter(CodeBuilder codeBuilder)
+            if (_isDisposed)
             {
-                _codeBuilder = codeBuilder;
-                _codeBuilder.IncreaseIndentation();
+                return;
             }
-
-            public void Dispose()
-            {
-                _codeBuilder.DecreaseIndentation();
-            }
+            
+            _indenter.Dispose();
+            _isDisposed = true;
         }
 
-        public class CommaSeparatedExpressionSyntax : IDisposable
+        public void Append(string expression)
         {
-            private readonly CodeBuilder _codeBuilder;
-            private readonly IDisposable _indenter;
-            private bool _anyWritten;
-            private bool _doneOne;
-            private bool _isDisposed;
-
-            public CommaSeparatedExpressionSyntax(CodeBuilder codeBuilder)
+            if (_anyWritten)
             {
-                _codeBuilder = codeBuilder;
-                _indenter = codeBuilder.Indent();
+                _codeBuilder.Append(", ");
+                _doneOne = false;
             }
 
-            public void Dispose()
-            {
-                if (_isDisposed)
-                {
-                    return;
-                }
-                
-                _indenter.Dispose();
-                _isDisposed = true;
-            }
+            _codeBuilder.Append(expression);
 
-            public void Append(string expression)
-            {
-                if (_anyWritten)
-                {
-                    _codeBuilder.Append(", ");
-                    _doneOne = false;
-                }
-
-                _codeBuilder.Append(expression);
-
-                _anyWritten = true;
-            }
-
-            public void AppendLine(string expression)
-            {
-                if (_anyWritten && _doneOne)
-                {
-                    _codeBuilder.AppendLine(",");
-                    _doneOne = false;
-                }
-
-                _codeBuilder.AppendLine(expression);
-                _anyWritten = true;
-            }
-
-            public void Next() => _doneOne = true;
-
-            public IDisposable Indent() => new Indenter(_codeBuilder);
+            _anyWritten = true;
         }
+
+        public void AppendLine(string expression)
+        {
+            if (_anyWritten && _doneOne)
+            {
+                _codeBuilder.AppendLine(",");
+                _doneOne = false;
+            }
+
+            _codeBuilder.AppendLine(expression);
+            _anyWritten = true;
+        }
+
+        public void Next() => _doneOne = true;
+
+        public IDisposable Indent() => new Indenter(_codeBuilder);
     }
 }

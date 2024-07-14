@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using Richiban.Cmdr.Models;
-using Richiban.Cmdr.Writers;
+
+
 using Shouldly;
 
 namespace Richiban.Cmdr.Tests
@@ -28,7 +28,7 @@ namespace Richiban.Cmdr.Tests
             actual.ShouldBe(@"using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using Richiban.Cmdr;
+
 
 public static class Program
 {
@@ -61,9 +61,8 @@ public static class Program
             var rootCommand = new CommandModel.RootCommandModel();
 
             rootCommand.SubCommands.Add(
-                new CommandModel.SubCommandModel
+                new CommandModel.SubCommandModel("some-function")
                 {
-                    CommandName = "some-function",
                     Method = new CommandMethod(
                         "SomeClass",
                         "SomeFunction",
@@ -78,7 +77,7 @@ public static class Program
                 @"using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using Richiban.Cmdr;
+
 
 public static class Program
 {
@@ -116,9 +115,8 @@ public static class Program
             var rootCommand = new CommandModel.RootCommandModel();
 
             rootCommand.SubCommands.Add(
-                new CommandModel.SubCommandModel
+                new CommandModel.SubCommandModel("items")
                 {
-                    CommandName = "items",
                     Method =
                         new CommandMethod(
                             "ItemActions",
@@ -126,9 +124,8 @@ public static class Program
                             new List<CommandParameterModel>()),
                     SubCommands =
                     {
-                        new CommandModel.SubCommandModel
+                        new CommandModel.SubCommandModel("add")
                         {
-                            CommandName = "add",
                             Method = new CommandMethod(
                                 "ItemActions",
                                 "AddItem",
@@ -141,7 +138,7 @@ public static class Program
                                             null,
                                             "test description"),
                                     new CommandParameterModel.
-                                        CommandFlagModel("allowClobber", "test description")
+                                        CommandFlagModel("allowClobber", "a", "test description")
                                 ])
                         }
                     }
@@ -155,7 +152,7 @@ public static class Program
                 @"using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using Richiban.Cmdr;
+
 
 public static class Program
 {

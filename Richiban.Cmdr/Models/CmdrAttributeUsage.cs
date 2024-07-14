@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Richiban.Cmdr;
 
-public record CmdrAttributeUsage(string[] Names, string? Description, string? ShortForm);
+public record CmdrAttributeUsage(IReadOnlyCollection<string> Names, string? ShortForm);

@@ -92,7 +92,7 @@ namespace TestSamples
         public void StaticMethodWithAutoName()
         {
             var source = @"
-using Richiban.Cmdr;
+
 using System;
 
 namespace TestSamples
@@ -117,7 +117,7 @@ namespace TestSamples
                 @"using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using Richiban.Cmdr;
+
 
 public static class Program
 {
@@ -153,7 +153,7 @@ public static class Program
         public void ExplicitNameChangesCommandName()
         {
             var source = @"
-using Richiban.Cmdr;
+
 using System;
 
 namespace TestSamples
@@ -178,7 +178,7 @@ namespace TestSamples
                 @"using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using Richiban.Cmdr;
+
 
 public static class Program
 {
@@ -256,7 +256,7 @@ namespace TestSamples
                 @"using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using Richiban.Cmdr;
+
 
 public static class Program
 {
@@ -320,7 +320,7 @@ public static class Program
         public void EmptyCommandNameResultsInShortenedPath()
         {
             var source = @"
-using Richiban.Cmdr;
+
 using System;
 
 namespace TestSamples
@@ -351,7 +351,7 @@ namespace TestSamples
                 @"using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using Richiban.Cmdr;
+
 
 public static class Program
 {
@@ -393,7 +393,7 @@ public static class Program
         [Test]
         public void RootWithCommandHandlerTest()
         {
-            var source = @"using Richiban.Cmdr;
+            var source = @"
 using System;
 
 namespace TestSamples
@@ -417,7 +417,7 @@ namespace TestSamples
                 @"using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using Richiban.Cmdr;
+
 
 public static class Program
 {
@@ -511,7 +511,7 @@ namespace Richiban.Cmdr.Samples
                 @"using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using Richiban.Cmdr;
+
 
 public static class Program
 {
@@ -607,7 +607,7 @@ public static class Program
                 ],
                 new CSharpCompilationOptions(OutputKind.ConsoleApplication));
 
-            var generator = new CmdrGenerator();
+            var generator = new CmdrSourceGenerator();
 
             var driver = CSharpGeneratorDriver.Create(generator)
                 .RunGeneratorsAndUpdateCompilation(

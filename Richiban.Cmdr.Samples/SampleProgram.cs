@@ -3,23 +3,42 @@ using Cmdr;
 
 namespace Richiban.Cmdr.Samples;
 
-class Program
+[Cmdr("branch")]
+class BranchActions
+{
+    [Cmdr("")]
+    public static void ListBranches()
+    {
+        Console.WriteLine("Listing branches");
+    }
+
+    [Cmdr("")]
+    public static void CreateBranch(string newName, bool force = false)
+    {
+        Console.WriteLine($"Creating branch {newName}");
+    }
+}
+
+/// <summary>
+/// Hmmm
+/// </summary>
+[Cmdr("checkout")]
+class CheckoutActions
 {
     /// <summary>
-    /// A function that greets a person with the appropriate formality
+    /// Checkout a branch by name
     /// </summary>
-    /// <param name="name">The name of the person you would like to greet</param>
-    /// <param name="formal">"true" means the person will be greeted very formally</param>
-    [Cmdr("greet")]
-    public static void GreetPersonWithTitle(string name, bool formal)
+    /// <param name="branchName">The name of the branch to check out</param>
+    /// <param name="force">Allow checkout even of local changes will be overwritten</param>
+    [Cmdr("")]
+    public static void Checkout(string branchName, bool force = false)
     {
-        if (formal)
+        if (force)
         {
-            Console.WriteLine($"Good day to you, {name}!");
+            Console.WriteLine($"Checking out branch {branchName} forcefully");
+            return;
         }
-        else
-        {
-            Console.WriteLine($"Hey, {name}!");
-        }
+
+        Console.WriteLine($"Checking out branch {branchName}");
     }
 }

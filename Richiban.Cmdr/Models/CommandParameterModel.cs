@@ -1,16 +1,16 @@
 ﻿using System;
 using System.ComponentModel;
 
-namespace Richiban.Cmdr.Models;
+namespace Richiban.Cmdr;
 
-public abstract class CommandParameterModel
+abstract class CommandParameterModel
 {
     private CommandParameterModel(
         string name,
         string fullyQualifiedTypeName,
         bool isRequired,
-        string? defaultValue,
-        string? description)
+        Option<string> defaultValue,
+        Option<string> description)
     {
         Name = name;
         FullyQualifiedTypeName = fullyQualifiedTypeName;
@@ -22,8 +22,8 @@ public abstract class CommandParameterModel
     public string Name { get; }
     public string FullyQualifiedTypeName { get; }
     public bool IsRequired { get; }
-    public string? DefaultValue { get; }
-    public string? Description { get; }
+    public Option<string> DefaultValue { get; }
+    public Option<string> Description { get; }
 
     public sealed class CommandPositionalParameterModel : CommandParameterModel
     {
@@ -31,17 +31,20 @@ public abstract class CommandParameterModel
             string name,
             string fullyQualifiedTypeName,
             bool isRequired,
-            string? defaultValue,
-            string? description) : base(name, fullyQualifiedTypeName, isRequired, defaultValue, description)
+            Option<string> defaultValue,
+            Option<string> description) : base(name, fullyQualifiedTypeName, isRequired, defaultValue, description)
         {
         }
     }
 
     public sealed class CommandFlagModel : CommandParameterModel
     {
-        public CommandFlagModel(string name, string? description) 
+        public CommandFlagModel(string name, Option<string> shortForm, Option<string> description) 
             : base(name, "System.Boolean", isRequired: false, defaultValue: "false", description)
         {
+            ShortForm = shortForm;
         }
+
+        public Option<string> ShortForm { get; }
     }
 }
