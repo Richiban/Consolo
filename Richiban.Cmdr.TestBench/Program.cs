@@ -1,6 +1,6 @@
 ﻿begin:
 
-switch (args.NormaliseArgs())
+switch (NormaliseArgs(args))
 {
     case ["branch", "--help"]:
         Console.WriteLine("Help for branch branch command");
@@ -13,7 +13,7 @@ switch (args.NormaliseArgs())
         break;
     case ["branch"]:
         Console.WriteLine("Listing branches");
-        break; 
+        break;
     case ["branch", ..]:
         Console.Error.WriteLine("!! Unknown branch command !!");
 
@@ -39,42 +39,24 @@ switch (args.NormaliseArgs())
         break;
 }
 
-public static class ArgsExtensions
+static string[] NormaliseArgs(string[] args)
 {
-    public static string[] NormaliseArgs(this string[] args)
-    {
-        var copy = args
-            .SelectMany(ExpandShortForm)
-            .Where(s => !String.IsNullOrEmpty(s))
-            .ToArray();
+    var copy = args
+        .SelectMany(s => s switch {
+            ['-', not '-', ..] => s.Skip(1).Select(c => $"-{c}"),
+            _ => [s],
+        })
+        .Where(s => !String.IsNullOrEmpty(s))
+        .ToArray();
 
-        Array.Sort(copy, Compare);
-        return copy;
-    }
-
-    public static IEnumerable<string> ExpandShortForm(string arg)
-    {
-        if (arg is ['-', not '-', ..])
+    Array.Sort(copy, (x, y) =>
+        (x, y) switch
         {
-            foreach (var c in arg.Skip(1))
-            {
-                yield return $"-{c}";
-            }
+            (['-', ..], [not '-', ..]) => 1,
+            ([not '-', ..], ['-', ..]) => -1,
+            _ => 0,
         }
-        else
-        {
-            yield return arg;
-        }
-    }
+    );
 
-    private static int Compare(string x, string y)
-    {
-        if (x[0] == '-' && y[0] != '-')
-            return 1;
-
-        if (x[0] != '-' && y[0] == '-')
-            return -1;
-
-        return 0;
-    }
+    return copy;
 }

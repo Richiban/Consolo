@@ -19,26 +19,18 @@ class BranchActions
     }
 }
 
-/// <summary>
-/// Hmmm
-/// </summary>
-[Cmdr("checkout")]
-class CheckoutActions
+[Cmdr("remote")]
+class RemoteActions
 {
-    /// <summary>
-    /// Checkout a branch by name
-    /// </summary>
-    /// <param name="branchName">The name of the branch to check out</param>
-    /// <param name="force">Allow checkout even of local changes will be overwritten</param>
     [Cmdr("")]
-    public static void Checkout(string branchName, bool force = false)
+    public static void ListRemotes()
     {
-        if (force)
-        {
-            Console.WriteLine($"Checking out branch {branchName} forcefully");
-            return;
-        }
+        Console.WriteLine("Listing remotes");
+    }
 
-        Console.WriteLine($"Checking out branch {branchName}");
+    [Cmdr("add")]
+    public static void AddRemote(string remoteName, string remoteUrl)
+    {
+        Console.WriteLine($"Adding remote {remoteName} at {remoteUrl}");
     }
 }
