@@ -51,14 +51,14 @@ internal class MethodModelBuilder
         ];
 
         return new ResultWithDiagnostics<Option<MethodModel>>(
-            new MethodModel {
-                MethodName = methodSymbol.Name,
-                ProvidedName = lastPathItem.Name,
-                FullyQualifiedClassName = fullyQualifiedName,
-                GroupCommandPath = parentNames,
-                Parameters = parameterResults.Result,
-                Description = xmlComments.Result.FlatMap(x => x.Summary)
-            },
+            new MethodModel(
+                MethodName: methodSymbol.Name,
+                ProvidedName: lastPathItem.Name,
+                FullyQualifiedClassName: fullyQualifiedName,
+                GroupCommandPath: parentNames,
+                Parameters: parameterResults.Result,
+                Description: xmlComments.Result.FlatMap(x => x.Summary)
+            ),
             diagnostics);
     }
 

@@ -2,12 +2,11 @@
 
 namespace Richiban.Cmdr;
 
-record MethodModel
-{
-    public string FullyQualifiedClassName { get; init; }
-    public Option<string> Description { get; init; }
-    public string MethodName { get; init; }
-    public Option<string> ProvidedName { get; init; }
-    public IReadOnlyList<CommandPathItem> GroupCommandPath { get; init; }
-    public IReadOnlyCollection<ParameterModel> Parameters { get; init; }
-}
+record MethodModel(
+    string FullyQualifiedClassName,
+    Option<string> Description,
+    string MethodName,
+    Option<string> ProvidedName,
+    IReadOnlyList<CommandPathItem> GroupCommandPath,
+    IReadOnlyCollection<ParameterModel> Parameters
+);

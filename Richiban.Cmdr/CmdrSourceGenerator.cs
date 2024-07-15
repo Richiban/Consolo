@@ -41,7 +41,7 @@ public class CmdrSourceGenerator : ISourceGenerator
                 return;
             }
 
-            var asemblyName = context.Compilation.AssemblyName;
+            var assemblyName = context.Compilation.AssemblyName;
 
             var candidateMethods =
                 new MethodScanner(context.Compilation, diagnosticsManager)
@@ -64,7 +64,7 @@ public class CmdrSourceGenerator : ISourceGenerator
 
             // context.AddCodeFile(new ProgramClassFileGenerator(rootCommandModel));
 
-            context.AddCodeFile(new NewProgramClassFileGenerator(asemblyName, methodResults.Result));
+            context.AddCodeFile(new NewProgramClassFileGenerator(assemblyName ?? "Unknown assembly", methodResults.Result));
         }
         catch (Exception ex)
         {

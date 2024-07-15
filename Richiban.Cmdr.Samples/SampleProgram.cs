@@ -42,6 +42,8 @@ class RemoteActions
     /// <summary>
     /// Adds a remote
     /// </summary>
+    /// <param name="remoteName">The name of the remote</param>
+    /// <param name="remoteUrl">The URL of the remote</param>
     [Cmdr("add")]
     public static void AddRemote(string remoteName, string remoteUrl)
     {
@@ -61,7 +63,7 @@ class CheckoutActions
     [Cmdr("")]
     public static void CheckoutBranch(
         string branchName, 
-        bool remote = false,
+        [Cmdr(ShortForm = "r")] bool remote = false,
         [Cmdr(ShortForm = "f")] bool force = false)
     {
         Console.WriteLine(

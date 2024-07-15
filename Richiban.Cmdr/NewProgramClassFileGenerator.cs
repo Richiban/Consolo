@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Richiban.Cmdr;
 
@@ -64,15 +62,18 @@ internal class NewProgramClassFileGenerator(
                 );
                 
                 var optionalParameters = com.Parameters
-                    .Where(x => !x.IsRequired)
+                    .Where(x => !x.IsRequired);
+                
+                var optionalParameterDeclarations = optionalParameters
                     .Select(x => $"var {x.Name}");
 
                 var ps = com.Parameters
                     .Where(x => x.IsRequired)
                     .Select(x => x.Name);
 
-                codeBuilder.AppendLine(
-                    $"case ([{String.Join(", ", allStrings)}, ..], [.., \"--help\" or \"-h\"]):"
+                codeBuilder.AppendLines(
+                    $"case ([{String.Join(", ", allStrings)}, ..], [.., \"--help\" or \"-h\"]):",
+                    "{"
                 );
 
                 using (codeBuilder.Indent())
@@ -141,21 +142,43 @@ internal class NewProgramClassFileGenerator(
                         }
                     }
 
-                    codeBuilder.AppendLine("break;");
+                    codeBuilder.AppendLines("break;");
                 }
 
-                codeBuilder.AppendLine(
-                    $"case ([{String.Join(", ", allStrings)}], []):"
+                codeBuilder.AppendLines("}");
+
+                codeBuilder.AppendLines(
+                    $"case ([{String.Join(", ", allStrings)}], var options):",
+                    "{"
                 );
 
                 using (codeBuilder.Indent())
                 {
+                    foreach (var flag in optionalParameters)
+                    {
+                        if (flag.ShortForm.HasValue)
+                        {
+                            codeBuilder.AppendLine(
+                                $"var {flag.Name} = options.Contains(\"-{flag.ShortForm}\") || options.Contains(\"--{flag.Name}\");"
+                            );
+                        }
+                        else 
+                        {
+                            codeBuilder.AppendLine(
+                                $"var {flag.Name} = options.Contains(\"--{flag.Name}\");"
+                            );
+                        }
+                    }
+
+                    var arguments = ps.Concat(optionalParameters.Select(x => $"{x.Name}: {x.Name}"));
+
                     codeBuilder.AppendLine(
-                        $"{com.Method}({String.Join(", ", ps)});"
+                        $"{com.Method}({String.Join(", ", arguments)});"
                     );
 
                     codeBuilder.AppendLine("break;");
                 }
+                codeBuilder.AppendLine("}");
             }
 
             codeBuilder.AppendLine("default: ");
