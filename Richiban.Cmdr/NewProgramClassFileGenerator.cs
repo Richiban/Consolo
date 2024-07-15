@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Richiban.Cmdr;
 
-internal class NewProgramClassFileGenerator(IReadOnlyCollection<MethodModel> results) : CodeFileGenerator
+internal class NewProgramClassFileGenerator(
+    string assemblyName,
+    IReadOnlyCollection<MethodModel> results) : CodeFileGenerator
 {
     public override string FileName => "Program.g.cs";
 
@@ -16,9 +19,13 @@ internal class NewProgramClassFileGenerator(IReadOnlyCollection<MethodModel> res
 
         codeBuilder.AppendLines(
             "using System;",
-            "using System.CommandLine;",
-            "using System.CommandLine.Invocation;",
-            "using System.Linq;");
+            "using System.Linq;",
+            "using System.Collections.Generic;");
+
+        codeBuilder.AppendLine();
+
+        codeBuilder.AppendLine("var consoleColor = Console.ForegroundColor;");
+        codeBuilder.AppendLine("var helpTextColor = ConsoleColor.Green;");
 
         codeBuilder.AppendLine();
 
@@ -39,7 +46,7 @@ internal class NewProgramClassFileGenerator(IReadOnlyCollection<MethodModel> res
 
                 var method = $"{result.FullyQualifiedClassName}.{result.MethodName}";
 
-                commands.Add(new Com(path, method, result.Parameters));
+                commands.Add(new Com(path, method, result.Parameters, result.Description | ""));
             }
 
             foreach (var com in commands.SortOrder(Com.CompareTo))
@@ -51,27 +58,98 @@ internal class NewProgramClassFileGenerator(IReadOnlyCollection<MethodModel> res
                     .Select(x => $"var {x.Name}");
 
                 var allStrings = pathStrings.Concat(parameterStrings);
+
+                var allHelpText = com.Path.Concat(
+                    com.Parameters.Select(x => x.GetHelpTextInPlace())
+                );
                 
                 var optionalParameters = com.Parameters
                     .Where(x => !x.IsRequired)
                     .Select(x => $"var {x.Name}");
-
-                if (optionalParameters.Any())
-                {
-                    allStrings = allStrings.Append("..");
-                }
 
                 var ps = com.Parameters
                     .Where(x => x.IsRequired)
                     .Select(x => x.Name);
 
                 codeBuilder.AppendLine(
-                    $"case [{String.Join(", ", allStrings)}]:"
+                    $"case ([{String.Join(", ", allStrings)}, ..], [.., \"--help\" or \"-h\"]):"
                 );
 
                 using (codeBuilder.Indent())
                 {
+                    codeBuilder.AppendLine(
+                        $"Console.WriteLine("
+                    );
 
+                    using (codeBuilder.Indent())
+                    {
+                        codeBuilder.AppendLines(
+                            "\"\"\"",
+                            $"{assemblyName}",
+                            "",
+                            $"Command:",
+                            $"    {String.Join(" ", allHelpText)}",
+                            "\"\"\""
+                        );
+                    }
+
+                    codeBuilder.AppendLines(
+                        $");"
+                    );
+
+                    if (!String.IsNullOrEmpty(com.Description))
+                    {
+                        codeBuilder.AppendLine("Console.ForegroundColor = helpTextColor;");
+                        
+                        codeBuilder.AppendLines(
+                            $"Console.WriteLine(",
+                            $"    \"\"\"",
+                            "",
+                            $"        {com.Description}",
+                            $"    \"\"\"",
+                            ");"
+                        );
+
+                        codeBuilder.AppendLine("Console.ForegroundColor = consoleColor;");
+                    }
+
+                    if (com.Parameters.Any())
+                    {
+                        codeBuilder.AppendLines(
+                            $"Console.WriteLine(",
+                            "    \"\"\"",
+                            "",
+                            $"    Parameters:",
+                            "    \"\"\"",
+                            ");"
+                        );
+
+                        var helpNames = 
+                            com.Parameters.Select(x => (x.GetHelpTextOutOfPlace(), x.Description));
+
+                        var longestParameter = helpNames.Max(x => x.Item1.Length);
+
+                        foreach (var (helpName, description) in helpNames)
+                        {
+                            codeBuilder.AppendLines(
+                                $"Console.Write(\"    {helpName.PadRight(longestParameter)}  \");",
+                                "Console.ForegroundColor = helpTextColor;",
+                                $"Console.WriteLine(\"{description}\");"
+                            );
+
+                            codeBuilder.AppendLine("Console.ForegroundColor = consoleColor;");
+                        }
+                    }
+
+                    codeBuilder.AppendLine("break;");
+                }
+
+                codeBuilder.AppendLine(
+                    $"case ([{String.Join(", ", allStrings)}], []):"
+                );
+
+                using (codeBuilder.Indent())
+                {
                     codeBuilder.AppendLine(
                         $"{com.Method}({String.Join(", ", ps)});"
                     );
@@ -81,9 +159,27 @@ internal class NewProgramClassFileGenerator(IReadOnlyCollection<MethodModel> res
             }
 
             codeBuilder.AppendLine("default: ");
+
             using (codeBuilder.Indent())
             {
-                codeBuilder.AppendLine("Console.WriteLine(\"Command not found\");");
+                codeBuilder.AppendLines($"Console.WriteLine(\"{assemblyName}\");", "Console.WriteLine();");
+                codeBuilder.AppendLine("Console.WriteLine(\"Commands:\");");
+
+                var availableCommands = commands
+                    .Select(c => c.GetHelpText())
+                    .ToImmutableArray();
+
+                var longestCommand = availableCommands.Max(x => x.Item1.Length);
+                
+                foreach (var (command, description) in availableCommands)
+                {
+                    var cmd = command.PadRight(longestCommand);
+                    codeBuilder.AppendLine($"Console.Write(\"    {cmd}\");");
+                    codeBuilder.AppendLine("Console.ForegroundColor = helpTextColor;");
+                    codeBuilder.AppendLine($"Console.WriteLine(\"  {description}\");");
+                    codeBuilder.AppendLine("Console.ForegroundColor = consoleColor;");
+                }
+
                 codeBuilder.AppendLine("break;");
             }
         }
@@ -95,26 +191,38 @@ internal class NewProgramClassFileGenerator(IReadOnlyCollection<MethodModel> res
 
         codeBuilder.AppendLine(
             """
-            static string[] NormaliseArgs(string[] args)
+            static (IReadOnlyList<string> positionalArgs, IReadOnlyList<string> options) NormaliseArgs(string[] args)
             {
-                var copy = args
-                    .SelectMany(s => s switch {
-                        ['-', not '-', ..] => s.Skip(1).Select(c => $"-{c}"),
-                        _ => [s],
-                    })
-                    .Where(s => !String.IsNullOrEmpty(s))
-                    .ToArray();
+                var positionalArgs = new List<string>();
+                var options = new List<string>();
 
-                Array.Sort(copy, (x, y) =>
+                foreach (var arg in args)
+                {
+                    switch (arg)
+                    {
+                        case ['-', '-', ..]:
+                            options.Add(arg);
+                            break;
+                        case ['-', not '-', ..]:
+                            options.AddRange(arg.Skip(1).Select(c => $"-{c}"));
+                            break;
+                        case not (null or ""):
+                            positionalArgs.Add(arg);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+                options.Sort((x, y) =>
                     (x, y) switch
                     {
-                        (['-', ..], [not '-', ..]) => 1,
-                        ([not '-', ..], ['-', ..]) => -1,
-                        _ => 0,
-                    }
-                );
+                        ("--help" or "-h", _) => 1,
+                        (_, "--help" or "-h") => -1,
+                        _ => x.CompareTo(y),
+                    });
 
-                return copy;
+                return (positionalArgs, options);
             }
             """);
 
@@ -125,11 +233,27 @@ internal class NewProgramClassFileGenerator(IReadOnlyCollection<MethodModel> res
 class Com(
     IReadOnlyCollection<string> path,
     string method,
-    IReadOnlyCollection<ParameterModel> parameters)
+    IReadOnlyCollection<ParameterModel> parameters,
+    string description)
 {
     public IReadOnlyCollection<string> Path { get; } = path;
     public string Method { get; } = method;
     public IReadOnlyCollection<ParameterModel> Parameters { get; } = parameters;
+    public string Description { get; } = description;
+
+    public (string A, string Description) GetHelpText() => 
+        (String.Join(" ", Path.Concat(Parameters.Select(GetParameterHelp))), Description);
+
+    private static string GetParameterHelp(ParameterModel parameter) =>
+        parameter switch
+        {
+            {IsFlag: true, ShortForm: {HasValue: false}} flag =>
+                $"[--{flag.Name}]",
+            {IsFlag: true, ShortForm: {HasValue: true}} flag =>
+                $"[-{flag.ShortForm} | --{flag.Name}]",
+            {IsRequired: true} => $"<{parameter.Name}>",
+            _ => $"[{parameter.Name}]"
+        };
 
     public static int CompareTo(Com left, Com right)
     {
@@ -147,7 +271,7 @@ class Com(
     }
 }
 
-static class EnumerableExtensions1
+static class Ext
 {
     public static ImmutableArray<T> SortOrder<T>(
         this IEnumerable<T> source,
@@ -161,4 +285,23 @@ static class EnumerableExtensions1
 
         return items.ToImmutableArray();
     }
+
+    public static string GetHelpTextInPlace(this ParameterModel parameter) =>
+        parameter switch
+        {
+            { IsFlag: true } => parameter.ShortForm.HasValue
+                                ? $"[-{parameter.ShortForm} | --{parameter.Name}]"
+                                : $"[--{parameter.Name}]",
+            { IsRequired: false } => $"[<{parameter.Name}>]",
+            _ => $"<{parameter.Name}>",
+        };
+
+    public static string GetHelpTextOutOfPlace(this ParameterModel parameter) =>
+        parameter switch
+        {
+            { IsFlag: true } => parameter.ShortForm.HasValue
+                                ? $"-{parameter.ShortForm} | --{parameter.Name}"
+                                : $"--{parameter.Name}",
+            _ => $"{parameter.Name}",
+        };
 }

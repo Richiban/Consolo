@@ -1,4 +1,6 @@
-﻿begin:
+﻿using System.Security.Cryptography;
+
+begin:
 
 switch (NormaliseArgs(args))
 {
@@ -39,24 +41,38 @@ switch (NormaliseArgs(args))
         break;
 }
 
-static string[] NormaliseArgs(string[] args)
+static (IReadOnlyList<string> positionalArgs, IReadOnlyList<string> options) NormaliseArgs(string[] args)
 {
-    var copy = args
-        .SelectMany(s => s switch {
-            ['-', not '-', ..] => s.Skip(1).Select(c => $"-{c}"),
-            _ => [s],
-        })
-        .Where(s => !String.IsNullOrEmpty(s))
-        .ToArray();
+    var positionalArgs = new List<string>();
+    var options = new List<string>();
 
-    Array.Sort(copy, (x, y) =>
+    foreach (var arg in args)
+    {
+        switch (arg)
+        {
+            case ['-', '-', ..]:
+                options.Add(arg);
+                break;
+            case ['-', not '-', ..]:
+                options.AddRange(arg.Skip(1).Select(c => $"-{c}"));
+                break;
+            case not (null or ""):
+                positionalArgs.Add(arg);
+                break;
+            default:
+                break;
+        }
+    }
+
+    options.Sort((x, y) =>
         (x, y) switch
         {
+            ("--help" or "-h", _) => 1,
+            (_, "--help" or "-h") => -1,
             (['-', ..], [not '-', ..]) => 1,
             ([not '-', ..], ['-', ..]) => -1,
             _ => 0,
-        }
-    );
+        });
 
-    return copy;
+    return (positionalArgs, options);
 }

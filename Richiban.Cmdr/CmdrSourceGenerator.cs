@@ -41,6 +41,8 @@ public class CmdrSourceGenerator : ISourceGenerator
                 return;
             }
 
+            var asemblyName = context.Compilation.AssemblyName;
+
             var candidateMethods =
                 new MethodScanner(context.Compilation, diagnosticsManager)
                     .GetCandidateMethods(receiver.QualifyingMembers);
@@ -62,7 +64,7 @@ public class CmdrSourceGenerator : ISourceGenerator
 
             // context.AddCodeFile(new ProgramClassFileGenerator(rootCommandModel));
 
-            context.AddCodeFile(new NewProgramClassFileGenerator(methodResults.Result));
+            context.AddCodeFile(new NewProgramClassFileGenerator(asemblyName, methodResults.Result));
         }
         catch (Exception ex)
         {

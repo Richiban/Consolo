@@ -12,18 +12,13 @@ internal class CodeBuilder
 
     public void AppendLine()
     {
-        AppendLine("", ignoreBlank: false);
+        AppendLine("");
     }
 
-    public void AppendLine(string line, bool ignoreBlank = true)
+    public void AppendLine(string line)
     {
         if (string.IsNullOrWhiteSpace(line))
         {
-            if (ignoreBlank)
-            {
-                return;
-            }
-
             _sb.AppendLine();
 
             return;

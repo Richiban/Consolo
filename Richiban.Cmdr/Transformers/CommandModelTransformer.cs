@@ -114,11 +114,6 @@ internal class CommandModelTransformer(CmdrDiagnosticsManager diagnosticsManager
             List = list;
             Index = index;
             _diagnosticsManager = diagnosticsManager;
-            _diagnosticsManager.ReportDiagnostic(
-                new DiagnosticModel(
-                    $"ListWalker created with index {new {index, count = list.Count}}",
-                    Location: null,
-                    DiagnosticSeverity.Warning));
         }
 
         public int Index { get; }

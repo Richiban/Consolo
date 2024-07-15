@@ -6,6 +6,7 @@
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <Summary>Sample application for Richiban.Cmdr</Summary>
     </PropertyGroup>
 
     <PropertyGroup>
