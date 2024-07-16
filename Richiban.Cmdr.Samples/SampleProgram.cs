@@ -1,19 +1,38 @@
 ﻿using System;
 using Cmdr;
+using System.IO;
 
 namespace Richiban.Cmdr.Samples;
+
+class TestActions
+{
+    [Cmdr("test")]
+    public static void TestMethod(
+        string arg1,
+        string arg2 = "default2",
+        string arg3 = "default3",
+        bool f = false)
+    {
+        Console.WriteLine(new {
+            arg1,
+            arg2,
+            arg3,
+            f
+        });
+    }
+}
 
 [Cmdr("branch")]
 class BranchActions
 {
-    /// <summary>
-    /// Lists branches
-    /// </summary>
-    [Cmdr("")]
-    public static void ListBranches()
-    {
-        Console.WriteLine("Listing branches");
-    }
+    // /// <summary>
+    // /// Lists branches
+    // /// </summary>
+    // [Cmdr("")]
+    // public static void ListBranches()
+    // {
+    //     Console.WriteLine("Listing branches");
+    // }
 
     /// <summary>
     /// Creates a new branch

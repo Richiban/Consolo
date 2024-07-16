@@ -48,8 +48,13 @@ internal class CodeBuilder
         AppendLine(line3);
     }
 
-    public void Append(string text)
+    public void Append(string text, bool withIndentation = false)
     {
+        if (withIndentation)
+        {
+            _sb.Append(Indentation);
+        }
+
         _sb.Append(text);
     }
 

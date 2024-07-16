@@ -1,4 +1,6 @@
-﻿namespace Richiban.Cmdr;
+﻿using Microsoft.CodeAnalysis;
+
+namespace Richiban.Cmdr;
 
 internal record ParameterModel(
     string Name,
@@ -7,4 +9,5 @@ internal record ParameterModel(
     bool IsRequired,
     Option<string> DefaultValue,
     Option<string> Description,
-    Option<string> ShortForm);
+    Option<string> ShortForm,
+    ITypeSymbol type);

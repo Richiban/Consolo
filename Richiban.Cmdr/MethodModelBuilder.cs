@@ -131,7 +131,8 @@ internal class MethodModelBuilder
                 IsRequired: isRequired,
                 DefaultValue: defaultValue,
                 Description: xmlComment,
-                ShortForm: shortForm),
+                ShortForm: shortForm,
+                type: parameterSymbol.Type),
             diagnostics
         );
     }
