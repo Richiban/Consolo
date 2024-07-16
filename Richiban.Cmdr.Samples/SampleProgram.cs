@@ -11,13 +11,13 @@ class TestActions
         string arg1,
         string arg2 = "default2",
         string arg3 = "default3",
-        bool f = false)
+        bool flag = false)
     {
         Console.WriteLine(new {
             arg1,
             arg2,
             arg3,
-            f
+            flag
         });
     }
 }

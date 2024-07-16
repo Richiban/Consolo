@@ -26,6 +26,7 @@ internal class ProgramClassFileGenerator(
         _codeBuilder.AppendLine("var helpTextColor = ConsoleColor.Green;");
 
         _codeBuilder.AppendLine();
+        _codeBuilder.AppendLine("handleArguments:");
 
         _codeBuilder.AppendLine("switch (NormaliseArgs(args))");
         _codeBuilder.AppendLine("{");
@@ -154,7 +155,8 @@ internal class ProgramClassFileGenerator(
             .Concat(optionalParameters.Any() ? ["..var optionalArguments"] : Array.Empty<string>());
 
         var flags = com.Parameters
-            .Where(x => x.IsFlag);
+            .Where(x => x.IsFlag)
+            .ToImmutableArray();
 
         var optionalParameterDeclarations = optionalParameters
             .Select(x => $"var {x.Name}");
@@ -210,18 +212,44 @@ internal class ProgramClassFileGenerator(
                 _codeBuilder.AppendLine();
             }
 
-            var arguments = requiredParameters
-                .Select(p => p.Name)
-                .Concat(optionalParameters.Select(x => $"{x.Name}: {x.Name}"))
-                .Concat(flags.Select(x => $"{x.Name}: {x.Name}"));
+            if (flags.Any())
+            {
+                _codeBuilder.AppendLines(
+                    $"if (options.Except([{String.Join(", ", flags.Select(x => $"\"--{x.Name}\""))}]).ToList() is {{Count: > 0}} unrecognisedOptions)",
+                    "{",
+                    "    Console.Error.WriteLine($\"Unrecogised option(s): {String.Join(\", \", unrecognisedOptions)}\");",
+                    "    args = args.Append(\"--help\").ToArray();",
+                    "    goto handleArguments;",
+                    "}",
+                    "else",
+                    "{");
 
-            _codeBuilder.AppendLine(
-                $"{com.Method}({String.Join(", ", arguments)});"
-            );
+                using (_codeBuilder.Indent())
+                {
+                    WriteCommandMethodCall(com, optionalParameters, flags, requiredParameters);
+                }
 
+                _codeBuilder.AppendLine("}");
+            }
+            else 
+            {
+                WriteCommandMethodCall(com, optionalParameters, flags, requiredParameters);
+            }
             _codeBuilder.AppendLine("break;");
         }
         _codeBuilder.AppendLine("}");
+    }
+
+    private void WriteCommandMethodCall(Com com, ImmutableArray<ParameterModel> optionalParameters, ImmutableArray<ParameterModel> flags, IEnumerable<ParameterModel> requiredParameters)
+    {
+        var arguments = requiredParameters
+                        .Select(p => p.Name)
+                        .Concat(optionalParameters.Select(x => $"{x.Name}: {x.Name}"))
+                        .Concat(flags.Select(x => $"{x.Name}: {x.Name}"));
+
+        _codeBuilder.AppendLine(
+            $"{com.Method}({String.Join(", ", arguments)});"
+        );
     }
 
     private void WriteHelpCase(
