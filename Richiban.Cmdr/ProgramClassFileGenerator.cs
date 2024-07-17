@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using static Richiban.Cmdr.CommandModel;
 
 namespace Richiban.Cmdr;
 
 internal class ProgramClassFileGenerator(
     string assemblyName,
-    IReadOnlyCollection<MethodModel> results) : CodeFileGenerator
+    RootCommandModel rootCommand) : CodeFileGenerator
 {
     private readonly CodeBuilder _codeBuilder = new CodeBuilder();
     public override string FileName => "Program.g.cs";
@@ -28,26 +29,102 @@ internal class ProgramClassFileGenerator(
         _codeBuilder.AppendLine();
         _codeBuilder.AppendLine("handleArguments:");
 
-        _codeBuilder.AppendLine("switch (NormaliseArgs(args))");
-        _codeBuilder.AppendLine("{");
+        _codeBuilder.AppendLine("var (positionalArgs, options) = NormaliseArgs(args);");
+        _codeBuilder.AppendLine($"// Found {rootCommand.SubCommands.Count} commands");
 
-        using (_codeBuilder.Indent())
-        {
-            var commands = PrepareCommands(results);
-
-            foreach (var com in commands.SortOrder(Com.CompareTo))
-                WriteCommandCase(assemblyName, com);
-
-            WriteDefaultCase(assemblyName, commands);
-        }
-
-
-        _codeBuilder.AppendLine("}");
+        WriteCommand(rootCommand, []);
 
         _codeBuilder.AppendLine();
         WriteHelperMethods();
 
         return _codeBuilder.ToString();
+
+        void WriteCommand(CommandModel command, ImmutableArray<string> depth)
+        {
+            switch (command)
+            {
+                case RootCommandModel { Method: var m } rootCommand when m.IsSome(out var m2):
+                    _codeBuilder.AppendLine($"if (positionalArgs.Length == 0 && options.Length == 0)");
+                    using (_codeBuilder.IndentBraces())
+                    {
+                        _codeBuilder.AppendLine($"{m2.FullyQualifiedName}();");
+                        _codeBuilder.AppendLine("return;");
+                    }
+                    break;
+                case SubCommandModel subCommand:
+                    var a = depth.Length + subCommand.MandatoryParameterCount;
+                    var b = depth.Length + subCommand.MandatoryParameterCount + subCommand.OptionalParameterCount;
+                    
+                    _codeBuilder.AppendLines(
+                        $"if (positionalArgs.Length >= {depth.Length} && positionalArgs[{depth.Length - 1}] == \"{subCommand.CommandName}\")");
+
+                    using (_codeBuilder.IndentBraces())
+                    {
+                        _codeBuilder.AppendLines(
+                            $"if (",
+                            $"    positionalArgs.Length >= {a} ",
+                            $"    && positionalArgs.Length <= {b}",
+                            ")");
+
+                        using (_codeBuilder.IndentBraces())
+                        {
+                            if (subCommand.Method.IsSome(out var method))
+                            {
+                                foreach (var (p, i) in subCommand.Parameters.OfType<CommandParameterModel.CommandPositionalParameterModel>().Select((p, i) => (p, i)))
+                                {
+                                    _codeBuilder.AppendLines(
+                                        $"var {p.Name} = positionalArgs[{depth.Length + i}];");
+                                }
+
+                                foreach (var (p, i) in subCommand.Parameters.OfType<CommandParameterModel.CommandOptionalPositionalParameterModel>().Select((p, i) => (p, i)))
+                                {
+                                    _codeBuilder.AppendLines(
+                                        $"var {p.Name} = positionalArgs.Length >= {a + i + 1} ? positionalArgs[{a + i}] : {p.DefaultValue};");
+                                }
+
+                                foreach (var (flag, i) in subCommand.Parameters.OfType<CommandParameterModel.CommandFlagModel>().Select((p, i) => (p, i)))
+                                {
+                                    _codeBuilder.AppendLines(
+                                        $"var {flag.Name} = options.Contains(\"--{flag.Name}\") || options.Contains(\"-{flag.ShortForm}\");");
+                                }
+
+                                var argString = String.Join(", ", subCommand.Parameters.Select(x => x.Name));
+
+                                _codeBuilder.AppendLine($"{method.FullyQualifiedName}({argString});");
+                                _codeBuilder.AppendLine("return;");
+                            }
+                            else 
+                            {
+                                if (subCommand.Description.IsSome(out var description))
+                                {
+                                    _codeBuilder.AppendLine($"Console.WriteLine(\"{description}\");");
+                                    _codeBuilder.AppendLine("return;");
+                                }
+                                else 
+                                {
+                                    _codeBuilder.AppendLine($"Console.WriteLine(\"{subCommand.CommandName}\");");
+                                    _codeBuilder.AppendLine("return;");
+                                }
+                            }
+                        }
+
+                        // _codeBuilder.AppendLine("else");
+                        // using (_codeBuilder.IndentBraces())
+                        // {
+                        //     _codeBuilder.AppendLine($"Console.WriteLine(\"Invalid number of arguments for command '{subCommand.CommandName}'\");");
+                        //     _codeBuilder.AppendLine("return;");
+                        // }
+
+                        break;
+                    }
+            }
+
+            foreach (var c in command.SubCommands)
+            {
+                using var _ = _codeBuilder.Indent();
+                WriteCommand(c, depth.Add(c.CommandName));
+            }
+        }
     }
 
     private void WriteHelperMethods()

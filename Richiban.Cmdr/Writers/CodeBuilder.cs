@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace Richiban.Cmdr;
@@ -58,30 +59,52 @@ internal class CodeBuilder
         _sb.Append(text);
     }
 
-    private void IncreaseIndentation() => _indentationLevel++;
+    private void IncreaseIndentation()
+    {
+        _indentationLevel++;
+    }
 
-    private void DecreaseIndentation() =>
-        _indentationLevel = Math.Max(_indentationLevel - 1, val2: 0);
+    private void DecreaseIndentation()
+    {
+        _indentationLevel = Math.Max(_indentationLevel - 1, 0);
+    }
 
     public override string ToString() => _sb.ToString();
 
-    public IDisposable Indent() => new Indenter(this);
+    public IDisposable Indent() => new Indenter(this, null, null);
+
+    public IDisposable Indent(string beforeLine, string afterLine) => new Indenter(this, beforeLine, afterLine);
+
+    public IDisposable IndentBraces() => Indent("{", "}");
 
     public CommaSeparatedExpressionSyntax OpenExpressionList() => new(this);
 
     private class Indenter : IDisposable
     {
         private readonly CodeBuilder _codeBuilder;
+        private readonly string? _afterLine;
 
-        public Indenter(CodeBuilder codeBuilder)
+        public Indenter(CodeBuilder codeBuilder, string? beforeLine, string? afterLine)
         {
             _codeBuilder = codeBuilder;
+            
+            if (beforeLine is not null)
+            {
+                _codeBuilder.AppendLine(beforeLine);
+            }
+
             _codeBuilder.IncreaseIndentation();
+            _afterLine = afterLine;
         }
 
         public void Dispose()
         {
             _codeBuilder.DecreaseIndentation();
+
+            if (_afterLine is not null)
+            {
+                _codeBuilder.AppendLine(_afterLine);
+            }
         }
     }
 
@@ -137,6 +160,6 @@ internal class CodeBuilder
 
         public void Next() => _doneOne = true;
 
-        public IDisposable Indent() => new Indenter(_codeBuilder);
+        public IDisposable Indent() => _codeBuilder.Indent();
     }
 }

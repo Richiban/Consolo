@@ -1,50 +1,40 @@
-﻿using System;
-using System.ComponentModel;
-
-namespace Richiban.Cmdr;
+﻿namespace Richiban.Cmdr;
 
 abstract class CommandParameterModel
 {
-    private CommandParameterModel(
-        string name,
-        string fullyQualifiedTypeName,
-        bool isRequired,
-        Option<string> defaultValue,
-        Option<string> description)
-    {
-        Name = name;
-        FullyQualifiedTypeName = fullyQualifiedTypeName;
-        IsRequired = isRequired;
-        DefaultValue = defaultValue;
-        Description = description;
-    }
+    public abstract string Name { get; }
+    public abstract string FullyQualifiedTypeName { get; }
+    public abstract Option<string> Description { get; }
 
-    public string Name { get; }
-    public string FullyQualifiedTypeName { get; }
-    public bool IsRequired { get; }
-    public Option<string> DefaultValue { get; }
-    public Option<string> Description { get; }
-
-    public sealed class CommandPositionalParameterModel : CommandParameterModel
-    {
-        public CommandPositionalParameterModel(
+    public sealed class CommandPositionalParameterModel(
             string name,
             string fullyQualifiedTypeName,
-            bool isRequired,
-            Option<string> defaultValue,
-            Option<string> description) : base(name, fullyQualifiedTypeName, isRequired, defaultValue, description)
-        {
-        }
+            Option<string> description) : CommandParameterModel
+    {
+        public override string Name { get; } = name;
+        public override string FullyQualifiedTypeName { get; } = fullyQualifiedTypeName;
+        public override Option<string> Description { get; } = description;
     }
 
-    public sealed class CommandFlagModel : CommandParameterModel
+    public sealed class CommandOptionalPositionalParameterModel(
+            string name,
+            string fullyQualifiedTypeName,
+            string defaultValue,
+            Option<string> description) : CommandParameterModel
     {
-        public CommandFlagModel(string name, Option<string> shortForm, Option<string> description) 
-            : base(name, "System.Boolean", isRequired: false, defaultValue: "false", description)
-        {
-            ShortForm = shortForm;
-        }
+        public override string Name { get; } = name;
+        public override string FullyQualifiedTypeName { get; } = fullyQualifiedTypeName;
+        public override Option<string> Description { get; } = description;
+        public string DefaultValue { get; } = defaultValue;
+    }
 
-        public Option<string> ShortForm { get; }
+    public sealed class CommandFlagModel(
+        string name, Option<string> shortForm, Option<string> description) 
+        : CommandParameterModel
+    {
+        public override string Name { get; } = name;
+        public override string FullyQualifiedTypeName { get; } = "System.Boolean";
+        public override Option<string> Description { get; } = description;
+        public Option<string> ShortForm { get; } = shortForm;
     }
 }

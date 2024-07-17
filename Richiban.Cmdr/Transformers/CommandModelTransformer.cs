@@ -44,6 +44,7 @@ internal class CommandModelTransformer(CmdrDiagnosticsManager diagnosticsManager
                 {
                     Method = MapMethod(methodModel),
                     Description = methodModel.Description,
+                    Parameters = MapParameters(methodModel.Parameters),
                 });
 
             return;
@@ -77,8 +78,7 @@ internal class CommandModelTransformer(CmdrDiagnosticsManager diagnosticsManager
     private static CommandMethod MapMethod(MethodModel methodModel) =>
         new CommandMethod(
             methodModel.FullyQualifiedClassName,
-            methodModel.MethodName,
-            MapParameters(methodModel.Parameters));
+            methodModel.MethodName);
 
     private static IReadOnlyCollection<CommandParameterModel> MapParameters(
         IReadOnlyCollection<ParameterModel> methodModelArguments)
@@ -92,12 +92,17 @@ internal class CommandModelTransformer(CmdrDiagnosticsManager diagnosticsManager
                 arg.Name,
                 arg.ShortForm,
                 arg.Description)
-            : new CommandParameterModel.CommandPositionalParameterModel(
-                arg.Name,
-                arg.FullyQualifiedTypeName,
-                arg.IsRequired,
-                arg.DefaultValue,
-                arg.Description);
+            : arg.IsRequired 
+                ? new CommandParameterModel.CommandPositionalParameterModel(
+                    arg.Name,
+                    arg.FullyQualifiedTypeName,
+                    arg.Description)
+                : new CommandParameterModel.CommandOptionalPositionalParameterModel(
+                    arg.Name,
+                    arg.FullyQualifiedTypeName,
+                    arg.DefaultValue | "default",
+                    arg.Description
+                );
 
     private readonly struct ListWalker<T>
     {

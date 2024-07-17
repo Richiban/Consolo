@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Richiban.Cmdr;
+﻿namespace Richiban.Cmdr;
 
 internal record CommandMethod(
         string FullyQualifiedClassName,
-        string MethodName,
-        IReadOnlyCollection<CommandParameterModel> Parameters)
+        string MethodName)
 {
     public string FullyQualifiedName { get; } = $"{FullyQualifiedClassName}.{MethodName}";
 }
