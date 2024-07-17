@@ -50,6 +50,12 @@ internal class ProgramClassFileGenerator(
                         _codeBuilder.AppendLine($"{m2.FullyQualifiedName}();");
                         _codeBuilder.AppendLine("return;");
                     }
+
+                    foreach (var c in command.SubCommands)
+                    {
+                        WriteCommand(c, depth.Add(c.CommandName));
+                    }
+                    
                     break;
                 case SubCommandModel subCommand:
                     var a = depth.Length + subCommand.MandatoryParameterCount;
@@ -60,6 +66,11 @@ internal class ProgramClassFileGenerator(
 
                     using (_codeBuilder.IndentBraces())
                     {
+                        foreach (var c in command.SubCommands)
+                        {
+                            WriteCommand(c, depth.Add(c.CommandName));
+                        }
+
                         _codeBuilder.AppendLines(
                             $"if (",
                             $"    positionalArgs.Length >= {a} ",
@@ -117,12 +128,6 @@ internal class ProgramClassFileGenerator(
 
                         break;
                     }
-            }
-
-            foreach (var c in command.SubCommands)
-            {
-                using var _ = _codeBuilder.Indent();
-                WriteCommand(c, depth.Add(c.CommandName));
             }
         }
     }
