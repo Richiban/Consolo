@@ -39,7 +39,7 @@ internal class ProgramClassFileGenerator(
 
         return _codeBuilder.ToString();
 
-        void WriteCommand(CommandModel command, ImmutableArray<string> depth)
+        void WriteCommand(CommandModel command, ImmutableArray<string> path)
         {
             switch (command)
             {
@@ -53,29 +53,26 @@ internal class ProgramClassFileGenerator(
 
                     foreach (var c in command.SubCommands)
                     {
-                        WriteCommand(c, depth.Add(c.CommandName));
+                        WriteCommand(c, path.Add(c.CommandName));
                     }
                     
                     break;
                 case SubCommandModel subCommand:
-                    var a = depth.Length + subCommand.MandatoryParameterCount;
-                    var b = depth.Length + subCommand.MandatoryParameterCount + subCommand.OptionalParameterCount;
+                    var a = path.Length + subCommand.MandatoryParameterCount;
+                    var b = path.Length + subCommand.MandatoryParameterCount + subCommand.OptionalParameterCount;
                     
                     _codeBuilder.AppendLines(
-                        $"if (positionalArgs.Length >= {depth.Length} && positionalArgs[{depth.Length - 1}] == \"{subCommand.CommandName}\")");
+                        $"if (positionalArgs.Length >= {path.Length} && positionalArgs[{path.Length - 1}] == \"{subCommand.CommandName}\")");
 
                     using (_codeBuilder.IndentBraces())
                     {
                         foreach (var c in command.SubCommands)
                         {
-                            WriteCommand(c, depth.Add(c.CommandName));
+                            WriteCommand(c, path.Add(c.CommandName));
                         }
 
                         _codeBuilder.AppendLines(
-                            $"if (",
-                            $"    positionalArgs.Length >= {a} ",
-                            $"    && positionalArgs.Length <= {b}",
-                            ")");
+                            $"if (positionalArgs.Length >= {a} && positionalArgs.Length <= {b})");
 
                         using (_codeBuilder.IndentBraces())
                         {
@@ -84,7 +81,7 @@ internal class ProgramClassFileGenerator(
                                 foreach (var (p, i) in subCommand.Parameters.OfType<CommandParameterModel.CommandPositionalParameterModel>().Select((p, i) => (p, i)))
                                 {
                                     _codeBuilder.AppendLines(
-                                        $"var {p.Name} = positionalArgs[{depth.Length + i}];");
+                                        $"var {p.Name} = positionalArgs[{path.Length + i}];");
                                 }
 
                                 foreach (var (p, i) in subCommand.Parameters.OfType<CommandParameterModel.CommandOptionalPositionalParameterModel>().Select((p, i) => (p, i)))
@@ -119,17 +116,40 @@ internal class ProgramClassFileGenerator(
                             }
                         }
 
-                        // _codeBuilder.AppendLine("else");
-                        // using (_codeBuilder.IndentBraces())
-                        // {
-                        //     _codeBuilder.AppendLine($"Console.WriteLine(\"Invalid number of arguments for command '{subCommand.CommandName}'\");");
-                        //     _codeBuilder.AppendLine("return;");
-                        // }
+                        _codeBuilder.AppendLine("else");
+                        using (_codeBuilder.IndentBraces())
+                        {
+                            _codeBuilder.AppendLine($"Console.Error.WriteLine(\"Invalid number of arguments for command '{subCommand.CommandName}'\");");
+                            WriteHelp(assemblyName, path, subCommand);
+                            _codeBuilder.AppendLine("return;");
+                        }
 
                         break;
                     }
             }
         }
+    }
+
+    private string GetHelpTextInPlace(CommandParameterModel parameter)
+    {
+        return parameter switch
+        {
+            CommandParameterModel.CommandOptionalPositionalParameterModel p => $"[<{p.Name}>]",
+            CommandParameterModel.CommandFlagModel p when p.ShortForm.IsSome(out var shortForm) => $"[-{shortForm} | --{p.Name}]",
+            CommandParameterModel.CommandFlagModel p => $"[--{p.Name}]",
+            var p => $"<{p.Name}>",
+        };
+    }
+
+    private string GetHelpTextOutOfPlace(CommandParameterModel parameter)
+    {
+        return parameter switch
+        {
+            CommandParameterModel.CommandOptionalPositionalParameterModel p => $"{p.Name}",
+            CommandParameterModel.CommandFlagModel p when p.ShortForm.IsSome(out var shortForm) => $"-{shortForm} | --{p.Name}",
+            CommandParameterModel.CommandFlagModel p => $"--{p.Name}",
+            var p => $"<{p.Name}>",
+        };
     }
 
     private void WriteHelperMethods()
@@ -172,181 +192,43 @@ internal class ProgramClassFileGenerator(
             """);
     }
 
-    private List<Com> PrepareCommands(IReadOnlyCollection<MethodModel> results)
+    // private void WriteDefaultCase(string assemblyName, List<Com> commands)
+    // {
+    //     _codeBuilder.AppendLine("default: ");
+
+    //     using (_codeBuilder.Indent())
+    //     {
+    //         _codeBuilder.AppendLines($"Console.WriteLine(\"{assemblyName}\");", "Console.WriteLine();");
+    //         _codeBuilder.AppendLine("Console.WriteLine(\"Commands:\");");
+
+    //         var availableCommands = commands
+    //             .Select(c => c.GetHelpText())
+    //             .ToImmutableArray();
+
+    //         var longestCommand = availableCommands.Max(x => x.Item1.Length);
+
+    //         foreach (var (command, description) in availableCommands)
+    //         {
+    //             var cmd = command.PadRight(longestCommand);
+    //             _codeBuilder.AppendLine($"Console.Write(\"    {cmd}\");");
+    //             _codeBuilder.AppendLine("Console.ForegroundColor = helpTextColor;");
+    //             _codeBuilder.AppendLine($"Console.WriteLine(\"  {description}\");");
+    //             _codeBuilder.AppendLine("Console.ForegroundColor = consoleColor;");
+    //         }
+
+    //         _codeBuilder.AppendLine("break;");
+    //     }
+    // }
+
+    private void WriteHelp(
+        string assemblyName,
+        ImmutableArray<string> path,
+        CommandModel com)
     {
-        var commands = new List<Com>();
+        var pathStrings = path.Select(x => $"\"{x}\"");
 
-        foreach (var result in results)
-        {
-            var path = result.GroupCommandPath
-                    .Select(x => x.Name)
-                    .Append(result.ProvidedName | result.MethodName)
-                    .Where(x => x is not (null or ""))
-                    .ToImmutableArray();
-
-            var method = $"{result.FullyQualifiedClassName}.{result.MethodName}";
-
-            commands.Add(new Com(path, method, result.Parameters, result.Description | ""));
-        }
-
-        return commands;
-    }
-
-    private void WriteDefaultCase(string assemblyName, List<Com> commands)
-    {
-        _codeBuilder.AppendLine("default: ");
-
-        using (_codeBuilder.Indent())
-        {
-            _codeBuilder.AppendLines($"Console.WriteLine(\"{assemblyName}\");", "Console.WriteLine();");
-            _codeBuilder.AppendLine("Console.WriteLine(\"Commands:\");");
-
-            var availableCommands = commands
-                .Select(c => c.GetHelpText())
-                .ToImmutableArray();
-
-            var longestCommand = availableCommands.Max(x => x.Item1.Length);
-
-            foreach (var (command, description) in availableCommands)
-            {
-                var cmd = command.PadRight(longestCommand);
-                _codeBuilder.AppendLine($"Console.Write(\"    {cmd}\");");
-                _codeBuilder.AppendLine("Console.ForegroundColor = helpTextColor;");
-                _codeBuilder.AppendLine($"Console.WriteLine(\"  {description}\");");
-                _codeBuilder.AppendLine("Console.ForegroundColor = consoleColor;");
-            }
-
-            _codeBuilder.AppendLine("break;");
-        }
-    }
-
-    private void WriteCommandCase(string assemblyName, Com com)
-    {
-        var pathStrings = com.Path.Select(x => $"\"{x}\"");
-
-        var requiredParameterDeclarations = com.Parameters
-            .Where(x => x.IsRequired)
-            .Select(x => $"var {x.Name}");
-
-        var optionalParameters = com.Parameters
-            .Where(x => !x.IsRequired && !x.IsFlag)
-            .ToImmutableArray();
-
-        var caseDeclarations = pathStrings
-            .Concat(requiredParameterDeclarations)
-            .Concat(optionalParameters.Any() ? ["..var optionalArguments"] : Array.Empty<string>());
-
-        var flags = com.Parameters
-            .Where(x => x.IsFlag)
-            .ToImmutableArray();
-
-        var optionalParameterDeclarations = optionalParameters
-            .Select(x => $"var {x.Name}");
-
-        var requiredParameters = com.Parameters
-            .Where(x => x.IsRequired);
-
-        WriteHelpCase(assemblyName, com);
-
-        _codeBuilder.AppendLines(
-            $"case ([{String.Join(", ", caseDeclarations)}], var options):",
-            "{"
-        );
-
-        using (_codeBuilder.Indent())
-        {
-            foreach (var (optionalParam, i) in optionalParameters.Select((a, b) => (a, b)))
-            {
-                var leadingOptionalParams = optionalParameters.Take(i);
-                var a = Enumerable.Range(0, i).Select(i => "_").Append($"var v{i}");
-                var listMatch = String.Join(", ", a);
-
-                _codeBuilder.AppendLine(
-                    $"var {optionalParam.Name} = optionalArguments is [{listMatch}] ? v{i} : {SourceValueUtils.SourceValue(optionalParam.DefaultValue)};"
-                );
-            }
-
-            foreach (var flag in flags)
-            {
-                if (flag.ShortForm.HasValue)
-                {
-                    _codeBuilder.Append(
-                        $"var {flag.Name} = options.Contains(\"-{flag.ShortForm}\") || options.Contains(\"--{flag.Name}\")",
-                        withIndentation: true
-                    );
-                }
-                else
-                {
-                    _codeBuilder.Append(
-                        $"var {flag.Name} = options.Contains(\"--{flag.Name}\")",
-                        withIndentation: true
-                    );
-                }
-
-                if (flag.DefaultValue.IsSome(out var defaultValue))
-                {
-                    _codeBuilder.Append(
-                        $" || {defaultValue.ToLower()}"
-                    );
-                }
-
-                _codeBuilder.Append(";");
-                _codeBuilder.AppendLine();
-            }
-
-            if (flags.Any())
-            {
-                _codeBuilder.AppendLines(
-                    $"if (options.Except([{String.Join(", ", flags.Select(x => $"\"--{x.Name}\""))}]).ToList() is {{Count: > 0}} unrecognisedOptions)",
-                    "{",
-                    "    Console.Error.WriteLine($\"Unrecogised option(s): {String.Join(\", \", unrecognisedOptions)}\");",
-                    "    args = args.Append(\"--help\").ToArray();",
-                    "    goto handleArguments;",
-                    "}",
-                    "else",
-                    "{");
-
-                using (_codeBuilder.Indent())
-                {
-                    WriteCommandMethodCall(com, optionalParameters, flags, requiredParameters);
-                }
-
-                _codeBuilder.AppendLine("}");
-            }
-            else 
-            {
-                WriteCommandMethodCall(com, optionalParameters, flags, requiredParameters);
-            }
-            _codeBuilder.AppendLine("break;");
-        }
-        _codeBuilder.AppendLine("}");
-    }
-
-    private void WriteCommandMethodCall(Com com, ImmutableArray<ParameterModel> optionalParameters, ImmutableArray<ParameterModel> flags, IEnumerable<ParameterModel> requiredParameters)
-    {
-        var arguments = requiredParameters
-                        .Select(p => p.Name)
-                        .Concat(optionalParameters.Select(x => $"{x.Name}: {x.Name}"))
-                        .Concat(flags.Select(x => $"{x.Name}: {x.Name}"));
-
-        _codeBuilder.AppendLine(
-            $"{com.Method}({String.Join(", ", arguments)});"
-        );
-    }
-
-    private void WriteHelpCase(
-        string assemblyName, 
-        Com com)
-    {
-        var pathStrings = com.Path.Select(x => $"\"{x}\"");
-
-        _codeBuilder.AppendLines(
-            $"case ([{String.Join(", ", pathStrings)}, ..], [.., \"--help\" or \"-h\"]):",
-            "{"
-        );
-
-        var allHelpText = com.Path.Concat(
-            com.Parameters.Select(x => x.GetHelpTextInPlace())
+        var allHelpText = path.Concat(
+            com.Parameters.Select(GetHelpTextInPlace)
         );
 
         using (_codeBuilder.Indent())
@@ -371,7 +253,7 @@ internal class ProgramClassFileGenerator(
                 $");"
             );
 
-            if (!String.IsNullOrEmpty(com.Description))
+            if (com.Description.HasValue)
             {
                 _codeBuilder.AppendLine("Console.ForegroundColor = helpTextColor;");
 
@@ -399,7 +281,7 @@ internal class ProgramClassFileGenerator(
                 );
 
                 var helpNames =
-                    com.Parameters.Select(x => (x.GetHelpTextOutOfPlace(), x.Description));
+                    com.Parameters.Select(p => (GetHelpTextOutOfPlace(p), p.Description));
 
                 var longestParameter = helpNames.Max(x => x.Item1.Length);
 
@@ -414,86 +296,6 @@ internal class ProgramClassFileGenerator(
                     _codeBuilder.AppendLine("Console.ForegroundColor = consoleColor;");
                 }
             }
-
-            _codeBuilder.AppendLines("break;");
         }
-
-        _codeBuilder.AppendLines("}");
     }
-}
-
-class Com(
-    IReadOnlyCollection<string> path,
-    string method,
-    IReadOnlyCollection<ParameterModel> parameters,
-    string description)
-{
-    public IReadOnlyCollection<string> Path { get; } = path;
-    public string Method { get; } = method;
-    public IReadOnlyCollection<ParameterModel> Parameters { get; } = parameters;
-    public string Description { get; } = description;
-
-    public (string A, string Description) GetHelpText() => 
-        (String.Join(" ", Path.Concat(Parameters.Select(GetParameterHelp))), Description);
-
-    private static string GetParameterHelp(ParameterModel parameter) =>
-        parameter switch
-        {
-            {IsFlag: true, ShortForm: {HasValue: false}} flag =>
-                $"[--{flag.Name}]",
-            {IsFlag: true, ShortForm: {HasValue: true}} flag =>
-                $"[-{flag.ShortForm} | --{flag.Name}]",
-            {IsRequired: true} => $"<{parameter.Name}>",
-            _ => $"[{parameter.Name}]"
-        };
-
-    public static int CompareTo(Com left, Com right)
-    {
-        return left.Path.Count.CompareTo(right.Path.Count) switch
-        {
-            > 0 => -1,
-            < 0 => 1,
-            _ => left.Parameters.Count.CompareTo(right.Parameters.Count) switch
-            {
-                > 0 => -1,
-                < 0 => 1,
-                _ => 0
-            },
-        };
-    }
-}
-
-static class Ext
-{
-    public static ImmutableArray<T> SortOrder<T>(
-        this IEnumerable<T> source,
-        Func<T, T, int> compareToFunc)
-    {
-        var items = source.ToArray();
-
-        int CompareTo(T left, T right) => compareToFunc(left, right);
-
-        Array.Sort(items, CompareTo);
-
-        return items.ToImmutableArray();
-    }
-
-    public static string GetHelpTextInPlace(this ParameterModel parameter) =>
-        parameter switch
-        {
-            { IsFlag: true } => parameter.ShortForm.HasValue
-                                ? $"[-{parameter.ShortForm} | --{parameter.Name}]"
-                                : $"[--{parameter.Name}]",
-            { IsRequired: false } => $"[<{parameter.Name}>]",
-            _ => $"<{parameter.Name}>",
-        };
-
-    public static string GetHelpTextOutOfPlace(this ParameterModel parameter) =>
-        parameter switch
-        {
-            { IsFlag: true } => parameter.ShortForm.HasValue
-                                ? $"-{parameter.ShortForm} | --{parameter.Name}"
-                                : $"--{parameter.Name}",
-            _ => $"{parameter.Name}",
-        };
 }

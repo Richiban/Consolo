@@ -13,6 +13,7 @@ internal abstract class CommandModel
     public List<SubCommandModel> SubCommands { get; } = new();
     public Option<CommandMethod> Method { get; set; }
     public IReadOnlyCollection<CommandParameterModel> Parameters { get; init; } = [];
+    public Option<string> Description { get; init; }
 
     public int MandatoryParameterCount => 
         Parameters
@@ -32,7 +33,6 @@ internal abstract class CommandModel
     public sealed class SubCommandModel(string name) : CommandModel
     {
         public string CommandName { get; } = name;
-        public Option<string> Description { get; init; }
     }
 
     public sealed class RootCommandModel : CommandModel
