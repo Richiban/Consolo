@@ -4,16 +4,16 @@ using System.Linq;
 
 namespace Richiban.Cmdr;
 
-internal abstract class CommandModel
+internal abstract class CommandTree
 {
-    private CommandModel()
+    private CommandTree()
     {
     }
 
-    public List<SubCommandModel> SubCommands { get; } = new();
+    public List<SubCommand> SubCommands { get; } = new();
     public Option<CommandMethod> Method { get; set; }
-    public IReadOnlyCollection<CommandParameterModel> Parameters { get; init; } = [];
-    public Option<string> Description { get; init; }
+    public IReadOnlyCollection<CommandParameterModel> Parameters { get; set; } = [];
+    public Option<string> Description { get; set; }
 
     public int MandatoryParameterCount => 
         Parameters
@@ -30,12 +30,12 @@ internal abstract class CommandModel
             .OfType<CommandParameterModel.CommandFlagModel>()
             .Count();
 
-    public sealed class SubCommandModel(string name) : CommandModel
+    public sealed class SubCommand(string name) : CommandTree
     {
         public string CommandName { get; } = name;
     }
 
-    public sealed class RootCommandModel : CommandModel
+    public sealed class Root : CommandTree
     {
     }
 }

@@ -4,59 +4,25 @@ using System.IO;
 
 namespace Richiban.Cmdr.Samples;
 
-class RootActions
-{
-    [Cmdr("")]
-    public static void Help()
-    {
-        Console.WriteLine("Help requested!");
-    }
-}
-
 /// <summary>
-/// These are some test actions
-/// 
-/// What does this do?
+/// A collection of actions for checking out branches and files
 /// </summary>
-[Cmdr("test")]
-class TestActions
+[Cmdr("checkout")]
+class CheckoutActions
 {
     /// <summary>
-    /// This is a test method
+    /// Check out a branch
     /// </summary>
-    /// <param name="arg1">Argument one</param>
-    /// <param name="arg2">Argument two</param>
-    /// <param name="arg3"></param>
-    /// <param name="flag"></param>
-    [Cmdr("test2")]
-    public static void TestMethod(
-        string arg1,
-        string arg2 = "default2",
-        string arg3 = "default3",
-        [Cmdr(ShortForm = "a")] bool flagA = false,
-        [Cmdr(ShortForm = "b")] bool flagB = false)
+    /// <param name="branchName">The name of the branch to check out</param>
+    /// <param name="force">Allow the checkout to overwrite local changes</param>
+    [Cmdr("")]
+    public static void CheckoutBranch(
+        string branchName,
+        [Cmdr(ShortForm = "f")] bool force = false)
     {
         Console.WriteLine(new {
-            arg1,
-            arg2,
-            arg3,
-            flagA,
-            flagB
-        });
-    }
-    
-    [Cmdr("test3")]
-    public static void TestMethod3(
-        string arg1,
-        string arg2 = "default2",
-        string arg3 = "default3",
-        bool flag = false)
-    {
-        Console.WriteLine(new {
-            arg1,
-            arg2,
-            arg3,
-            flag
+            branchName,
+            force
         });
     }
 }

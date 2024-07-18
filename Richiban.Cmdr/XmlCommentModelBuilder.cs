@@ -2,6 +2,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using System.Xml.Linq;
 using static Richiban.Cmdr.Prelude;
+using System.Collections.Generic;
 
 namespace Richiban.Cmdr;
 
@@ -20,10 +21,17 @@ internal class XmlCommentModelBuilder
         var memberElement = doc.Element("member");
         var summary = memberElement.Element("summary").Value;
 
-        var paramComments = memberElement.Elements("param")
-            .ToDictionary(
-                el => el.Attribute("name")?.Value ?? "",
-                el => SourceValueUtils.EscapeCSharpString(el.Value));
+        var paramComments = new Dictionary<string, string>();
+        
+        foreach (var paramComment in memberElement.Elements("param"))
+        {
+            var paramName = paramComment.Attribute("name")?.Value ?? "";
+            
+            if (!paramComments.ContainsKey(paramName))
+            {
+                paramComments.Add(paramName, SourceValueUtils.EscapeCSharpString(paramComment.Value));
+            }
+        }
 
         summary = SourceValueUtils.EscapeCSharpString(summary.Trim());
 

@@ -55,7 +55,7 @@ internal class MethodModelBuilder
                 MethodName: methodSymbol.Name,
                 ProvidedName: lastPathItem.Name,
                 FullyQualifiedClassName: fullyQualifiedName,
-                GroupCommandPath: parentNames,
+                ParentCommandPath: parentNames,
                 Parameters: parameterResults.Result,
                 Description: xmlComments.Result.FlatMap(x => x.Summary)
             ),

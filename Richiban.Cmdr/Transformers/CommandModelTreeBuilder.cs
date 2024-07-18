@@ -5,18 +5,17 @@ using Microsoft.CodeAnalysis;
 
 namespace Richiban.Cmdr;
 
-internal class CommandModelTransformer(CmdrDiagnosticsManager diagnosticsManager)
+internal class CommandModelTreeBuilder(CmdrDiagnosticsManager diagnosticsManager)
 {
-    public CommandModel.RootCommandModel Transform(
-        IEnumerable<MethodModel> methodModels)
+    public CommandTree.Root Transform(IEnumerable<MethodModel> methodModels)
     {
-        var root = new CommandModel.RootCommandModel();
+        var root = new CommandTree.Root();
 
         foreach (var methodModel in methodModels)
         {
             Set(
                 root,
-                new ListWalker<CommandPathItem>(methodModel.GroupCommandPath, diagnosticsManager),
+                new ListWalker<CommandPathItem>(methodModel.ParentCommandPath, diagnosticsManager),
                 methodModel);
         }
 
@@ -24,7 +23,7 @@ internal class CommandModelTransformer(CmdrDiagnosticsManager diagnosticsManager
     }
 
     private static void Set(
-        CommandModel commandModel,
+        CommandTree commandModel,
         ListWalker<CommandPathItem> pathWalker,
         MethodModel methodModel)
     {
@@ -35,12 +34,14 @@ internal class CommandModelTransformer(CmdrDiagnosticsManager diagnosticsManager
             if (methodModel.ProvidedName == "")
             {
                 commandModel.Method = MapMethod(methodModel);
+                commandModel.Description = methodModel.Description;
+                commandModel.Parameters = MapParameters(methodModel.Parameters);
 
                 return;
             }
 
             commandModel.SubCommands.Add(
-                new CommandModel.SubCommandModel(StringUtils.ToKebabCase(currentName))
+                new CommandTree.SubCommand(StringUtils.ToKebabCase(currentName))
                 {
                     Method = MapMethod(methodModel),
                     Description = methodModel.Description,
@@ -66,7 +67,7 @@ internal class CommandModelTransformer(CmdrDiagnosticsManager diagnosticsManager
             return;
         }
 
-        var newSubTree = new CommandModel.SubCommandModel(StringUtils.ToKebabCase(current.Name))
+        var newSubTree = new CommandTree.SubCommand(StringUtils.ToKebabCase(current.Name))
         {
             Description = current.XmlComment,
         };

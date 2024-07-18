@@ -60,7 +60,7 @@ public class CmdrSourceGenerator : ISourceGenerator
             diagnosticsManager.ReportDiagnostics(methodResults.Diagnostics);
 
             var rootCommandModel =
-                new CommandModelTransformer(diagnosticsManager).Transform(methodResults.Result);
+                new CommandModelTreeBuilder(diagnosticsManager).Transform(methodResults.Result);
 
             context.AddCodeFile(new ProgramClassFileGenerator(assemblyName ?? "Unknown assembly", rootCommandModel));
         }

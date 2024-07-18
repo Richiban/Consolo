@@ -2,6 +2,7 @@
 
 abstract class CommandParameterModel
 {
+    private CommandParameterModel() { }
     public abstract string Name { get; }
     public abstract string FullyQualifiedTypeName { get; }
     public abstract Option<string> Description { get; }
