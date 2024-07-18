@@ -42,8 +42,8 @@ internal class ProgramClassFileGenerator(
         WriteCommandDebug(rootCommand);
         _codeBuilder.AppendLine();
 
-        _codeBuilder.AppendLine();
-        _codeBuilder.AppendLine("handleArguments:");
+        // _codeBuilder.AppendLine();
+        // _codeBuilder.AppendLine("handleArguments:");
 
         _codeBuilder.AppendLine("var (positionalArgs, options, isHelp) = NormaliseArgs(args);");
         _codeBuilder.AppendLine($"// Found {rootCommand.SubCommands.Count} commands");
