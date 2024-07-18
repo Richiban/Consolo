@@ -38,7 +38,7 @@ internal class ProgramClassFileGenerator(
         _codeBuilder.AppendLine("var consoleColor = Console.ForegroundColor;");
         _codeBuilder.AppendLine("var helpTextColor = ConsoleColor.Green;");
 
-        _codeBuilder.AppendLine();
+        _codeBuilder.AppendLine($"// Found {rootCommand.SubCommands.Count} commands");
         WriteCommandDebug(rootCommand);
         _codeBuilder.AppendLine();
 
@@ -46,7 +46,6 @@ internal class ProgramClassFileGenerator(
         // _codeBuilder.AppendLine("handleArguments:");
 
         _codeBuilder.AppendLine("var (positionalArgs, options, isHelp) = NormaliseArgs(args);");
-        _codeBuilder.AppendLine($"// Found {rootCommand.SubCommands.Count} commands");
 
         WriteCommand(rootCommand, []);
 
