@@ -5,23 +5,20 @@ using System.IO;
 namespace Richiban.Cmdr.Samples;
 
 /// <summary>
-/// A collection of actions for checking out branches and files
+/// A collection of actions for adding and removing remotes
 /// </summary>
-[Cmdr("checkout")]
+[Cmdr("remote")]
 class CheckoutActions
 {
-    /// <summary>
-    /// Check out a branch
-    /// </summary>
-    /// <param name="branchName">The name of the branch to check out</param>
-    /// <param name="force">Allow the checkout to overwrite local changes</param>
-    [Cmdr("")]
+    [Cmdr("add")]
     public static void CheckoutBranch(
-        string branchName,
+        string name,
+        string url,
         [Cmdr(ShortForm = "f")] bool force = false)
     {
         Console.WriteLine(new {
-            branchName,
+            name,
+            url,
             force
         });
     }

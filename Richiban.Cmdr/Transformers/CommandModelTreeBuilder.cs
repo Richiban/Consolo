@@ -81,24 +81,24 @@ internal class CommandModelTreeBuilder(CmdrDiagnosticsManager diagnosticsManager
             methodModel.FullyQualifiedClassName,
             methodModel.MethodName);
 
-    private static IReadOnlyCollection<CommandParameterModel> MapParameters(
+    private static IReadOnlyCollection<CommandParameter> MapParameters(
         IReadOnlyCollection<ParameterModel> methodModelArguments)
     {
         return methodModelArguments.Select(MapParameter).ToList();
     }
 
-    private static CommandParameterModel MapParameter(ParameterModel arg) =>
+    private static CommandParameter MapParameter(ParameterModel arg) =>
         arg.IsFlag
-            ? new CommandParameterModel.CommandFlagModel(
+            ? new CommandParameter.Flag(
                 arg.Name,
                 arg.ShortForm,
                 arg.Description)
             : arg.IsRequired 
-                ? new CommandParameterModel.CommandPositionalParameterModel(
+                ? new CommandParameter.Positional(
                     arg.Name,
                     arg.FullyQualifiedTypeName,
                     arg.Description)
-                : new CommandParameterModel.CommandOptionalPositionalParameterModel(
+                : new CommandParameter.OptionalPositional(
                     arg.Name,
                     arg.FullyQualifiedTypeName,
                     arg.DefaultValue | "default",
