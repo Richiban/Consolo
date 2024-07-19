@@ -53,92 +53,107 @@ internal class ProgramClassFileGenerator(
         WriteHelperMethods();
 
         return _codeBuilder.ToString();
+    }
 
-        void WriteCommand(CommandTree command, ImmutableArray<string> path)
+    private void WriteCommand(CommandTree command, ImmutableArray<string> path)
+    {
+        var minPositionalCount = path.Length + command.MandatoryParameterCount;
+        var maxPositionalCount = minPositionalCount + command.OptionalParameterCount;
+
+        if (command is SubCommand s)
         {
-            var a = path.Length + command.MandatoryParameterCount;
-            var b = path.Length + command.MandatoryParameterCount + command.OptionalParameterCount;
+            _codeBuilder.AppendLines(
+                $"if (positionalArgs.Length >= {path.Length} && positionalArgs[{path.Length - 1}] == \"{s.CommandName}\")");
+        }
+        else
+        {
+            _codeBuilder.AppendLines(
+                $"if (positionalArgs.Length >= 0)");
+        }
 
-            if (command is SubCommand s)
+        using (_codeBuilder.IndentBraces())
+        {
+            foreach (var c in command.SubCommands)
             {
-                _codeBuilder.AppendLines(
-                    $"if (positionalArgs.Length >= {path.Length} && positionalArgs[{path.Length - 1}] == \"{s.CommandName}\" && !isHelp)");
+                WriteCommand(c, path.Add(c.CommandName));
             }
-            else
-            {
-                _codeBuilder.AppendLines(
-                    $"if (positionalArgs.Length >= 0 && !isHelp)");
-            }
+
+            _codeBuilder.AppendLines(
+                $"if (positionalArgs.Length >= {minPositionalCount} && positionalArgs.Length <= {maxPositionalCount} && !isHelp)");
 
             using (_codeBuilder.IndentBraces())
             {
-                foreach (var c in command.SubCommands)
+                _codeBuilder.AppendLines($"// Found {command.Parameters.Count()} parameters");
+                if (command.Method.IsSome(out var method))
                 {
-                    WriteCommand(c, path.Add(c.CommandName));
-                }
-
-                _codeBuilder.AppendLines(
-                    $"if (positionalArgs.Length >= {a} && positionalArgs.Length <= {b})");
-
-                using (_codeBuilder.IndentBraces())
-                {
-                    _codeBuilder.AppendLines($"// Found {command.Parameters.Count()} parameters");
-                    if (command.Method.IsSome(out var method))
+                    foreach (var (p, i) in command.Parameters.OfType<CommandParameterModel.CommandPositionalParameterModel>().Select((p, i) => (p, i)))
                     {
-                        foreach (var (p, i) in command.Parameters.OfType<CommandParameterModel.CommandPositionalParameterModel>().Select((p, i) => (p, i)))
+                        _codeBuilder.AppendLines(
+                            $"var {p.Name} = positionalArgs[{path.Length + i}];");
+                    }
+
+                    foreach (var (p, i) in command.Parameters.OfType<CommandParameterModel.CommandOptionalPositionalParameterModel>().Select((p, i) => (p, i)))
+                    {
+                        _codeBuilder.AppendLines(
+                            $"var {p.Name} = positionalArgs.Length >= {minPositionalCount + i + 1} ? positionalArgs[{minPositionalCount + i}] : {p.DefaultValue};");
+                    }
+
+                    foreach (var (flag, i) in command.Parameters.OfType<CommandParameterModel.CommandFlagModel>().Select((p, i) => (p, i)))
+                    {
+                        if (flag.ShortForm.IsSome(out var shortForm))
                         {
                             _codeBuilder.AppendLines(
-                                $"var {p.Name} = positionalArgs[{path.Length + i}];");
+                                $"var {flag.Name} = options.Contains(\"--{flag.Name}\") || options.Contains(\"-{shortForm}\");");
                         }
-
-                        foreach (var (p, i) in command.Parameters.OfType<CommandParameterModel.CommandOptionalPositionalParameterModel>().Select((p, i) => (p, i)))
+                        else
                         {
                             _codeBuilder.AppendLines(
-                                $"var {p.Name} = positionalArgs.Length >= {a + i + 1} ? positionalArgs[{a + i}] : {p.DefaultValue};");
+                                $"var {flag.Name} = options.Contains(\"--{flag.Name}\");");
                         }
-
-                        foreach (var (flag, i) in command.Parameters.OfType<CommandParameterModel.CommandFlagModel>().Select((p, i) => (p, i)))
-                        {
-                            if (flag.ShortForm.IsSome(out var shortForm))
-                            {
-                                _codeBuilder.AppendLines(
-                                    $"var {flag.Name} = options.Contains(\"--{flag.Name}\") || options.Contains(\"-{shortForm}\");");
-                            }
-                            else
-                            {
-                                _codeBuilder.AppendLines(
-                                    $"var {flag.Name} = options.Contains(\"--{flag.Name}\");");
-                            }
-                        }
-
-                        var argString = String.Join(", ", command.Parameters.Select(x => x.Name));
-
-                        _codeBuilder.AppendLine($"{method.FullyQualifiedName}({argString});");
-                        _codeBuilder.AppendLine("return;");
                     }
-                    else
-                    {
-                        WriteHelp(assemblyName, path, command);
-                        _codeBuilder.AppendLine("return;");
-                    }
+
+                    var argString = String.Join(", ", command.Parameters.Select(x => x.Name));
+
+                    _codeBuilder.AppendLine($"{method.FullyQualifiedName}({argString});");
+                    _codeBuilder.AppendLine("return;");
                 }
-
-                _codeBuilder.AppendLine("else");
-                using (_codeBuilder.IndentBraces())
+                else
                 {
-                    if (command is SubCommand sub)
-                    {
-                        WriteError($"Invalid number of arguments for command '{sub.CommandName}'");
-                    }
-                    else
-                    {
-                        WriteError($"Invalid number of arguments");
-                    }
+                    WriteHelp(assemblyName, path, command);
+                    _codeBuilder.AppendLine("return;");
                 }
-
-                WriteHelp(assemblyName, path, command);
-                _codeBuilder.AppendLine("return;");
             }
+
+            _codeBuilder.AppendLines("", $"if (positionalArgs.Length < {minPositionalCount} && !isHelp)");
+            
+            using (_codeBuilder.IndentBraces())
+            {
+                if (command is SubCommand sub)
+                {
+                    WriteError($"Missing arguments for command '{sub.CommandName}'");
+                }
+                else
+                {
+                    WriteError($"Missing arguments");
+                }
+            }
+
+            _codeBuilder.AppendLines("", $"if (positionalArgs.Length > {maxPositionalCount} && !isHelp)");
+            
+            using (_codeBuilder.IndentBraces())
+            {
+                if (command is SubCommand sub)
+                {
+                    WriteError($"Unrecognised arguments for command '{sub.CommandName}'");
+                }
+                else
+                {
+                    WriteError($"Unrecognised arguments");
+                }
+            }
+
+            WriteHelp(assemblyName, path, command);
+            _codeBuilder.AppendLine("return;");
         }
     }
 
