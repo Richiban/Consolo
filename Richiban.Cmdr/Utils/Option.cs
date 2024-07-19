@@ -46,14 +46,14 @@ readonly struct Option<T>(T? value)
         return defaultValue;
     }
 
-    public T GetValueOrDefault(Func<T> defaultValue)
+    public T GetValueOrDefault(Func<T> getDefaultValue)
     {
         if (HasValue)
         {
             return value!;
         }
 
-        return defaultValue();
+        return getDefaultValue();
     }
 
     public static T operator |(Option<T> option, T defaultValue) => 

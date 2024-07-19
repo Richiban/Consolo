@@ -1,31 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Microsoft.CodeAnalysis;
 
 namespace Richiban.Cmdr;
 
 internal class CommandModelTreeBuilder(CmdrDiagnosticsManager diagnosticsManager)
 {
-    public CommandTree.Root Transform(IEnumerable<MethodModel> methodModels)
+    public ResultWithDiagnostics<CommandTree.Root> Transform(IEnumerable<MethodModel> methodModels)
     {
         var root = new CommandTree.Root();
+        var diagnostics = new List<DiagnosticModel>();
 
         foreach (var methodModel in methodModels)
         {
             Set(
                 root,
                 new ListWalker<CommandPathItem>(methodModel.ParentCommandPath, diagnosticsManager),
-                methodModel);
+                methodModel,
+                diagnostics);
         }
 
-        return root;
+        return new ResultWithDiagnostics<CommandTree.Root>(root, diagnostics);
     }
 
     private static void Set(
         CommandTree commandModel,
         ListWalker<CommandPathItem> pathWalker,
-        MethodModel methodModel)
+        MethodModel methodModel,
+        List<DiagnosticModel> diagnostics)
     {
         var currentName = methodModel.ProvidedName.GetValueOrDefault(() => pathWalker.Current.Name);
 
@@ -36,6 +40,18 @@ internal class CommandModelTreeBuilder(CmdrDiagnosticsManager diagnosticsManager
                 commandModel.Method = MapMethod(methodModel);
                 commandModel.Description = methodModel.Description;
                 commandModel.Parameters = MapParameters(methodModel.Parameters);
+
+                return;
+            }
+
+            if (commandModel.SubCommands.Any(t => t.CommandName == StringUtils.ToKebabCase(currentName)))
+            {
+                diagnostics.Add(
+                    DiagnosticModel.CommandNameAlreadyInUse(
+                        currentName, 
+                        methodModel.Location.GetValueOrDefault(defaultValue: null!)
+                    )
+                );
 
                 return;
             }
@@ -59,7 +75,7 @@ internal class CommandModelTreeBuilder(CmdrDiagnosticsManager diagnosticsManager
         {
             subTreeWasMatched = true;
 
-            Set(tree, remaining, methodModel);
+            Set(tree, remaining, methodModel, diagnostics);
         }
 
         if (subTreeWasMatched)
@@ -72,7 +88,7 @@ internal class CommandModelTreeBuilder(CmdrDiagnosticsManager diagnosticsManager
             Description = current.XmlComment,
         };
 
-        Set(newSubTree, remaining, methodModel);
+        Set(newSubTree, remaining, methodModel, diagnostics);
         commandModel.SubCommands.Add(newSubTree);
     }
 
@@ -90,19 +106,22 @@ internal class CommandModelTreeBuilder(CmdrDiagnosticsManager diagnosticsManager
     private static CommandParameter MapParameter(ParameterModel arg) =>
         arg.IsFlag
             ? new CommandParameter.Flag(
-                arg.Name,
-                arg.ShortForm,
-                arg.Description)
+                name: arg.Name,
+                shortForm: arg.ShortForm,
+                description: arg.Description,
+                originalName: arg.OriginalName)
             : arg.IsRequired 
                 ? new CommandParameter.Positional(
-                    arg.Name,
-                    arg.FullyQualifiedTypeName,
-                    arg.Description)
+                    name: arg.Name,
+                    originalName: arg.OriginalName,
+                    type: arg.Type,
+                    description: arg.Description)
                 : new CommandParameter.OptionalPositional(
-                    arg.Name,
-                    arg.FullyQualifiedTypeName,
-                    arg.DefaultValue | "default",
-                    arg.Description
+                    name: arg.Name,
+                    type: arg.Type,
+                    defaultValue: arg.DefaultValue | "default",
+                    description: arg.Description,
+                    originalName: arg.OriginalName
                 );
 
     private readonly struct ListWalker<T>

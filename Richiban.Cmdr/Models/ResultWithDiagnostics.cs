@@ -17,6 +17,12 @@ class ResultWithDiagnostics<T>
     {
         return new ResultWithDiagnostics<T>(result, []);
     }
+
+    public void Deconstruct(out T result, out IReadOnlyCollection<DiagnosticModel> diagnostics)
+    {
+        result = Result;
+        diagnostics = Diagnostics;
+    }
 }
 
 static class ResultWithDiagnostics

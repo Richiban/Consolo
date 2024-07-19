@@ -52,17 +52,32 @@ public class CmdrSourceGenerator : ISourceGenerator
 
             diagnosticsManager.ReportDiagnostic(
                 new DiagnosticModel(
+                    Code: "Cmdr0000",
                     $"Found {methodResults.Result.Count} qualifying methods, {methodResults.Diagnostics.Count} diagnostics.",
                     Location: null,
                     Severity: DiagnosticSeverity.Info)
                 );
 
+            if (methodResults.Result.Count == 0)
+            {
+                diagnosticsManager.ReportDiagnostic(DiagnosticModel.NoMethodsFound());
+
+                return;
+            }
+
             diagnosticsManager.ReportDiagnostics(methodResults.Diagnostics);
 
-            var rootCommandModel =
+            var (rootCommandModel, transformingDiagnostics) =
                 new CommandModelTreeBuilder(diagnosticsManager).Transform(methodResults.Result);
 
-            context.AddCodeFile(new ProgramClassFileGenerator(assemblyName ?? "Unknown assembly", rootCommandModel));
+            diagnosticsManager.ReportDiagnostics(transformingDiagnostics);
+
+            context.AddCodeFile(
+                new ProgramClassFileGenerator(
+                    assemblyName ?? "Unknown assembly",
+                    rootCommandModel
+                )
+            );
         }
         catch (Exception ex)
         {

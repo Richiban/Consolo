@@ -17,7 +17,7 @@ public class RemoteActions
     /// <param name="force">Overwrite any existing remote with the given name</param>
     [Cmdr("add")]
     public static void AddRemote(
-        string name,
+        [Cmdr("long-name")] string name,
         string url,
         [Cmdr(ShortForm = "f")] bool force = false)
     {

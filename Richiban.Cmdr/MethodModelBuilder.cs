@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -19,18 +18,16 @@ internal class MethodModelBuilder
         if (methodSymbol is null)
         {
             return ResultWithDiagnostics.DiagnosticOnly<MethodModel>(
-                new DiagnosticModel("Method not found",
-                Location: null,
-                Severity: DiagnosticSeverity.Error));
+                DiagnosticModel.ErrorProcessingMethod("Method not found",
+                Location: null));
         }
 
         if (!methodSymbol.IsStatic)
         {
             return ResultWithDiagnostics.DiagnosticOnly<MethodModel>(
-                new DiagnosticModel(
-                    $"Method {methodSymbol} must be static in order to use the {CmdrAttributeDefinition.ShortName} attribute.",
-                    methodSymbol.Locations.FirstOrDefault(),
-                    Severity: DiagnosticSeverity.Error));
+                DiagnosticModel.MethodMustBeStatic(
+                    methodSymbol,
+                    methodSymbol.Locations.FirstOrDefault()));
         }
 
         var xmlComments = XmlCommentModelBuilder.GetXmlComments(methodSymbol);
@@ -57,7 +54,8 @@ internal class MethodModelBuilder
                 FullyQualifiedClassName: fullyQualifiedName,
                 ParentCommandPath: parentNames,
                 Parameters: parameterResults.Result,
-                Description: xmlComments.Result.FlatMap(x => x.Summary)
+                Description: xmlComments.Result.FlatMap(x => x.Summary),
+                Location: methodSymbol.Locations.FirstOrDefault()
             ),
             diagnostics);
     }
@@ -74,7 +72,7 @@ internal class MethodModelBuilder
                 var xmlComment = XmlCommentModelBuilder.GetXmlComments(symbol)
                     .Result.FlatMap(r => r.Summary);
 
-                if (commandName == "" && path is { Count: > 0 }) 
+                if (commandName == "" && path is { Count: > 0 })
                 {
                     var parent = path.Last();
                     path.RemoveAt(path.Count - 1);
@@ -102,13 +100,15 @@ internal class MethodModelBuilder
         var attr = AttributeUsageUtils.GetUsage(parameterSymbol);
         var diagnostics = new List<DiagnosticModel>();
 
-        if (attr is {Names: { Count: > 1 and var count }})
+        if (attr is { Names: { Count: > 1 and var count } })
         {
             diagnostics.Add(
-                new DiagnosticModel(
-                    $"Parameter {parameterSymbol.Name} has {count} names specified in the attribute; parameters can only specify one.",
-                    Location: parameterSymbol.Locations.FirstOrDefault(),
-                    Severity: DiagnosticSeverity.Error));
+                DiagnosticModel.MultipleParameterNamesSupplied(
+                    parameterSymbol,
+                    count,
+                    Location: parameterSymbol.Locations.FirstOrDefault()
+                )
+            );
         }
 
         var name = attr?.Names?.FirstOrDefault() ?? parameterSymbol.Name;
@@ -125,14 +125,14 @@ internal class MethodModelBuilder
 
         return new ResultWithDiagnostics<ParameterModel>(
             new ParameterModel(
-                name,
-                type,
-                isFlag,
+                Name: name,
+                OriginalName: parameterSymbol.Name,
+                IsFlag: isFlag,
                 IsRequired: isRequired,
                 DefaultValue: defaultValue,
                 Description: xmlComment,
                 ShortForm: shortForm,
-                type: parameterSymbol.Type),
+                Type: parameterSymbol.Type),
             diagnostics
         );
     }

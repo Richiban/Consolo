@@ -4,10 +4,10 @@ namespace Richiban.Cmdr;
 
 internal record ParameterModel(
     string Name,
-    string FullyQualifiedTypeName,
+    string OriginalName,
     bool IsFlag,
     bool IsRequired,
     Option<string> DefaultValue,
     Option<string> Description,
     Option<string> ShortForm,
-    ITypeSymbol type);
+    ITypeSymbol Type);

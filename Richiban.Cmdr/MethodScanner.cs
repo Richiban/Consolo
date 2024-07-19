@@ -40,10 +40,10 @@ internal class MethodScanner(
                             var candidateReason = errType.CandidateReason;
 
                             diagnostics.ReportDiagnostic(
-                                new DiagnosticModel(
-                                    $"There was a problem with attribute {errType.Name}: {candidateReason}",
-                                    Location: method.Locations.FirstOrDefault(),
-                                    Severity: DiagnosticSeverity.Error));
+                                DiagnosticModel.AttributeProblem(
+                                    errType.Name,
+                                    candidateReason,
+                                    Location: method.Locations.FirstOrDefault()));
 
                             return false;
                         }

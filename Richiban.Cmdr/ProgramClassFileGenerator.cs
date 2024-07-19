@@ -84,13 +84,13 @@ internal class ProgramClassFileGenerator(
                     foreach (var (p, i) in command.Parameters.OfType<CommandParameter.Positional>().Select((p, i) => (p, i)))
                     {
                         _codeBuilder.AppendLines(
-                            $"var {p.Name} = positionalArgs[{path.Length + i}];");
+                            $"var {p.OriginalName} = positionalArgs[{path.Length + i}];");
                     }
 
                     foreach (var (p, i) in command.Parameters.OfType<CommandParameter.OptionalPositional>().Select((p, i) => (p, i)))
                     {
                         _codeBuilder.AppendLines(
-                            $"var {p.Name} = positionalArgs.Length >= {minPositionalCount + i + 1} ? positionalArgs[{minPositionalCount + i}] : {p.DefaultValue};");
+                            $"var {p.OriginalName} = positionalArgs.Length >= {minPositionalCount + i + 1} ? positionalArgs[{minPositionalCount + i}] : {p.DefaultValue};");
                     }
 
                     foreach (var (flag, i) in command.Parameters.OfType<CommandParameter.Flag>().Select((p, i) => (p, i)))
@@ -98,16 +98,16 @@ internal class ProgramClassFileGenerator(
                         if (flag.ShortForm.IsSome(out var shortForm))
                         {
                             _codeBuilder.AppendLines(
-                                $"var {flag.Name} = options.Contains(\"--{flag.Name}\") || options.Contains(\"-{shortForm}\");");
+                                $"var {flag.OriginalName} = options.Contains(\"--{flag.Name}\") || options.Contains(\"-{shortForm}\");");
                         }
                         else
                         {
                             _codeBuilder.AppendLines(
-                                $"var {flag.Name} = options.Contains(\"--{flag.Name}\");");
+                                $"var {flag.OriginalName} = options.Contains(\"--{flag.Name}\");");
                         }
                     }
 
-                    var argString = String.Join(", ", command.Parameters.Select(x => x.Name));
+                    var argString = String.Join(", ", command.Parameters.Select(x => x.OriginalName));
 
                     _codeBuilder.AppendLine($"{method.FullyQualifiedName}({argString});");
                     _codeBuilder.AppendLine("return;");
@@ -192,7 +192,7 @@ internal class ProgramClassFileGenerator(
     {
         _codeBuilder.AppendLine(
                     """
-            static (ImmutableArray<string> positionalArgs, ImmutableArray<string> options, bool isHelp) NormaliseArgs(string[] args)
+            static (ImmutableArray<string> positionalArgs, ImmutableHashSet<string> options, bool isHelp) NormaliseArgs(string[] args)
             {
                 var positionalArgs = new List<string>();
                 var options = new List<string>();
@@ -219,7 +219,7 @@ internal class ProgramClassFileGenerator(
                     }
                 }
 
-                return (positionalArgs.ToImmutableArray(), options.ToImmutableArray(), isHelp);
+                return (positionalArgs.ToImmutableArray(), options.ToImmutableHashSet(), isHelp);
             }
             """);
     }

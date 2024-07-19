@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Microsoft.CodeAnalysis;
 
 namespace Richiban.Cmdr;
 
@@ -8,5 +9,6 @@ record MethodModel(
     string MethodName,
     Option<string> ProvidedName,
     IReadOnlyList<CommandPathItem> ParentCommandPath,
-    IReadOnlyCollection<ParameterModel> Parameters
+    IReadOnlyCollection<ParameterModel> Parameters,
+    Option<Location> Location
 );
