@@ -18,7 +18,8 @@ public class RemoteActions
     [Cmdr("add")]
     public static void AddRemote(
         [Cmdr("long-name")] string name,
-        string url,
+        Uri url,
+        int count,
         [Cmdr(ShortForm = "f")] bool force = false)
     {
         if (force)

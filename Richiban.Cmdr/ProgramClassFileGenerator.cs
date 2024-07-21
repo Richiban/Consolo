@@ -84,13 +84,13 @@ internal class ProgramClassFileGenerator(
                     foreach (var (p, i) in command.Parameters.OfType<CommandParameter.Positional>().Select((p, i) => (p, i)))
                     {
                         _codeBuilder.AppendLines(
-                            $"var {p.OriginalName} = positionalArgs[{path.Length + i}];");
+                            $"var {p.SourceName} = {ConvertParameter(p.Type, $"positionalArgs[{path.Length + i}]")};");
                     }
 
                     foreach (var (p, i) in command.Parameters.OfType<CommandParameter.OptionalPositional>().Select((p, i) => (p, i)))
                     {
                         _codeBuilder.AppendLines(
-                            $"var {p.OriginalName} = positionalArgs.Length >= {minPositionalCount + i + 1} ? positionalArgs[{minPositionalCount + i}] : {p.DefaultValue};");
+                            $"var {p.SourceName} = positionalArgs.Length >= {minPositionalCount + i + 1} ? {ConvertParameter(p.Type, $"positionalArgs[{minPositionalCount + i}]")} : {p.DefaultValue};");
                     }
 
                     foreach (var (flag, i) in command.Parameters.OfType<CommandParameter.Flag>().Select((p, i) => (p, i)))
@@ -98,25 +98,20 @@ internal class ProgramClassFileGenerator(
                         if (flag.ShortForm.IsSome(out var shortForm))
                         {
                             _codeBuilder.AppendLines(
-                                $"var {flag.OriginalName} = options.Contains(\"--{flag.Name}\") || options.Contains(\"-{shortForm}\");");
+                                $"var {flag.SourceName} = options.Contains(\"--{flag.Name}\") || options.Contains(\"-{shortForm}\");");
                         }
                         else
                         {
                             _codeBuilder.AppendLines(
-                                $"var {flag.OriginalName} = options.Contains(\"--{flag.Name}\");");
+                                $"var {flag.SourceName} = options.Contains(\"--{flag.Name}\");");
                         }
                     }
 
-                    var argString = String.Join(", ", command.Parameters.Select(x => x.OriginalName));
+                    var argString = String.Join(", ", command.Parameters.Select(x => x.SourceName));
 
                     _codeBuilder.AppendLine($"{method.FullyQualifiedName}({argString});");
                     _codeBuilder.AppendLine("return;");
                 }
-                // else
-                // {
-                //     WriteHelp(assemblyName, path, command);
-                //     _codeBuilder.AppendLine("return;");
-                // }
             }
 
             _codeBuilder.AppendLines("", $"if (positionalArgs.Length < {minPositionalCount} && !isHelp)");
@@ -157,6 +152,18 @@ internal class ProgramClassFileGenerator(
             WriteHelp(assemblyName, path, command);
             _codeBuilder.AppendLine("return;");
         }
+    }
+
+    private string ConvertParameter(ParameterType type, string expression)
+    {
+        return type switch
+        {
+            ParameterType.AsIs => expression,
+            ParameterType.Parse p => $"{p.GetFullyQualifiedName()}.{p.ParseMethodName}({expression})",
+            ParameterType.Constructor c => $"new {c.GetFullyQualifiedName()}({expression})",
+            ParameterType.ExplicitCast c => $"({c.GetFullyQualifiedName()})({expression})",
+            _ => throw new NotSupportedException("Unsupported parameter type: " + type.GetType().Name)
+        };
     }
 
     private string GetHelpTextInPlace(CommandParameter parameter)

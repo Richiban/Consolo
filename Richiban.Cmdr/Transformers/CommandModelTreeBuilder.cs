@@ -114,15 +114,30 @@ internal class CommandModelTreeBuilder(CmdrDiagnosticsManager diagnosticsManager
                 ? new CommandParameter.Positional(
                     name: arg.Name,
                     originalName: arg.OriginalName,
-                    type: arg.Type,
+                    type: MapType(arg.Type),
                     description: arg.Description)
                 : new CommandParameter.OptionalPositional(
                     name: arg.Name,
-                    type: arg.Type,
+                    type: MapType(arg.Type),
                     defaultValue: arg.DefaultValue | "default",
                     description: arg.Description,
                     originalName: arg.OriginalName
                 );
+
+    private static ParameterType MapType(ITypeSymbol type)
+    {
+        switch (type)
+        {
+            case INamedTypeSymbol t when t.HasParseMethod():
+                return new ParameterType.Parse(type, "Parse");
+            case INamedTypeSymbol t when t.HasExplicitCastFromString():
+                return new ParameterType.ExplicitCast(type);
+            case INamedTypeSymbol t when t.HasConstructorWithSingleStringParameter():
+                return new ParameterType.Constructor(type);
+            default:
+                return new ParameterType.AsIs(type);
+        }
+    }
 
     private readonly struct ListWalker<T>
     {
