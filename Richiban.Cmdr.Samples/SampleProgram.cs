@@ -14,6 +14,7 @@ public class RemoteActions
     /// </summary>
     /// <param name="name">The local name to give the remote</param>
     /// <param name="url">The URL of the remote</param>
+    /// <param name="count">The number of remotes to add</param>
     /// <param name="force">Overwrite any existing remote with the given name</param>
     [Cmdr("add")]
     public static void AddRemote(
@@ -24,11 +25,11 @@ public class RemoteActions
     {
         if (force)
         {
-            Console.WriteLine($"Adding remote {name} at {url} (force)");
+            Console.WriteLine($"Adding remote {name} at {url} (force), count = {count}");
             return;
         }
 
-        Console.WriteLine($"Adding remote {name} at {url}");
+        Console.WriteLine($"Adding remote {name} at {url}, count = {count}");
     }
 
     /// <summary>

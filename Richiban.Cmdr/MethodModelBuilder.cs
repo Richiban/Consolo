@@ -120,7 +120,7 @@ internal class MethodModelBuilder
             parameterSymbol.HasExplicitDefaultValue
             ? SourceValueUtils.SourceValue(parameterSymbol.ExplicitDefaultValue)
             : null;
-        var xmlComment = methodXmlComments.FlatMap(x => x[name]);
+        var xmlComment = methodXmlComments.FlatMap(x => x[parameterSymbol.Name]);
         var shortForm = attr?.ShortForm;
 
         return new ResultWithDiagnostics<ParameterModel>(
