@@ -23,12 +23,16 @@ public static class TypeSymbolExtensions
         });
     }
 
-    public static bool HasExplicitCastFromString(this INamedTypeSymbol typeSymbol)
+    public static bool HasCastFromString(this INamedTypeSymbol typeSymbol)
     {
-        return typeSymbol.GetMembers("op_Explicit").OfType<IMethodSymbol>().Any(method =>
-        {
-            var parameters = method.Parameters;
-            return parameters.Length == 1 && parameters[0].Type.SpecialType == SpecialType.System_String;
-        });
+        return typeSymbol
+            .GetMembers("op_Explicit")
+            .Concat(typeSymbol.GetMembers("op_Implicit"))
+            .OfType<IMethodSymbol>()
+            .Any(method =>
+            {
+                var parameters = method.Parameters;
+                return parameters.Length == 1 && parameters[0].Type.SpecialType == SpecialType.System_String;
+            });
     }
 }

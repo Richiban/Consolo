@@ -68,4 +68,14 @@ record DiagnosticModel(string Code, string Message, Location? Location, Diagnost
             Severity: DiagnosticSeverity.Error
         );
     }
+
+    internal static DiagnosticModel UnsupportedParameterType(ParameterModel param)
+    {
+        return new DiagnosticModel(
+            Code: "Cmdr0008",
+            Message: $"Parameter '{param.Name}' has a type that is unsupported ({param.Type.Name}).",
+            Location: param.Location,
+            Severity: DiagnosticSeverity.Error
+        );
+    }
 }

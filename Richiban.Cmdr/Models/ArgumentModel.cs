@@ -10,4 +10,5 @@ internal record ParameterModel(
     Option<string> DefaultValue,
     Option<string> Description,
     Option<string> ShortForm,
-    ITypeSymbol Type);
+    ITypeSymbol Type,
+    Location? Location);

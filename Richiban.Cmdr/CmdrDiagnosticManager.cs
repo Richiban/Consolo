@@ -14,7 +14,7 @@ internal class CmdrDiagnosticsManager(GeneratorExecutionContext context)
         _context.ReportDiagnostic(
             Diagnostic.Create(
                 new DiagnosticDescriptor(
-                    "Cmdr0001",
+                    diagnostic.Code,
                     diagnostic.Message,
                     diagnostic.Message,
                     "Cmdr",

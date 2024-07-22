@@ -68,7 +68,7 @@ public class CmdrSourceGenerator : ISourceGenerator
             diagnosticsManager.ReportDiagnostics(methodResults.Diagnostics);
 
             var (rootCommandModel, transformingDiagnostics) =
-                new CommandModelTreeBuilder(diagnosticsManager).Transform(methodResults.Result);
+                new CommandTreeBuilder().Transform(methodResults.Result);
 
             diagnosticsManager.ReportDiagnostics(transformingDiagnostics);
 

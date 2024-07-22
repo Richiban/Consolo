@@ -132,7 +132,8 @@ internal class MethodModelBuilder
                 DefaultValue: defaultValue,
                 Description: xmlComment,
                 ShortForm: shortForm,
-                Type: parameterSymbol.Type),
+                Type: parameterSymbol.Type,
+                Location: parameterSymbol.Locations.FirstOrDefault()),
             diagnostics
         );
     }
