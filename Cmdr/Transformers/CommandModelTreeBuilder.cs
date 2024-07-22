@@ -34,15 +34,6 @@ class CommandTreeBuilder
         var root = new CommandTree.Root();
         var diagnostics = new List<DiagnosticModel>();
 
-        // foreach (var methodModel in methodModels)
-        // {
-        //     Set(
-        //         root,
-        //         new ListWalker<CommandPathItem>(methodModel.ParentCommandPath, diagnosticsManager),
-        //         methodModel,
-        //         diagnostics);
-        // }
-
         foreach (var methodModel in methodModels)
         {
             CommandTree currentLevel = root;
@@ -122,72 +113,7 @@ class CommandTreeBuilder
 
         return new ResultWithDiagnostics<CommandTree.Root>(root, diagnostics);
     }
-
-    private static void Set(
-        CommandTree commandModel,
-        ListWalker<CommandPathItem> pathWalker,
-        MethodModel methodModel,
-        List<DiagnosticModel> diagnostics)
-    {
-        var currentName = methodModel.ProvidedName.GetValueOrDefault(() => pathWalker.Current.Name);
-
-        if (pathWalker.AtEnd)
-        {
-            if (methodModel.ProvidedName == "")
-            {
-                commandModel.Method = MapMethod(methodModel, diagnostics);
-                commandModel.Description = methodModel.Description;
-
-                return;
-            }
-
-            if (commandModel.SubCommands.Any(t => t.CommandName == StringUtils.ToKebabCase(currentName)))
-            {
-                diagnostics.Add(
-                    DiagnosticModel.CommandNameAlreadyInUse(
-                        currentName,
-                        methodModel.Location.GetValueOrDefault(defaultValue: null!)
-                    )
-                );
-
-                return;
-            }
-
-            commandModel.SubCommands.Add(
-                new CommandTree.SubCommand(StringUtils.ToKebabCase(currentName))
-                {
-                    Method = MapMethod(methodModel, diagnostics),
-                    Description = methodModel.Description,
-                });
-
-            return;
-        }
-
-        var (current, remaining) = pathWalker;
-        var subTreeWasMatched = false;
-
-        foreach (var tree in commandModel.SubCommands.Where(
-            t => t.CommandName == current.Name))
-        {
-            subTreeWasMatched = true;
-
-            Set(tree, remaining, methodModel, diagnostics);
-        }
-
-        if (subTreeWasMatched)
-        {
-            return;
-        }
-
-        var newSubTree = new CommandTree.SubCommand(StringUtils.ToKebabCase(current.Name))
-        {
-            Description = current.XmlComment,
-        };
-
-        Set(newSubTree, remaining, methodModel, diagnostics);
-        commandModel.SubCommands.Add(newSubTree);
-    }
-
+    
     private static CommandMethod MapMethod(MethodModel methodModel, List<DiagnosticModel> diagnostics) =>
         new CommandMethod(
             FullyQualifiedClassName: methodModel.FullyQualifiedClassName,
