@@ -90,32 +90,7 @@ if (positionalArgs.Length >= 1 && positionalArgs[0] == "greet")
         }
     }
 
-    Console.WriteLine(
-        """
-        Cmdr.Samples
-
-        Command:
-            greet <name>
-        """
-    );
-    Console.ForegroundColor = helpTextColor;
-    Console.WriteLine(
-        """
-
-            A function that can greet a person by name.\n    \n    Use it to say Hello!
-        """
-    );
-    Console.ForegroundColor = consoleColor;
-    Console.WriteLine(
-        """
-
-        Parameters:
-        """
-    );
-    Console.Write("    name  ");
-    Console.ForegroundColor = helpTextColor;
-    Console.WriteLine("The name of the person you would like to greet");
-    Console.ForegroundColor = consoleColor;
+    // Auto-generated help goes here...
     return;
 }
 
@@ -234,14 +209,14 @@ greet
   A function that greets a person with the appropriate formality
 
 Usage:
-  Cmdr.Samples [options] greet <name>
+  Cmdr.Samples greet <name> [options]
 
 Arguments:
   <name>  The name of the person you would like to greet
 
 Options:
-  -f, --formal    "true" means the person will be greeted very formally
-  -?, -h, --help  Show help and usage information
+  -f | --formal  "true" means the person will be greeted very formally
+  -h | --help    Show help and usage information
 ```
 
 # Arguments and auto-conversion
