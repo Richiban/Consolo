@@ -1,4 +1,6 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Collections;
+using System.Collections.Generic;
+using Microsoft.CodeAnalysis;
 
 namespace Consolo;
 
@@ -7,48 +9,46 @@ abstract class CommandParameter
     private CommandParameter() { }
     public abstract string Name { get; }
     public abstract string SourceName { get; }
-    public abstract string FullyQualifiedTypeName { get; }
     public abstract Option<string> Description { get; }
+    public abstract ParameterType Type { get; }
+    public string FullyQualifiedTypeName => Type.FullyQualifiedTypeName;
 
     public sealed class Positional(
             string name,
-            string originalName,
+            string sourceName,
             ParameterType type,
             string description) : CommandParameter
     {
         public override string Name { get; } = name;
-        public ParameterType Type { get; } = type;
-        public override string FullyQualifiedTypeName { get; } = type.GetFullyQualifiedName();
+        public override ParameterType Type { get; } = type;
         public override Option<string> Description { get; } = description;
-        public override string SourceName { get; } = originalName;
+        public override string SourceName { get; } = sourceName;
     }
 
-    public sealed class OptionalPositional(
+    public sealed class Option(
             string name,
             ParameterType type,
             string defaultValue,
+            Option<string> shortForm,
             string description,
-            string originalName) : CommandParameter
+            string sourceName,
+            bool isFlag) : CommandParameter
     {
         public override string Name { get; } = name;
-        public ParameterType Type { get; } = type;
-        public override string FullyQualifiedTypeName { get; } = type.GetFullyQualifiedName();
+        public override ParameterType Type { get; } = type;
         public override Option<string> Description { get; } = description;
-        public override string SourceName { get; } = originalName;
+        public override string SourceName { get; } = sourceName;
         public string DefaultValue { get; } = defaultValue;
-    }
-
-    public sealed class Flag(
-        string name, 
-        Option<string> shortForm,
-        Option<string> description,
-        string originalName) 
-        : CommandParameter
-    {
-        public override string Name { get; } = name;
-        public override string FullyQualifiedTypeName { get; } = "System.Boolean";
-        public override Option<string> Description { get; } = description;
         public Option<string> ShortForm { get; } = shortForm;
-        public override string SourceName { get; } = originalName;
+        public bool IsFlag { get; } = isFlag;
+
+        public IEnumerable<string> GetNames()
+        {
+            yield return Name;
+            if (ShortForm.IsSome(out var shortForm))
+            {
+                yield return shortForm;
+            }
+        }
     }
 }

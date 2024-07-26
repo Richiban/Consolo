@@ -3,15 +3,15 @@ Consolo
 
 Consolo is a library that makes it super easy to define command line interfaces in C#.
 
-It offers all the features you'd expect from a command-line library such as converting command-line arguments and auto-generated help but, since it's based on a source generator, it offers a number of advantages over existing solutions (such as [`System.CommandLine`](https://www.nuget.org/packages/System.CommandLine)), such as:
+It offers all the features you'd expect from a command-line library such as converting command-line arguments and auto-generated help but, since it's based on a source generator, it offers a number of advantages over existing solutions such as [`System.CommandLine`](https://www.nuget.org/packages/System.CommandLine):
 * **No need to define a `Main` method**: Consolo will generate this for you.
 * **Almost no boilerplate**: All you need is to decorate your code with a few attributes and Consolo will generate all the code you need
 * **Compile-time errors**: Misconfiguration of your commands will result in errors at compile time, rather than at runtime
-* **Fast**: Since the code is generated at compile time, there's no runtime overhead like reflection. Consolo ensures that the resulting application is as fast as it's possible to be
+* **Fast**: Since most of the work is being done during the build, there's no runtime overhead like reflection. Consolo ensures that the resulting application is as fast as it's possible to be
 
 # Installation
 
-To get working with `Consolo`, simply install the `Consolo` package in your console application:
+To get started, simply install the `Consolo` package in your console application:
 
 ```bash
 dotnet add package Consolo
@@ -20,22 +20,30 @@ dotnet add package Consolo
 Or, alternatively, add the following to your `csproj` file:
 
 ```xml
-    <ItemGroup>
-        <PackageReference Include="Consolo"
-                          OutputItemType="Analyzer"
-                          ReferenceOutputAssembly="false" />
-    </ItemGroup>
+<ItemGroup>
+    <PackageReference Include="Consolo" Version="0.9.1" />
+</ItemGroup>
 ```
 
-> Note that to make use of Consolo your console app must **not** have a `Main` method or any top-level statements;Consolo will generate these for you.
+> Note that to make use of Consolo your console app must **not** have a `Main` method or any top-level statements; Consolo will generate these for you.
 
 If you want your XML comments to flow through to the generated code, you will need to add the following to your `csproj` file:
 
 ```xml
-    <PropertyGroup>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    </PropertyGroup>
+<PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+</PropertyGroup>
 ```
+
+[Optional] If you want to see the code that Consolo generates, you can add the following to your `csproj` file:
+
+```xml
+<PropertyGroup>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+</PropertyGroup>
+```
+
+You'll then find the generated code in the `obj` folder of your project, e.g. `/obj/Debug/net8.0/generated/Consolo/Consolo.ConsoloSourceGenerator/Program.g.cs`
 
 # A Hello World example
 
@@ -90,19 +98,11 @@ if (positionalArgs.Length >= 1 && positionalArgs[0] == "greet")
         }
     }
 
-    // Auto-generated help goes here...
+    // Auto-generated help for the 'greet' command...
     return;
 }
 
-Console.WriteLine("Consolo.Samples");
-Console.WriteLine("");
-Console.WriteLine("Commands:");
-Console.Write("    greet <name>");
-Console.ForegroundColor = helpTextColor;
-Console.WriteLine("  A function that can greet a person by name.\n    \n    Use it to say Hello!");
-Console.ForegroundColor = consoleColor;
-return;
-
+// Auto-generated help for the application...
 
 // A few helper methods go here...
 ```
@@ -126,13 +126,13 @@ greet
       Use it to say Hello!
 
 Usage:
-  Consolo.Samples [options] greet <name>
+  Consolo.Samples greet <name> [options]
 
 Arguments:
-  <name>  The name of the person you would like to greet
+  name  The name of the person you would like to greet
 
 Options:
-  -?, -h, --help  Show help and usage information
+  -h | --help  Show help and usage information
 ```
 
 # More complex examples

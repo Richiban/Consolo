@@ -17,14 +17,9 @@ internal record CommandMethod(
             .OfType<CommandParameter.Positional>()
             .ToImmutableArray();
 
-    public ImmutableArray<CommandParameter.OptionalPositional> OptionalParameters { get; } =
+    public ImmutableArray<CommandParameter.Option> Options { get; } =
         Parameters
-            .OfType<CommandParameter.OptionalPositional>()
-            .ToImmutableArray();
-
-    public ImmutableArray<CommandParameter.Flag> Flags { get; } =
-        Parameters
-            .OfType<CommandParameter.Flag>()
+            .OfType<CommandParameter.Option>()
             .ToImmutableArray();
 
     public int MandatoryParameterCount { get; } =
@@ -32,13 +27,8 @@ internal record CommandMethod(
             .OfType<CommandParameter.Positional>()
             .Count();
 
-    public int OptionalParameterCount { get; } =
+    public int OptionCount { get; } =
         Parameters
-            .OfType<CommandParameter.OptionalPositional>()
-            .Count();
-
-    public int FlagCount =>
-        Parameters
-            .OfType<CommandParameter.Flag>()
+            .OfType<CommandParameter.Option>()
             .Count();
 }

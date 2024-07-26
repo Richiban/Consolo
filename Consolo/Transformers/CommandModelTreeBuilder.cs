@@ -202,32 +202,30 @@ class CommandTreeBuilder
             .ToList();
 
     private static CommandParameter MapParameter(ParameterModel param, List<DiagnosticModel> diagnostics) =>
-        param.IsFlag
-            ? new CommandParameter.Flag(
+        param.IsRequired
+            ? new CommandParameter.Positional(
+                name: param.Name,
+                sourceName: param.OriginalName,
+                type: MapType(param, diagnostics),
+                description: param.Description | param.Type.Name)
+            : new CommandParameter.Option(
                 name: param.Name,
                 shortForm: param.ShortForm,
-                description: param.Description,
-                originalName: param.OriginalName)
-            : param.IsRequired
-                ? new CommandParameter.Positional(
-                    name: param.Name,
-                    originalName: param.OriginalName,
-                    type: MapType(param, diagnostics),
-                    description: param.Description | param.Type.Name)
-                : new CommandParameter.OptionalPositional(
-                    name: param.Name,
-                    type: MapType(param, diagnostics),
-                    defaultValue: param.DefaultValue | "default",
-                    description: param.Description | param.Type.Name,
-                    originalName: param.OriginalName
-                );
+                type: MapType(param, diagnostics),
+                defaultValue: param.DefaultValue | "default",
+                description: param.Description | param.Type.Name,
+                sourceName: param.OriginalName,
+                isFlag: param.IsFlag
+            );
 
     private static ParameterType MapType(ParameterModel param, List<DiagnosticModel> diagnostics)
     {
         switch (param.Type)
         {
             case { SpecialType: SpecialType.System_String }:
-                return new ParameterType.AsIs(param.Type);
+                return new ParameterType.AsIs(param.Type.GetFullyQualifiedName());
+            case { SpecialType: SpecialType.System_Boolean }:
+                return new ParameterType.Bool();
             case { TypeKind: TypeKind.Enum }:
                 var enumValues = param.Type
                     .GetMembers()
@@ -235,16 +233,16 @@ class CommandTreeBuilder
                     .Select(member => member.Name)
                     .ToImmutableArray();
 
-                return new ParameterType.Enum(param.Type, enumValues);
+                return new ParameterType.Enum(param.Type.GetFullyQualifiedName(), enumValues);
             case INamedTypeSymbol t when t.HasParseMethod():
-                return new ParameterType.Parse(t, "Parse");
+                return new ParameterType.Parse(t.GetFullyQualifiedName(), "Parse");
             case INamedTypeSymbol t when t.HasCastFromString():
-                return new ParameterType.ExplicitCast(t);
+                return new ParameterType.ExplicitCast(t.GetFullyQualifiedName());
             case INamedTypeSymbol t when t.HasConstructorWithSingleStringParameter():
-                return new ParameterType.Constructor(t);
+                return new ParameterType.Constructor(t.GetFullyQualifiedName());
             default:
                 diagnostics.Add(DiagnosticModel.UnsupportedParameterType(param));
-                return new ParameterType.AsIs(param.Type);
+                return new ParameterType.AsIs(param.Type.GetFullyQualifiedName());
         };
     }
 

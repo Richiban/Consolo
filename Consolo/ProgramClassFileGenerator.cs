@@ -1,8 +1,9 @@
+using Microsoft.CodeAnalysis;
+using static Consolo.CommandTree;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using static Consolo.CommandTree;
 
 namespace Consolo;
 
@@ -43,7 +44,8 @@ internal class ProgramClassFileGenerator(
         WriteCommandDebug(rootCommand);
         _codeBuilder.AppendLine();
 
-        _codeBuilder.AppendLine("var (positionalArgs, options, isHelp) = NormaliseArgs(args);");
+        _codeBuilder.AppendLine("var isHelp = args.Intersect([\"--help\", \"-h\", \"-?\"]).Any();");
+        _codeBuilder.AppendLine();
 
         WriteCommandGroup(rootCommand, []);
 
@@ -58,7 +60,7 @@ internal class ProgramClassFileGenerator(
         if (command is SubCommand s)
         {
             _codeBuilder.AppendLines(
-                $"if (positionalArgs.Length >= {path.Length} && positionalArgs[{path.Length - 1}] == \"{s.CommandName}\")");
+                $"if (args.Length >= {path.Length} && args[{path.Length - 1}] == \"{s.CommandName}\")");
         }
 
         using (_codeBuilder.IndentBraces())
@@ -70,7 +72,7 @@ internal class ProgramClassFileGenerator(
 
             if (command.Method.IsSome(out var method))
             {
-                WriteMethodCall(command, path, method);
+                WriteCommandHandlerBody(command, path, method);
             }
 
             _codeBuilder.AppendLine("");
@@ -79,93 +81,92 @@ internal class ProgramClassFileGenerator(
         }
     }
 
-    private void WriteMethodCall(CommandTree command, ImmutableArray<string> path, CommandMethod method)
+    private void WriteCommandHandlerBody(CommandTree command, ImmutableArray<string> path, CommandMethod method)
     {
-        var minPositionalCount = path.Length + method.MandatoryParameterCount;
-        var maxPositionalCount = minPositionalCount + method.OptionalParameterCount;
+        var positionalCount = path.Length + method.MandatoryParameterCount;
 
         _codeBuilder.AppendLines("if (!isHelp)");
 
         using (_codeBuilder.IndentBraces())
         {
+            _codeBuilder.AppendLine("var processedArgs = new bool[args.Length];");
 
-            _codeBuilder.AppendLines(
-                $"if (positionalArgs.Length >= {minPositionalCount} && positionalArgs.Length <= {maxPositionalCount})");
+            for (var pathIndex = 0; pathIndex < path.Length; pathIndex++)
+            {
+                _codeBuilder.AppendLine($"processedArgs[{pathIndex}] = true;");
+            }
+
+            _codeBuilder.AppendLine();
+
+            WriteParameterAssignments(method);
+
+            _codeBuilder.AppendLines($"if (processedArgs.Any(x => !x))");
 
             using (_codeBuilder.IndentBraces())
             {
-                WriteParameterAssignments(method, path, minPositionalCount);
+                _codeBuilder.AppendLine("Console.WriteLine(\"Unrecognised args: \" + string.Join(\", \", args.Where((x, i) => !processedArgs[i])));");
+            }
 
+            _codeBuilder.AppendLines("else");
+
+            using (_codeBuilder.IndentBraces())
+            {
                 var argString = String.Join(", ", method.Parameters.Select(x => x.SourceName));
 
                 _codeBuilder.AppendLine($"{method.FullyQualifiedName}({argString});");
                 _codeBuilder.AppendLine("return;");
             }
-
-            _codeBuilder.AppendLines("", $"if (positionalArgs.Length < {minPositionalCount})");
-
-            using (_codeBuilder.IndentBraces())
-            {
-                if (command is SubCommand sub)
-                {
-                    _codeBuilder.AppendLine($"Console.ForegroundColor = ConsoleColor.Red;");
-                    _codeBuilder.Append($"Console.Error.WriteLine($\"", withIndentation: true);
-                    _codeBuilder.Append($"Command {sub.CommandName}: Missing argument(s) ");
-                    _codeBuilder.Append($"{{String.Join(\", \", new string[] {{ {String.Join(", ", method.MandatoryParameters.Select(x => $"\"'{x.Name}'\""))} }}.Skip(positionalArgs.Length - {path.Length}))}}");
-                    _codeBuilder.Append($"\");");
-                    _codeBuilder.AppendLine();
-                    _codeBuilder.AppendLine($"Console.ForegroundColor = consoleColor;");
-                }
-                else
-                {
-                    WriteError($"Missing arguments");
-                }
-            }
-
-            _codeBuilder.AppendLines("", $"if (positionalArgs.Length > {maxPositionalCount})");
-
-            using (_codeBuilder.IndentBraces())
-            {
-                if (command is SubCommand sub)
-                {
-                    WriteError($"Too many arguments supplied for command '{sub.CommandName}'");
-                }
-                else
-                {
-                    WriteError($"Too many arguments supplied");
-                }
-            }
         }
     }
 
-    private void WriteParameterAssignments(CommandMethod method, ImmutableArray<string> path, int minPositionalCount)
+    private void WriteParameterAssignments(CommandMethod method)
     {
-        foreach (var (p, i) in method.Parameters.OfType<CommandParameter.Positional>().Select((p, i) => (p, i)))
+        foreach (var p in
+            method.Parameters.OrderBy(p =>
+                p switch
+                {
+                    CommandParameter.Option { IsFlag: true } => 0,
+                    CommandParameter.Option => 1,
+                    _ => 2
+                }
+                ))
         {
+            _codeBuilder.AppendLine($"var {p.SourceName} = default({p.FullyQualifiedTypeName});");
 
-            _codeBuilder.AppendLines(
-                $"var {p.SourceName} = {ConvertParameter(p.Type, $"positionalArgs[{path.Length + i}]")};");
 
-        }
-
-        foreach (var (p, i) in method.Parameters.OfType<CommandParameter.OptionalPositional>().Select((p, i) => (p, i)))
-        {
-            _codeBuilder.AppendLines(
-                $"var {p.SourceName} = positionalArgs.Length >= {minPositionalCount + i + 1} ? {ConvertParameter(p.Type, $"positionalArgs[{minPositionalCount + i}]")} : {p.DefaultValue};");
-        }
-
-        foreach (var (flag, i) in method.Parameters.OfType<CommandParameter.Flag>().Select((p, i) => (p, i)))
-        {
-            if (flag.ShortForm.IsSome(out var shortForm))
+            switch (p)
             {
-                _codeBuilder.AppendLines(
-                    $"var {flag.SourceName} = options.Contains(\"--{flag.Name}\") || options.Contains(\"-{shortForm}\");");
+                case CommandParameter.Option { IsFlag: true } flag:
+                    {
+                        _codeBuilder.AppendLine(
+                            $"MatchNextFlag([\"--{flag.Name}\"{(flag.ShortForm.IsSome(out var shortForm) ? $", \"-{shortForm}\"" : "")}], ref {flag.SourceName}, processedArgs);");
+                        break;
+                    }
+                case CommandParameter.Option option:
+                    {
+                        _codeBuilder.AppendLine(
+                            $"if (MatchNextOption([\"--{option.Name}\"{(option.ShortForm.IsSome(out var shortForm) ? $", \"-{shortForm}\"" : "")}], ref {option.SourceName}, processedArgs, s => {ConvertParameter(option.Type, "s")}) == 2)");
+                        using (_codeBuilder.IndentBraces())
+                        {
+                            WriteError($"Missing value for option '--{option.Name}'");
+                            _codeBuilder.AppendLine("return;");
+                        }
+                        break;
+                    }
+                case var positional:
+                    {
+                        _codeBuilder.AppendLine(
+                    $"if (!MatchNextPositional(ref {positional.SourceName}, processedArgs, s => {ConvertParameter(positional.Type, "s")}))");
+                        using (_codeBuilder.IndentBraces())
+                        {
+                            WriteError($"Missing value for argument '{positional.SourceName}'");
+                            _codeBuilder.AppendLine("return;");
+                        }
+                        break;
+                    }
             }
-            else
-            {
-                _codeBuilder.AppendLines(
-                    $"var {flag.SourceName} = options.Contains(\"--{flag.Name}\");");
-            }
+
+            _codeBuilder.AppendLine();
         }
     }
 
@@ -174,10 +175,10 @@ internal class ProgramClassFileGenerator(
         return type switch
         {
             ParameterType.AsIs => expression,
-            ParameterType.Parse p => $"{p.GetFullyQualifiedName()}.{p.ParseMethodName}({expression})",
-            ParameterType.Constructor c => $"new {c.GetFullyQualifiedName()}({expression})",
-            ParameterType.ExplicitCast c => $"({c.GetFullyQualifiedName()})({expression})",
-            ParameterType.Enum e => $"({e.GetFullyQualifiedName()})Enum.Parse(typeof({e.GetFullyQualifiedName()}), {expression}, ignoreCase: true)",
+            ParameterType.Parse p => $"{p.FullyQualifiedTypeName}.{p.ParseMethodName}({expression})",
+            ParameterType.Constructor c => $"new {c.FullyQualifiedTypeName}({expression})",
+            ParameterType.ExplicitCast c => $"({c.FullyQualifiedTypeName})({expression})",
+            ParameterType.Enum e => $"({e.FullyQualifiedTypeName})Enum.Parse(typeof({e.FullyQualifiedTypeName}), {expression}, ignoreCase: true)",
             _ => throw new NotSupportedException("Unsupported parameter type: " + type.GetType().Name)
         };
     }
@@ -186,28 +187,44 @@ internal class ProgramClassFileGenerator(
     {
         return parameter switch
         {
-            CommandParameter.OptionalPositional p => $"[<{p.Name}>]",
-            CommandParameter.Flag p when p.ShortForm.IsSome(out var shortForm) => $"[-{shortForm} | --{p.Name}]",
-            CommandParameter.Flag p => $"[--{p.Name}]",
+            CommandParameter.Option p when IsFlag(p) && p.ShortForm.IsSome(out var shortForm) => $"[-{shortForm} | --{p.Name}]",
+            CommandParameter.Option p when IsFlag(p) => $"[<{p.Name}>]",
+            CommandParameter.Option p when p.ShortForm.IsSome(out var shortForm) => $"[-{shortForm} | --{p.Name} <{p.SourceName}>]",
+            CommandParameter.Option p => $"[--{p.Name}]",
             var p => $"<{p.Name}>",
+        };
+
+        bool IsFlag(CommandParameter p) => p switch
+        {
+            CommandParameter.Option { Type: ParameterType.Bool } => true,
+            _ => false
         };
     }
 
-    private string GetSoloHelpText(CommandParameter parameter)
+    private string GetSoloHelpFirstColumn(CommandParameter.Positional parameter)
     {
         return parameter switch
         {
-            CommandParameter.Positional { Type: ParameterType.Enum e } => 
-                $"{parameter.Name}: {String.Join("|", e.EnumValues)}",
-            CommandParameter.OptionalPositional { Type: ParameterType.Enum e } => 
-                $"{parameter.Name}: {String.Join("|", e.EnumValues)}",
-            CommandParameter.OptionalPositional p => 
-                $"{p.Name}",
-            CommandParameter.Flag p when p.ShortForm.IsSome(out var shortForm) => 
-                $"-{shortForm} | --{p.Name}",
-            CommandParameter.Flag p => 
-                $"--{p.Name}",
+            { Type: ParameterType.Enum e } =>
+                $"<{String.Join("|", e.EnumValues)}>",
             var p => $"{p.Name}",
+        };
+    }
+
+    private string GetSoloHelpFirstColumn(CommandParameter.Option parameter)
+    {
+        var parameterName = parameter.ShortForm.IsSome(out var shortForm)
+            ? $"-{shortForm} | --{parameter.Name}"
+            : $"--{parameter.Name}";
+
+        return parameter switch
+        {
+            { Type: ParameterType.Enum e } =>
+                $"{parameterName}={String.Join("|", e.EnumValues)}",
+            { Type: ParameterType.Bool } =>
+                $"{parameterName}",
+            _ =>
+                $"{parameterName}=<{parameter.SourceName}>",
         };
     }
 
@@ -221,35 +238,71 @@ internal class ProgramClassFileGenerator(
     private void WriteHelperMethods()
     {
         _codeBuilder.AppendLine(
-                    """
-            static (ImmutableArray<string> positionalArgs, ImmutableHashSet<string> options, bool isHelp) NormaliseArgs(string[] args)
+            """
+            bool MatchNextPositional<T>(ref T value, bool[] processedArgs, Func<string, T> mapper)
             {
-                var positionalArgs = new List<string>();
-                var options = new List<string>();
-                var isHelp = false;
+                var i = 0;
+                foreach (var arg in args)
+                {
+                    if (!processedArgs[i] && !arg.StartsWith("-"))
+                    {
+                        value = mapper(arg);
+                        processedArgs[i] = true;
+                        return true;
+                    }
+
+                    i++;
+                }
+
+                return false;
+            }
+
+            bool MatchNextFlag(ImmutableList<string> optionNames, ref bool value, bool[] processedArgs)
+            {
+                var i = 0;
+                foreach (var arg in args)
+                {
+                    if (!processedArgs[i] && optionNames.Contains(arg))
+                    {
+                        value = true;
+                        processedArgs[i] = true;
+                        return true;
+                    }
+
+                    i++;
+                }
+
+                return false;
+            }
+
+            // Returns 0 if the option is not found
+            // Returns 1 if the option is found and the value is found
+            // Returns 2 if the option is found but the value is missing
+            int MatchNextOption<T>(ImmutableList<string> optionNames, ref T value, bool[] processedArgs, Func<string, T> mapper)
+            {
+                var i = 0;
 
                 foreach (var arg in args)
                 {
-                    switch (arg)
+                    if (!processedArgs[i] && optionNames.Contains(arg))
                     {
-                        case "-h" or "--help":
-                            isHelp = true;
-                            break;
-                        case ['-', '-', ..]:
-                            options.Add(arg);
-                            break;
-                        case ['-', not '-', ..]:
-                            options.AddRange(arg.Skip(1).Select(c => $"-{c}"));
-                            break;
-                        case not (null or ""):
-                            positionalArgs.Add(arg);
-                            break;
-                        default:
-                            break;
+                        if (i + 1 < args.Length && !processedArgs[i + 1] && !args[i + 1].StartsWith("-"))
+                        {
+                            value = mapper(args[i + 1]);
+                            processedArgs[i] = true;
+                            processedArgs[i + 1] = true;
+                            return 1;
+                        }
+                        else
+                        {
+                            return 2;
+                        }
                     }
+
+                    i++;
                 }
 
-                return (positionalArgs.ToImmutableArray(), options.ToImmutableHashSet(), isHelp);
+                return 0;
             }
             """);
     }
@@ -264,7 +317,7 @@ internal class ProgramClassFileGenerator(
         if (command.Method.IsSome(out var method))
         {
             var allHelpText = path.Concat(
-                method.Parameters.Select(GetHelpTextInline)
+                method.MandatoryParameters.Select(GetHelpTextInline)
             );
 
             _codeBuilder.AppendLine(
@@ -319,7 +372,7 @@ internal class ProgramClassFileGenerator(
                 "    \"\"\"",
                 ");");
 
-            if (method.Parameters.Any())
+            if (method.MandatoryParameters.Any())
             {
                 _codeBuilder.AppendLines(
                     $"Console.WriteLine(",
@@ -331,9 +384,9 @@ internal class ProgramClassFileGenerator(
                 );
 
                 var helpNames =
-                    method.Parameters.Select(p => (GetSoloHelpText(p), p.Description));
+                    method.MandatoryParameters.Select(p => (GetSoloHelpFirstColumn(p), p.Description));
 
-                var longestParameter = helpNames.Max(x => x.Item1.Length);
+                var longestParameter = helpNames.MaxOrDefault(x => x.Item1.Length);
 
                 foreach (var (helpName, description) in helpNames)
                 {
@@ -346,6 +399,8 @@ internal class ProgramClassFileGenerator(
                     _codeBuilder.AppendLine("Console.ForegroundColor = consoleColor;");
                 }
             }
+
+            if (method.Options.Any())
             {
                 _codeBuilder.AppendLines(
                     $"Console.WriteLine(",
@@ -356,11 +411,11 @@ internal class ProgramClassFileGenerator(
                     ");"
                 );
 
-                var helpNames = method.Flags
-                    .Select(p => (GetSoloHelpText(p), p.Description))
+                var helpNames = method.Options
+                    .Select(p => (GetSoloHelpFirstColumn(p), p.Description))
                     .Append(("-h | --help", "Show help and usage information"));
 
-                var longestParameter = helpNames.DefaultIfEmpty(("", "")).Max(x => x.Item1.Length);
+                var longestParameter = helpNames.MaxOrDefault(x => x.Item1.Length);
 
                 foreach (var (helpName, description) in helpNames)
                 {
@@ -372,7 +427,7 @@ internal class ProgramClassFileGenerator(
 
                     _codeBuilder.AppendLine("Console.ForegroundColor = consoleColor;");
                 }
-                    
+
                 _codeBuilder.AppendLine("Console.WriteLine();");
             }
         }

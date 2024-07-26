@@ -75,4 +75,25 @@ internal static class EnumerableExtensions
 
     public static string StringJoin(this IEnumerable<string> source, string separator) =>
         string.Join(separator, source);
+
+    public static TProp MaxOrDefault<T, TProp>(
+        this IEnumerable<T> source,
+        Func<T, TProp> selector,
+        TProp defaultValue = default)
+        where TProp : IComparable<TProp>
+    {
+        var max = defaultValue;
+
+        foreach (var item in source)
+        {
+            var value = selector(item);
+
+            if (value.CompareTo(max) > 0)
+            {
+                max = value;
+            }
+        }
+
+        return max;
+    }
 }
