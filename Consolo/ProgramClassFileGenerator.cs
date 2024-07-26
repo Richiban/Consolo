@@ -96,6 +96,8 @@ internal class ProgramClassFileGenerator(
                 _codeBuilder.AppendLine($"processedArgs[{pathIndex}] = true;");
             }
 
+            _codeBuilder.AppendLine("var processingError = false;");
+
             _codeBuilder.AppendLine();
 
             WriteParameterAssignments(method);
@@ -105,9 +107,10 @@ internal class ProgramClassFileGenerator(
             using (_codeBuilder.IndentBraces())
             {
                 _codeBuilder.AppendLine("Console.WriteLine(\"Unrecognised args: \" + string.Join(\", \", args.Where((x, i) => !processedArgs[i])));");
+                _codeBuilder.AppendLine("processingError = true;");
             }
 
-            _codeBuilder.AppendLines("else");
+            _codeBuilder.AppendLines("", "if (!processingError)");
 
             using (_codeBuilder.IndentBraces())
             {
@@ -149,7 +152,7 @@ internal class ProgramClassFileGenerator(
                         using (_codeBuilder.IndentBraces())
                         {
                             WriteError($"Missing value for option '--{option.Name}'");
-                            _codeBuilder.AppendLine("return;");
+                            _codeBuilder.AppendLine("processingError = true;");
                         }
                         break;
                     }
@@ -160,7 +163,7 @@ internal class ProgramClassFileGenerator(
                         using (_codeBuilder.IndentBraces())
                         {
                             WriteError($"Missing value for argument '{positional.SourceName}'");
-                            _codeBuilder.AppendLine("return;");
+                            _codeBuilder.AppendLine("processingError = true;");
                         }
                         break;
                     }
