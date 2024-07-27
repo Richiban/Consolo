@@ -1,34 +1,53 @@
 ﻿using System;
-using System.IO;
-
 
 namespace Consolo.Samples;
 
 /// <summary>
-/// A collection of test commands
+/// A collection of command for git log
 /// </summary>
-[Consolo("test")]
-public class TestCommands
+[Consolo("log")]
+class TestCommands
 {
     /// <summary>
     /// A test command that takes a file as a parameter
     /// </summary>
-    /// <param name="file1">The first file</param>
-    /// <param name="file2">The second file</param>
-    /// <param name="display">The display mode</param>
-    /// <param name="flag">A test flag</param>
+    /// <param name="lines">The number of lines to display</param>
+    /// <param name="prettyPrintMode">The display mode</param>
     [Consolo("")]
     public static void TestMethod(
-        FileInfo file1,
-        FileInfo? file2 = null,
-        [Consolo(ShortForm = "d")] DisplayValue display = DisplayValue.Long,
-        [Consolo(ShortForm = "f")] bool flag = false)
+        int lines,
+        [Consolo("pretty")] PrettyPrintMode prettyPrintMode = PrettyPrintMode.Normal)
     {
-        Console.WriteLine($"file1: {file1.Name}");
-        Console.WriteLine($"file2: {file2?.Name ?? "<null>"}");
-        Console.WriteLine($"display: {display}");
-        Console.WriteLine($"flag: {flag}");
+        Console.WriteLine($"Displaying {lines} lines (pretty = {prettyPrintMode})");
     }
 
-    public enum DisplayValue { Long, Short }
+    public enum PrettyPrintMode 
+    {
+        /// <summary>
+        /// Show log messages in their entirety
+        /// </summary>
+        Normal, 
+
+        /// <summary>
+        /// Show the first line of each log message
+        /// </summary>
+        OneLine 
+    }
+}
+
+[Consolo("greet")]
+class GreetCommands
+{
+    /// <summary>
+    /// Greets a person
+    /// </summary>
+    /// <param name="name">The name of the person to greet</param>
+    /// <param name="loud">Whether or not to say it loud!</param>
+    [Consolo("")]
+    public static void Greet(
+        string name,
+        bool loud = false)
+    {
+        Console.WriteLine($"Hello, {name}{(loud ? "!" : ".")}");
+    }
 }

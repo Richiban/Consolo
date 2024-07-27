@@ -1,5 +1,6 @@
 using Microsoft.CodeAnalysis;
 using static Consolo.CommandTree;
+using static Consolo.Prelude;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -72,7 +73,7 @@ internal class ProgramClassFileGenerator(
 
             if (command.Method.IsSome(out var method))
             {
-                WriteCommandHandlerBody(command, path, method);
+                WriteCommandHandlerBody(path, method);
             }
 
             _codeBuilder.AppendLine("");
@@ -81,7 +82,7 @@ internal class ProgramClassFileGenerator(
         }
     }
 
-    private void WriteCommandHandlerBody(CommandTree command, ImmutableArray<string> path, CommandMethod method)
+    private void WriteCommandHandlerBody(ImmutableArray<string> path, CommandMethod method)
     {
         var positionalCount = path.Length + method.MandatoryParameterCount;
 
@@ -209,7 +210,7 @@ internal class ProgramClassFileGenerator(
         return parameter switch
         {
             { Type: ParameterType.Enum e } =>
-                $"<{String.Join("|", e.EnumValues)}>",
+                $"<{e.EnumValues.Select(v => v.SourceName).StringJoin("|")}>",
             var p => $"{p.Name}",
         };
     }
@@ -223,7 +224,7 @@ internal class ProgramClassFileGenerator(
         return parameter switch
         {
             { Type: ParameterType.Enum e } =>
-                $"{parameterName}={String.Join("|", e.EnumValues)}",
+                $"{parameterName}={e.EnumValues.Select(v => v.SourceName).StringJoin("|")}",
             { Type: ParameterType.Bool } =>
                 $"{parameterName}",
             _ =>
@@ -415,18 +416,24 @@ internal class ProgramClassFileGenerator(
                 );
 
                 var helpNames = method.Options
-                    .Select(p => (GetSoloHelpFirstColumn(p), p.Description))
-                    .Append(("-h | --help", "Show help and usage information"));
+                    .Select(p => (GetSoloHelpFirstColumn(p), p.Description, p.GetAllowedValues()))
+                    .Append(("-? | -h | --help", "Show help and usage information", None));
 
                 var longestParameter = helpNames.MaxOrDefault(x => x.Item1.Length);
 
-                foreach (var (helpName, description) in helpNames)
+                foreach (var (helpName, description, allowedValues) in helpNames)
                 {
                     _codeBuilder.AppendLines(
                         $"Console.Write(\"    {helpName.PadRight(longestParameter)}  \");",
                         "Console.ForegroundColor = helpTextColor;",
                         $"Console.WriteLine(\"{description}\");"
                     );
+
+                    foreach (var (valueName, valueDescription) in allowedValues)
+                    {
+                        _codeBuilder.AppendLine(
+                            $"Console.WriteLine(\"      {new string(' ', longestParameter)}- {valueName}: {valueDescription}\");");
+                    }
 
                     _codeBuilder.AppendLine("Console.ForegroundColor = consoleColor;");
                 }

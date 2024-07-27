@@ -79,7 +79,7 @@ internal static class EnumerableExtensions
     public static TProp MaxOrDefault<T, TProp>(
         this IEnumerable<T> source,
         Func<T, TProp> selector,
-        TProp defaultValue = default)
+        TProp defaultValue = default!)
         where TProp : IComparable<TProp>
     {
         var max = defaultValue;

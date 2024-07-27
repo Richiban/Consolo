@@ -35,9 +35,9 @@ abstract class ParameterType
         public string ParseMethodName { get; } = parseMethodName;
     }
 
-    public sealed class Enum(string fullyQualifiedTypeName, ImmutableArray<string> enumValues) : ParameterType
+    public sealed class Enum(string fullyQualifiedTypeName, ImmutableArray<EnumValue> enumValues) : ParameterType
     {
         public override string FullyQualifiedTypeName { get; } = fullyQualifiedTypeName;
-        public ImmutableArray<string> EnumValues { get; } = enumValues;
+        public ImmutableArray<EnumValue> EnumValues { get; } = enumValues;
     }
 }

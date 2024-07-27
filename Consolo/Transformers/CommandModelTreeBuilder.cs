@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Microsoft.CodeAnalysis;
+using static Consolo.Prelude;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using Microsoft.CodeAnalysis;
 
 namespace Consolo;
 
@@ -227,11 +227,7 @@ class CommandTreeBuilder
             case { SpecialType: SpecialType.System_Boolean }:
                 return new ParameterType.Bool();
             case { TypeKind: TypeKind.Enum }:
-                var enumValues = param.Type
-                    .GetMembers()
-                    .Where(member => member.Kind == SymbolKind.Field)
-                    .Select(member => member.Name)
-                    .ToImmutableArray();
+                var enumValues = MapEnumValues(param, diagnostics);
 
                 return new ParameterType.Enum(param.Type.GetFullyQualifiedName(), enumValues);
             case INamedTypeSymbol t when t.HasParseMethod():
@@ -244,6 +240,25 @@ class CommandTreeBuilder
                 diagnostics.Add(DiagnosticModel.UnsupportedParameterType(param));
                 return new ParameterType.AsIs(param.Type.GetFullyQualifiedName());
         };
+    }
+
+    private static ImmutableArray<EnumValue> MapEnumValues(ParameterModel param, List<DiagnosticModel> diagnostics)
+    {
+        return param.Type
+            .GetMembers()
+            .Where(member => member.Kind == SymbolKind.Field)
+            .Select(GetEnumValue)
+            .ToImmutableArray();
+
+        EnumValue GetEnumValue(ISymbol member)
+        {
+            var name = member.Name;
+            var xmlComments = XmlCommentModelBuilder.GetXmlComments(member);
+
+            diagnostics.AddRange(xmlComments.Diagnostics);
+
+            return new(name, xmlComments.Result.FlatMap(c => c.Summary));
+        }
     }
 
     private readonly struct ListWalker<T>
