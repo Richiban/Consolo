@@ -45,6 +45,9 @@ internal class ProgramClassFileGenerator(
         WriteCommandDebug(rootCommand);
         _codeBuilder.AppendLine();
 
+        _codeBuilder.AppendLine("args = args.SelectMany(arg => arg is ['-', not '-', ..] ? arg.Skip(1).Select(c => $\"-{c}\") : [arg]).ToArray();");
+        _codeBuilder.AppendLine();
+
         _codeBuilder.AppendLine("var isHelp = args.Intersect([\"--help\", \"-h\", \"-?\"]).Any();");
         _codeBuilder.AppendLine();
 
@@ -107,7 +110,7 @@ internal class ProgramClassFileGenerator(
 
             using (_codeBuilder.IndentBraces())
             {
-                _codeBuilder.AppendLine("Console.WriteLine(\"Unrecognised args: \" + string.Join(\", \", args.Where((x, i) => !processedArgs[i])));");
+                WriteError("Unrecognised args: \" + string.Join(\", \", args.Where((x, i) => !processedArgs[i])) + \"");
                 _codeBuilder.AppendLine("processingError = true;");
             }
 
@@ -332,13 +335,13 @@ internal class ProgramClassFileGenerator(
             {
                 _codeBuilder.AppendLines(
                     "\"\"\"",
-                    $"{assemblyName}"
+                    $"{assemblyName}",
+                    ""
                 );
 
                 if (command is SubCommand s)
                 {
                     _codeBuilder.AppendLines(
-                        $"",
                         $"{s.CommandName}"
                     );
                 }
@@ -366,6 +369,12 @@ internal class ProgramClassFileGenerator(
                 );
 
                 _codeBuilder.AppendLine("Console.ForegroundColor = consoleColor;");
+            }
+            else
+            {
+                _codeBuilder.AppendLines(
+                    "Console.WriteLine();"
+                );
             }
 
             _codeBuilder.AppendLines(

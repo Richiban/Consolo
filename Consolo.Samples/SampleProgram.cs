@@ -2,10 +2,6 @@
 
 namespace Consolo.Samples;
 
-/// <summary>
-/// A collection of command for git log
-/// </summary>
-[Consolo("log")]
 class TestCommands
 {
     /// <summary>
@@ -13,8 +9,8 @@ class TestCommands
     /// </summary>
     /// <param name="lines">The number of lines to display</param>
     /// <param name="prettyPrintMode">The display mode</param>
-    [Consolo("")]
-    public static void TestMethod(
+    [Consolo("log")]
+    public static void WriteLog(
         int lines,
         [Consolo("pretty")] PrettyPrintMode prettyPrintMode = PrettyPrintMode.Normal)
     {
@@ -32,6 +28,15 @@ class TestCommands
         /// Show the first line of each log message
         /// </summary>
         OneLine 
+    }
+
+    [Consolo("test")]
+    public static void TestMethod(
+        [Consolo(ShortForm ="a")] bool argA = false,
+        [Consolo(ShortForm ="b")] bool argB = false
+    )
+    {
+        Console.WriteLine(new {argA, argB});
     }
 }
 
