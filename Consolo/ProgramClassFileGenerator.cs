@@ -78,6 +78,23 @@ internal class ProgramClassFileGenerator(
             {
                 WriteCommandHandlerBody(path, method);
             }
+            else
+            {
+                _codeBuilder.AppendLine($"if (!isHelp)");
+                using (_codeBuilder.IndentBraces())
+                {
+                    _codeBuilder.AppendLine($"if (args.Length == {path.Length})");
+                    using (_codeBuilder.IndentBraces())
+                    {
+                        WriteError($"Missing command after: \" + string.Join(\" \", args.Skip({path.Length - 1})) + \"");
+                    }
+                    _codeBuilder.AppendLine("else");
+                    using (_codeBuilder.IndentBraces())
+                    {
+                        WriteError($"Unknown command: \" + string.Join(\" \", args.Skip({path.Length})) + \"");
+                    }
+                }
+            }
 
             _codeBuilder.AppendLine("");
             WriteHelp(assemblyName, path, command);
@@ -227,11 +244,11 @@ internal class ProgramClassFileGenerator(
         return parameter switch
         {
             { Type: ParameterType.Enum e } =>
-                $"{parameterName}={e.EnumValues.Select(v => v.SourceName).StringJoin("|")}",
+                $"{parameterName} {e.EnumValues.Select(v => v.SourceName).StringJoin("|")}",
             { Type: ParameterType.Bool } =>
                 $"{parameterName}",
             _ =>
-                $"{parameterName}=<{parameter.SourceName}>",
+                $"{parameterName} <{parameter.SourceName}>",
         };
     }
 
@@ -460,6 +477,24 @@ internal class ProgramClassFileGenerator(
     {
         _codeBuilder.AppendLines(
             $"Console.WriteLine(\"{assemblyName}\");",
+            "Console.WriteLine(\"\");"
+        );
+
+        if (command is SubCommand s)
+        {
+            _codeBuilder.AppendLines(
+                $"Console.WriteLine(\"{s.CommandName}\");"
+            );
+        }
+
+        if (command.Description.IsSome(out _))
+        {
+            _codeBuilder.AppendLine("Console.ForegroundColor = helpTextColor;");
+            _codeBuilder.AppendLine($"Console.WriteLine(\"    {command.Description.Trim()}\");");
+            _codeBuilder.AppendLine("Console.ForegroundColor = consoleColor;");
+        }
+
+        _codeBuilder.AppendLines(
             "Console.WriteLine(\"\");",
             "Console.WriteLine(\"Commands:\");"
         );

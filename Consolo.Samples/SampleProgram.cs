@@ -56,3 +56,35 @@ class GreetCommands
         Console.WriteLine($"Hello, {name}{(loud ? "!" : ".")}");
     }
 }
+
+/// <summary>
+/// Commands for managing remotes
+/// </summary>
+[Consolo("remote")]
+class RemoteCommands
+{
+    /// <summary>
+    /// Add a remote
+    /// </summary>
+    /// <param name="name">The name of the remote</param>
+    /// <param name="url">The remote URL</param>
+    /// <param name="allowClobber">Whether to overwrite an existing remote</param>
+    [Consolo("add")]
+    public static void Connect(
+        string name,
+        Uri url = null!,
+        [Consolo("force", ShortForm = "f")] bool allowClobber = false)
+    {
+        Console.WriteLine($"Adding remote {name}: {url} (allowClobber = {allowClobber})");
+    }
+
+    /// <summary>
+    /// Remove a remote
+    /// </summary>
+    /// <param name="remoteName">The name of the remote to remove</param>
+    [Consolo("remove")]
+    public static void Disconnect(string remoteName)
+    {
+        Console.WriteLine($"Removing remote {remoteName}");
+    }
+}
