@@ -110,11 +110,11 @@ internal class ProgramClassFileGenerator(
 
         using (_codeBuilder.IndentBraces())
         {
-            _codeBuilder.AppendLine("var processedArgs = new bool[args.Length];");
+            _codeBuilder.AppendLine("var remainingArgs = new SortedSet<int>(Enumerable.Range(0, args.Length));");
 
             for (var pathIndex = 0; pathIndex < path.Length; pathIndex++)
             {
-                _codeBuilder.AppendLine($"processedArgs[{pathIndex}] = true;");
+                _codeBuilder.AppendLine($"remainingArgs.Remove({pathIndex});");
             }
 
             _codeBuilder.AppendLine("var processingError = false;");
@@ -123,11 +123,11 @@ internal class ProgramClassFileGenerator(
 
             WriteParameterAssignments(method);
 
-            _codeBuilder.AppendLines($"if (processedArgs.Any(x => !x))");
+            _codeBuilder.AppendLines($"if (remainingArgs.Any())");
 
             using (_codeBuilder.IndentBraces())
             {
-                WriteError("Unrecognised args: \" + string.Join(\", \", args.Where((x, i) => !processedArgs[i])) + \"");
+                WriteError("Unrecognised args: \" + string.Join(\", \", remainingArgs.Select(i => args[i])) + \"");
                 _codeBuilder.AppendLine("processingError = true;");
             }
 
@@ -163,13 +163,13 @@ internal class ProgramClassFileGenerator(
                 case CommandParameter.Option { IsFlag: true } flag:
                     {
                         _codeBuilder.AppendLine(
-                            $"MatchNextFlag([\"--{flag.Name}\"{(flag.ShortForm.IsSome(out var shortForm) ? $", \"-{shortForm}\"" : "")}], ref {flag.SourceName}, processedArgs);");
+                            $"MatchNextFlag([\"--{flag.Name}\"{(flag.ShortForm.IsSome(out var shortForm) ? $", \"-{shortForm}\"" : "")}], ref {flag.SourceName}, remainingArgs);");
                         break;
                     }
                 case CommandParameter.Option option:
                     {
                         _codeBuilder.AppendLine(
-                            $"if (MatchNextOption([\"--{option.Name}\"{(option.ShortForm.IsSome(out var shortForm) ? $", \"-{shortForm}\"" : "")}], ref {option.SourceName}, processedArgs, s => {ConvertParameter(option.Type, "s")}) == 2)");
+                            $"if (MatchNextOption([\"--{option.Name}\"{(option.ShortForm.IsSome(out var shortForm) ? $", \"-{shortForm}\"" : "")}], ref {option.SourceName}, s => {ConvertParameter(option.Type, "s")}, remainingArgs) == 2)");
                         using (_codeBuilder.IndentBraces())
                         {
                             WriteError($"Missing value for option '--{option.Name}'");
@@ -180,7 +180,7 @@ internal class ProgramClassFileGenerator(
                 case var positional:
                     {
                         _codeBuilder.AppendLine(
-                    $"if (!MatchNextPositional(ref {positional.SourceName}, processedArgs, s => {ConvertParameter(positional.Type, "s")}))");
+                    $"if (!MatchNextPositional(ref {positional.SourceName}, s => {ConvertParameter(positional.Type, "s")}, remainingArgs))");
                         using (_codeBuilder.IndentBraces())
                         {
                             WriteError($"Missing value for argument '{positional.SourceName}'");
@@ -263,37 +263,33 @@ internal class ProgramClassFileGenerator(
     {
         _codeBuilder.AppendLine(
             """
-            bool MatchNextPositional<T>(ref T value, bool[] processedArgs, Func<string, T> mapper)
+            bool MatchNextPositional<T>(ref T value, Func<string, T> mapper, ISet<int> remainingArgs)
             {
-                var i = 0;
-                foreach (var arg in args)
+                foreach (var index in remainingArgs)
                 {
-                    if (!processedArgs[i] && !arg.StartsWith("-"))
+                    var arg = args[index];
+                    if (!arg.StartsWith("-"))
                     {
                         value = mapper(arg);
-                        processedArgs[i] = true;
+                        remainingArgs.Remove(index);
                         return true;
                     }
-
-                    i++;
                 }
 
                 return false;
             }
 
-            bool MatchNextFlag(ImmutableList<string> optionNames, ref bool value, bool[] processedArgs)
+            bool MatchNextFlag(ImmutableList<string> optionNames, ref bool value, ISet<int> remainingArgs)
             {
-                var i = 0;
-                foreach (var arg in args)
+                foreach (var index in remainingArgs)
                 {
-                    if (!processedArgs[i] && optionNames.Contains(arg))
+                    var arg = args[index];
+                    if (optionNames.Contains(arg))
                     {
                         value = true;
-                        processedArgs[i] = true;
+                        remainingArgs.Remove(index);
                         return true;
                     }
-
-                    i++;
                 }
 
                 return false;
@@ -302,19 +298,19 @@ internal class ProgramClassFileGenerator(
             // Returns 0 if the option is not found
             // Returns 1 if the option is found and the value is found
             // Returns 2 if the option is found but the value is missing
-            int MatchNextOption<T>(ImmutableList<string> optionNames, ref T value, bool[] processedArgs, Func<string, T> mapper)
+            int MatchNextOption<T>(ImmutableList<string> optionNames, ref T value, Func<string, T> mapper, ISet<int> remainingArgs)
             {
-                var i = 0;
-
-                foreach (var arg in args)
+                foreach (var i in remainingArgs)
                 {
-                    if (!processedArgs[i] && optionNames.Contains(arg))
+                    var arg = args[i];
+
+                    if (optionNames.Contains(arg))
                     {
-                        if (i + 1 < args.Length && !processedArgs[i + 1] && !args[i + 1].StartsWith("-"))
+                        if (i + 1 < args.Length && remainingArgs.Contains(i + 1) && !args[i + 1].StartsWith("-"))
                         {
                             value = mapper(args[i + 1]);
-                            processedArgs[i] = true;
-                            processedArgs[i + 1] = true;
+                            remainingArgs.Remove(i);
+                            remainingArgs.Remove(i + 1);
                             return 1;
                         }
                         else
@@ -322,8 +318,6 @@ internal class ProgramClassFileGenerator(
                             return 2;
                         }
                     }
-
-                    i++;
                 }
 
                 return 0;

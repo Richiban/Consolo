@@ -72,7 +72,7 @@ class RemoteCommands
     [Consolo("add")]
     public static void Connect(
         string name,
-        Uri url = null!,
+        Uri url,
         [Consolo("force", ShortForm = "f")] bool allowClobber = false)
     {
         Console.WriteLine($"Adding remote {name}: {url} (allowClobber = {allowClobber})");
