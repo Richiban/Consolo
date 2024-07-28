@@ -284,6 +284,31 @@ internal class ProgramClassFileGenerator(
                 foreach (var index in remainingArgs)
                 {
                     var arg = args[index];
+                
+                    if (args[index].Contains(':'))
+                    {
+                        var parts = args[index].Split(':', 2);
+
+                        if (optionNames.Contains(parts[0]))
+                        {
+                            value = bool.Parse(parts[1]);
+                            remainingArgs.Remove(index);
+                            return true;
+                        }
+                    }
+
+                    if (args[index].Contains('='))
+                    {
+                        var parts = args[index].Split('=', 2);
+
+                        if (optionNames.Contains(parts[0]))
+                        {
+                            value = bool.Parse(parts[1]);
+                            remainingArgs.Remove(index);
+                            return true;
+                        }
+                    }
+
                     if (optionNames.Contains(arg))
                     {
                         value = true;
@@ -306,6 +331,22 @@ internal class ProgramClassFileGenerator(
 
                     if (optionNames.Contains(arg))
                     {
+                        if (args[i].Contains(':'))
+                        {
+                            var parts = args[i].Split(':', 2);
+                            value = mapper(parts[1]);
+                            remainingArgs.Remove(i);
+                            return 1;
+                        }
+
+                        if (args[i].Contains('='))
+                        {
+                            var parts = args[i].Split('=', 2);
+                            value = mapper(parts[1]);
+                            remainingArgs.Remove(i);
+                            return 1;
+                        }
+
                         if (i + 1 < args.Length && remainingArgs.Contains(i + 1) && !args[i + 1].StartsWith("-"))
                         {
                             value = mapper(args[i + 1]);
@@ -313,10 +354,8 @@ internal class ProgramClassFileGenerator(
                             remainingArgs.Remove(i + 1);
                             return 1;
                         }
-                        else
-                        {
-                            return 2;
-                        }
+                        
+                        return 2;
                     }
                 }
 
