@@ -88,3 +88,22 @@ class RemoteCommands
         Console.WriteLine($"Removing remote {remoteName}");
     }
 }
+
+[Consolo("clean")]
+class CleanCommands
+{
+    /// <summary>
+    /// Clean the working directory
+    /// </summary>
+    /// <param name="bypassGitIgnore"></param>
+    /// <param name="includeDirectories"></param>
+    /// <param name="force">Whether to force the clean</param>
+    [Consolo("")]
+    public static void Clean(
+        [Consolo(ShortForm = "x")] bool bypassGitIgnore = false,
+        [Consolo(ShortForm = "d")] bool includeDirectories = false,
+        [Consolo(ShortForm = "f")] bool force = false)
+    {
+        Console.WriteLine($"Cleaning the working directory ({new {bypassGitIgnore, includeDirectories, force}})");
+    }
+}
