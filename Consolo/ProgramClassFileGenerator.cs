@@ -270,6 +270,7 @@ internal class ProgramClassFileGenerator(
     {
         _codeBuilder.AppendLine(
             """
+            #pragma warning disable CS8321
             bool MatchNextPositional<T>(ref T value, Func<string, T> mapper, ISet<int> remainingArgs)
             {
                 foreach (var index in remainingArgs)
@@ -368,6 +369,8 @@ internal class ProgramClassFileGenerator(
 
                 return 0;
             }
+            
+            #pragma warning restore CS8321
             """);
     }
 
