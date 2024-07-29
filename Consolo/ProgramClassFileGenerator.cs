@@ -285,25 +285,25 @@ internal class ProgramClassFileGenerator(
                 {
                     var arg = args[index];
                 
-                    if (args[index].Contains(':'))
+                    if (arg.EndsWith(":true", StringComparison.InvariantCultureIgnoreCase) || arg.EndsWith("=true", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        var parts = args[index].Split(':', 2);
+                        var optionName = arg.Substring(0, arg.Length - 5);
 
-                        if (optionNames.Contains(parts[0]))
+                        if (optionNames.Contains(optionName))
                         {
-                            value = bool.Parse(parts[1]);
+                            value = true;
                             remainingArgs.Remove(index);
                             return true;
                         }
                     }
-
-                    if (args[index].Contains('='))
+                
+                    if (arg.EndsWith(":false", StringComparison.InvariantCultureIgnoreCase) || arg.EndsWith("=false", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        var parts = args[index].Split('=', 2);
+                        var optionName = arg.Substring(0, arg.Length - 6);
 
-                        if (optionNames.Contains(parts[0]))
+                        if (optionNames.Contains(optionName))
                         {
-                            value = bool.Parse(parts[1]);
+                            value = false;
                             remainingArgs.Remove(index);
                             return true;
                         }
@@ -331,17 +331,17 @@ internal class ProgramClassFileGenerator(
 
                     if (optionNames.Contains(arg))
                     {
-                        if (args[i].Contains(':'))
+                        if (arg.Contains(':'))
                         {
-                            var parts = args[i].Split(':', 2);
+                            var parts = arg.Split(':', 2);
                             value = mapper(parts[1]);
                             remainingArgs.Remove(i);
                             return 1;
                         }
 
-                        if (args[i].Contains('='))
+                        if (arg.Contains('='))
                         {
-                            var parts = args[i].Split('=', 2);
+                            var parts = arg.Split('=', 2);
                             value = mapper(parts[1]);
                             remainingArgs.Remove(i);
                             return 1;
