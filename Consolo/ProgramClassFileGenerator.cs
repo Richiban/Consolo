@@ -470,7 +470,6 @@ internal class ProgramClassFileGenerator(
                 }
             }
 
-            if (method.Options.Any())
             {
                 _codeBuilder.AppendLines(
                     $"Console.WriteLine(",
@@ -503,9 +502,9 @@ internal class ProgramClassFileGenerator(
 
                     _codeBuilder.AppendLine("Console.ForegroundColor = consoleColor;");
                 }
-
-                _codeBuilder.AppendLine("Console.WriteLine();");
             }
+
+            _codeBuilder.AppendLine("Console.WriteLine();");
         }
         else
         {
