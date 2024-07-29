@@ -2,6 +2,10 @@
 
 namespace Consolo.Samples;
 
+/// <summary>
+/// A sample program that demonstrates how to use Consolo
+/// </summary>
+[Consolo("")]
 class TestCommands
 {
     /// <summary>

@@ -86,7 +86,14 @@ internal class ProgramClassFileGenerator(
                     _codeBuilder.AppendLine($"if (args.Length == {path.Length})");
                     using (_codeBuilder.IndentBraces())
                     {
-                        WriteError($"Missing command after: \" + string.Join(\" \", args.Skip({path.Length - 1})) + \"");
+                        if (path.Length > 0)
+                        {
+                            WriteError($"Missing command after: \" + string.Join(\" \", args.Skip({path.Length - 1})) + \"");
+                        }
+                        else
+                        {
+                            WriteError("Missing command");
+                        }
                     }
                     _codeBuilder.AppendLine("else");
                     using (_codeBuilder.IndentBraces())
@@ -509,13 +516,13 @@ internal class ProgramClassFileGenerator(
     private void WriteSubCommandHelpTextInline(CommandTree command)
     {
         _codeBuilder.AppendLines(
-            $"Console.WriteLine(\"{assemblyName}\");",
-            "Console.WriteLine(\"\");"
+            $"Console.WriteLine(\"{assemblyName}\");"
         );
 
         if (command is SubCommand s)
         {
             _codeBuilder.AppendLines(
+                "Console.WriteLine(\"\");",
                 $"Console.WriteLine(\"{s.CommandName}\");"
             );
         }
@@ -557,10 +564,18 @@ internal class ProgramClassFileGenerator(
         {
             return c switch
             {
-                SubCommand s when s.Method.IsSome(out var m) => $"{s.CommandName} {m.Parameters.Select(GetHelpTextInline).StringJoin(" ")}",
-                Root r when r.Method.IsSome(out var m) => $"{m.Parameters.Select(GetHelpTextInline).StringJoin(" ")}",
-                SubCommand s => s.CommandName,
-                _ => ""
+                SubCommand s when s.Method.IsSome(out var m) =>
+                    String.Join(" ", [
+                        s.CommandName,
+                        ..m.MandatoryParameters.Select(GetHelpTextInline),
+                        m.Options.Any() ? "[options]" : ""
+                    ]),
+                Root r when r.Method.IsSome(out var m) =>
+                    $"{m.Parameters.Select(GetHelpTextInline).StringJoin(" ")}",
+                SubCommand s =>
+                    $"{s.CommandName} ..",
+                _ =>
+                    ""
             };
         }
     }
