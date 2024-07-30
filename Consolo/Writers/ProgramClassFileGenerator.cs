@@ -134,12 +134,8 @@ internal class ProgramClassFileGenerator(
 
         using (_codeBuilder.IndentBraces())
         {
-            _codeBuilder.AppendLine("var remainingArgs = new SortedSet<int>(Enumerable.Range(0, args.Length));");
-
-            for (var pathIndex = 0; pathIndex < path.Length; pathIndex++)
-            {
-                _codeBuilder.AppendLine($"remainingArgs.Remove({pathIndex});");
-            }
+            _codeBuilder.AppendLine(
+                $"var remainingArgs = new SortedSet<int>(Enumerable.Range({path.Length}, args.Length - {path.Length}));");
 
             _codeBuilder.AppendLine("var processingError = false;");
 
@@ -407,37 +403,49 @@ internal class ProgramClassFileGenerator(
     {
         var pathStrings = path.Select(x => $"\"{x}\"");
 
-        if (command.Method.IsSome(out var method))
+        _codeBuilder.AppendLines(
+            $"Console.WriteLine(\"{assemblyName}\");"
+        );
+
+        if (command is SubCommand s)
         {
-            var allHelpText = path.Concat(
-                method.MandatoryParameters.Select(GetHelpTextInline)
+            _codeBuilder.AppendLines(
+                $"Console.WriteLine();",
+                $"Console.WriteLine(\"{s.CommandName}\");"
             );
+        }
+
+        if (command.Description.HasValue && command.Method.IsNone)
+        {
+            _codeBuilder.AppendLine("Console.ForegroundColor = helpTextColor;");
 
             _codeBuilder.AppendLines(
-                $"Console.WriteLine(\"{assemblyName}\");",
-                $"Console.WriteLine();"
+                $"Console.WriteLine(\"    {command.Description.Trim()}\");"
             );
 
-            if (command is SubCommand s)
-            {
-                _codeBuilder.AppendLines(
-                    $"Console.WriteLine(\"{s.CommandName}\");"
-                );
-            }
-
-            if (command.Description.HasValue)
-            {
-                _codeBuilder.AppendLine("Console.ForegroundColor = helpTextColor;");
-
-                _codeBuilder.AppendLines(
-                    $"Console.WriteLine(\"    {command.Description.Trim()}\");"
-                );
-
-                _codeBuilder.AppendLine("Console.ForegroundColor = consoleColor;");
-            }
+            _codeBuilder.AppendLine("Console.ForegroundColor = consoleColor;");
 
             _codeBuilder.AppendLines(
                 "Console.WriteLine();"
+            );
+        }
+
+        if (command.Method.IsSome(out var method))
+        {
+            _codeBuilder.AppendLine("Console.ForegroundColor = helpTextColor;");
+
+            if (method.Description.IsSome(out var methodDescription))
+            {
+                _codeBuilder.AppendLines(
+                    $"Console.WriteLine(\"    {method.Description.Trim()}\");"
+                );
+            }
+
+            _codeBuilder.AppendLine($"Console.WriteLine();");
+            _codeBuilder.AppendLine("Console.ForegroundColor = consoleColor;");
+
+            var allHelpText = path.Concat(
+                method.MandatoryParameters.Select(GetHelpTextInline)
             );
 
             _codeBuilder.AppendLines(
@@ -501,76 +509,59 @@ internal class ProgramClassFileGenerator(
 
             _codeBuilder.AppendLine("Console.WriteLine();");
         }
-        else
-        {
-            WriteSubCommandHelpTextInline(command);
-        }
+
+        WriteSubCommandHelpTextInline(command);
     }
 
     private void WriteSubCommandHelpTextInline(CommandTree command)
     {
         _codeBuilder.AppendLines(
-            $"Console.WriteLine(\"{assemblyName}\");"
-        );
-
-        if (command is SubCommand s)
-        {
-            _codeBuilder.AppendLines(
-                "Console.WriteLine(\"\");",
-                $"Console.WriteLine(\"{s.CommandName}\");"
-            );
-        }
-
-        if (command.Description.IsSome(out _))
-        {
-            _codeBuilder.AppendLine("Console.ForegroundColor = helpTextColor;");
-            _codeBuilder.AppendLine($"Console.WriteLine(\"    {command.Description.Trim()}\");");
-            _codeBuilder.AppendLine("Console.ForegroundColor = consoleColor;");
-        }
-
-        _codeBuilder.AppendLines(
-            "Console.WriteLine(\"\");",
             "Console.WriteLine(\"Commands:\");"
         );
 
-        var firstColumnLength = command.SubCommands.Select(GetFirstColumn).DefaultIfEmpty("").Max(x => x.Length);
+        var firstColumnLength = command.SubCommands
+            .SelectMany(GetColumns)
+            .DefaultIfEmpty(("", ""))
+            .Max(x => x.Item1.Length);
 
         foreach (var subCommand in command.SubCommands)
         {
-            var firstColumn = GetFirstColumn(subCommand).PadRight(firstColumnLength);
-            _codeBuilder.AppendLine(
-                $"Console.Write(\"    {firstColumn}\");"
-            );
+            foreach (var (column1, column2) in GetColumns(subCommand))
+            {
+                _codeBuilder.AppendLine(
+                    $"Console.Write(\"    {column1.PadRight(firstColumnLength)}\");"
+                );
 
-            if (subCommand.Description.IsSome(out var description))
-            {
                 _codeBuilder.AppendLine("Console.ForegroundColor = helpTextColor;");
-                _codeBuilder.AppendLine($"Console.WriteLine(\"  {description.Trim()}\");");
+                _codeBuilder.AppendLine($"Console.WriteLine(\"  {column2.Trim()}\");");
                 _codeBuilder.AppendLine("Console.ForegroundColor = consoleColor;");
-            }
-            else
-            {
-                _codeBuilder.AppendLine("Console.WriteLine();");
             }
         }
 
-        string GetFirstColumn(CommandTree c)
+        IEnumerable<(string column1, string column2)> GetColumns(CommandTree c)
         {
-            return c switch
+            if (c is SubCommand s && s.Method.IsSome(out var m))
             {
-                SubCommand s when s.Method.IsSome(out var m) =>
+                yield return (
                     String.Join(" ", [
                         s.CommandName,
                         ..m.MandatoryParameters.Select(GetHelpTextInline),
                         m.Options.Any() ? "[options]" : ""
                     ]),
-                Root r when r.Method.IsSome(out var m) =>
-                    $"{m.Parameters.Select(GetHelpTextInline).StringJoin(" ")}",
-                SubCommand s =>
-                    $"{s.CommandName} ..",
-                _ =>
-                    ""
-            };
+                    m.Description | "");
+            }
+
+            if (c is SubCommand s1 && s1.SubCommands.Any())
+            {
+                yield return (
+                    $"{s1.CommandName} ..",
+                    c.Description | "");
+            }
+
+            if (c is Root r && r.Method.IsSome(out var m1))
+            {
+                yield return ($"{m1.Parameters.Select(GetHelpTextInline).StringJoin(" ")}", m1.Description | "");
+            }
         }
     }
 }

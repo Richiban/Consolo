@@ -36,14 +36,11 @@ internal class MethodModelBuilder
 
         var fullyQualifiedName = methodSymbol.ContainingType.GetFullyQualifiedName();
 
-        var commandPath = GetCommandPath(methodSymbol);
+        var diagnostics = parameterResults.Diagnostics.ToList();
+
+        var commandPath = GetCommandPath(methodSymbol, diagnostics);
         var parentNames = commandPath.Truncate(count: -1).ToList();
         var lastPathItem = commandPath.LastOrDefault();
-
-        // TODO remove this if nothing else added
-        List<DiagnosticModel> diagnostics = [
-            ..parameterResults.Diagnostics
-        ];
 
         return new ResultWithDiagnostics<Option<MethodModel>>(
             new MethodModel(
@@ -58,7 +55,7 @@ internal class MethodModelBuilder
             diagnostics);
     }
 
-    private ImmutableList<CommandPathItem> GetCommandPath(ISymbol symbol)
+    private ImmutableList<CommandPathItem> GetCommandPath(ISymbol symbol, List<DiagnosticModel> diagnostics)
     {
         var path = ImmutableList.CreateBuilder<CommandPathItem>();
 
@@ -71,6 +68,9 @@ internal class MethodModelBuilder
                     .Result.FlatMap(r => r.Summary);
 
                 path.Add(new(commandName, xmlComment));
+
+                // TODO remove
+                //diagnostics.Add(DiagnosticModel.Test($"Command name: {commandName}, XML comment: {xmlComment}"));
             }
 
             symbol = symbol.ContainingType;

@@ -53,7 +53,7 @@ class CommandTreeBuilder
                 if (pathEntry.Name == "")
                 {
                     currentLevel.Method = MapMethod(methodModel, diagnostics);
-                    currentLevel.Description = pathEntry.XmlComment;
+
                     continue;
                 }
 
@@ -104,14 +104,14 @@ class CommandTreeBuilder
 
             // If the given name for the current path item is empty, it should be merged 
             // with its parent
-            if (methodModel.ProvidedName == "" && pathItems.LastOrDefault() is { } last)
-            {
-                pathItems.RemoveAt(pathItems.Count - 1);
-                newItem = new CommandPathItem(
-                    Name: last.Name,
-                    XmlComment: methodModel.Description
-                );
-            }
+            // if (methodModel.ProvidedName == "" && pathItems.LastOrDefault() is { } last)
+            // {
+            //     pathItems.RemoveAt(pathItems.Count - 1);
+            //     newItem = new CommandPathItem(
+            //         Name: last.Name,
+            //         XmlComment: methodModel.Description
+            //     );
+            // }
 
             pathItems.Add(newItem);
 

@@ -75,13 +75,22 @@ namespace Consolo.Samples
     class RemoteCommands
     {
         /// <summary>
+        /// List remotes
+        /// </summary>
+        [Consolo("")]
+        public static void ListRemotes()
+        {
+            Console.WriteLine("Listing remotes");
+        }
+
+        /// <summary>
         /// Add a remote
         /// </summary>
         /// <param name="name">The name of the remote</param>
         /// <param name="url">The remote URL</param>
         /// <param name="allowClobber">Whether to overwrite an existing remote</param>
         [Consolo("add")]
-        public static void Connect(
+        public static void AddRemote(
             string name,
             Uri url,
             [Consolo("force", Alias = "f")] bool allowClobber = false)
@@ -94,7 +103,7 @@ namespace Consolo.Samples
         /// </summary>
         /// <param name="remoteName">The name of the remote to remove</param>
         [Consolo("remove")]
-        public static void Disconnect(string remoteName)
+        public static void RemoveRemote(string remoteName)
         {
             Console.WriteLine($"Removing remote {remoteName}");
         }
