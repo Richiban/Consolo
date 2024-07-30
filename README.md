@@ -187,7 +187,7 @@ We can see how it looks when we make use of "options" or "flags" in our command:
 /// <param name="name">The name of the person you would like to greet</param>
 /// <param name="formal">"true" means the person will be greeted very formally</param>
 [Consolo("greet")]
-public static void GreetPersonWithTitle(string name, [Consolo(ShortForm = "f")] bool formal)
+public static void GreetPersonWithTitle(string name, [Consolo(Alias = "f")] bool formal)
 {
     if (formal)
     {

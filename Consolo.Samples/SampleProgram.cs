@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CommandLine.Collections;
 
 namespace Consolo.Samples;
 
@@ -36,8 +37,8 @@ class TestCommands
 
     [Consolo("test")]
     public static void TestMethod(
-        [Consolo(ShortForm ="a")] bool argA = false,
-        [Consolo(ShortForm ="b")] bool argB = false
+        [Consolo(Alias = "a")] bool argA = false,
+        [Consolo(Alias = "b")] bool argB = false
     )
     {
         Console.WriteLine(new {argA, argB});
@@ -77,7 +78,7 @@ class RemoteCommands
     public static void Connect(
         string name,
         Uri url,
-        [Consolo("force", ShortForm = "f")] bool allowClobber = false)
+        [Consolo("force", Alias = "f")] bool allowClobber = false)
     {
         Console.WriteLine($"Adding remote {name}: {url} (allowClobber = {allowClobber})");
     }
@@ -104,9 +105,9 @@ class CleanCommands
     /// <param name="force">Whether to force the clean</param>
     [Consolo("")]
     public static void Clean(
-        [Consolo(ShortForm = "x")] bool bypassGitIgnore = false,
-        [Consolo(ShortForm = "d")] bool includeDirectories = false,
-        [Consolo(ShortForm = "f")] bool force = false)
+        [Consolo(Alias = "x")] bool bypassGitIgnore = false,
+        [Consolo(Alias = "d")] bool includeDirectories = false,
+        [Consolo(Alias = "f")] bool force = false)
     {
         Console.WriteLine($"Cleaning the working directory ({new {bypassGitIgnore, includeDirectories, force}})");
     }

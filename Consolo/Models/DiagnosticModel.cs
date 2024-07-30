@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 
 namespace Consolo;
@@ -21,61 +22,64 @@ record DiagnosticModel(string Code, string Message, Location? Location, Diagnost
 
     internal static DiagnosticModel ErrorProcessingMethod(
         string message,
-        Location? Location)
-    {
-        return new DiagnosticModel(
+        Location? Location) =>
+        new DiagnosticModel(
             Code: "Consolo0004",
             Message: message,
             Location: Location,
             Severity: DiagnosticSeverity.Error
         );
-    }
 
-    internal static DiagnosticModel MethodMustBeStatic(
-        IMethodSymbol methodSymbol,
-        Location? location)
-    {
-        return new DiagnosticModel(
+    internal static DiagnosticModel MethodMustBeStatic(IMethodSymbol methodSymbol) =>
+        new DiagnosticModel(
             Code: "Consolo0005",
             Message: $"Method {methodSymbol} must be static in order to use the {ConsoloAttributeDefinition.ShortName} attribute.",
-            Location: location,
+            Location: methodSymbol.Locations.FirstOrDefault(),
             Severity: DiagnosticSeverity.Error
         );
-    }
 
     internal static DiagnosticModel AttributeProblem(
         string errTypeName,
         CandidateReason candidateReason,
-        Location? Location)
-    {
-        return new DiagnosticModel(
+        Location? Location) =>
+        new DiagnosticModel(
             Code: "Consolo0006",
             Message: $"There was a problem with attribute {errTypeName}: {candidateReason}",
             Location: Location,
             Severity: DiagnosticSeverity.Error
         );
-    }
 
-    internal static DiagnosticModel MultipleParameterNamesSupplied(
+    internal static DiagnosticModel IllegalParameterName(
         IParameterSymbol parameterSymbol,
-        int suppliedNameCount,
-        Location? Location)
-    {
-        return new DiagnosticModel(
+        string suppliedName) => 
+        new DiagnosticModel(
             Code: "Consolo0007",
-            Message: $"Parameter {parameterSymbol.Name} has {suppliedNameCount} names specified in the attribute; parameters can only specify one.",
-            Location: Location,
+            Message: $"Parameter {parameterSymbol.Name} has an invalid name '{suppliedName}' specified in the attribute.",
+            Location: parameterSymbol.Locations.FirstOrDefault(),
             Severity: DiagnosticSeverity.Error
         );
-    }
 
-    internal static DiagnosticModel UnsupportedParameterType(ParameterModel param)
-    {
-        return new DiagnosticModel(
+    internal static DiagnosticModel UnsupportedParameterType(ParameterModel param) => 
+        new DiagnosticModel(
             Code: "Consolo0008",
             Message: $"Parameter '{param.Name}' has a type that is unsupported ({param.Type.Name}).",
             Location: param.Location,
             Severity: DiagnosticSeverity.Error
         );
-    }
+
+    internal static DiagnosticModel AliasMustBeOneCharacter(IParameterSymbol param) =>
+        new DiagnosticModel(
+            Code: "Consolo0009",
+            Message: $"A parameter's alias must be exactly one character.",
+            Location: param.Locations.FirstOrDefault(),
+            Severity: DiagnosticSeverity.Error
+        );
+
+    internal static DiagnosticModel AliasOnPositionalParameter(IParameterSymbol parameterSymbol) =>
+        new DiagnosticModel(
+            Code: "Consolo0010",
+            Message: $"Positional parameters should not be given an alias.",
+            Location: parameterSymbol.Locations.FirstOrDefault(),
+            Severity: DiagnosticSeverity.Error
+        );
 }

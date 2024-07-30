@@ -41,6 +41,15 @@ class CommandTreeBuilder
 
             foreach (var (pathEntry, i) in currentPath.Select((a, b) => (a, b)))
             {
+                if (i == 0 && pathEntry.Name == "")
+                {
+                    if (root.Description.IsNone)
+                    {
+                        root.Description = pathEntry.XmlComment;
+                    }
+                    continue;
+                }
+
                 if (pathEntry.Name == "")
                 {
                     currentLevel.Method = MapMethod(methodModel, diagnostics);
@@ -49,7 +58,7 @@ class CommandTreeBuilder
                 }
 
                 var sub = currentLevel.SubCommands.FirstOrDefault(it => it.CommandName == pathEntry.Name);
-                
+
                 switch (sub)
                 {
                     case null when i == currentPath.Count - 1:
@@ -87,23 +96,19 @@ class CommandTreeBuilder
         IReadOnlyList<CommandPathItem> GetPath(MethodModel methodModel)
         {
             var pathItems = methodModel.ParentCommandPath.ToList();
+
             var newItem = new CommandPathItem(
                 Name: methodModel.ProvidedName | methodModel.MethodName,
                 XmlComment: methodModel.Description
             );
 
-            if (methodModel.ProvidedName == "")
+            if (methodModel.ProvidedName == "" && pathItems.LastOrDefault() is { } last)
             {
-                var last = pathItems.LastOrDefault();
-
-                if (last is not null)
-                {
-                    pathItems.RemoveAt(pathItems.Count - 1);
-                    newItem = new CommandPathItem(
-                        Name: last.Name,
-                        XmlComment: last.XmlComment + "\n" + methodModel.Description
-                    );
-                }
+                pathItems.RemoveAt(pathItems.Count - 1);
+                newItem = new CommandPathItem(
+                    Name: last.Name,
+                    XmlComment: last.XmlComment + "\n" + methodModel.Description
+                );
             }
 
             pathItems.Add(newItem);
@@ -136,7 +141,7 @@ class CommandTreeBuilder
                 description: param.Description | param.Type.Name)
             : new CommandParameter.Option(
                 name: param.Name,
-                shortForm: param.ShortForm,
+                alias: param.Alias,
                 type: MapType(param, diagnostics),
                 defaultValue: param.DefaultValue | "default",
                 description: param.Description | param.Type.Name,

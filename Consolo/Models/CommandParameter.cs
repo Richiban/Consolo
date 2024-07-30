@@ -29,7 +29,7 @@ abstract class CommandParameter
             string name,
             ParameterType type,
             string defaultValue,
-            Option<string> shortForm,
+            Option<string> alias,
             string description,
             string sourceName,
             bool isFlag) : CommandParameter
@@ -39,15 +39,15 @@ abstract class CommandParameter
         public override Option<string> Description { get; } = description;
         public override string SourceName { get; } = sourceName;
         public string DefaultValue { get; } = defaultValue;
-        public Option<string> ShortForm { get; } = shortForm;
+        public Option<string> Alias { get; } = alias;
         public bool IsFlag { get; } = isFlag;
 
         public IEnumerable<string> GetNames()
         {
             yield return Name;
-            if (ShortForm.IsSome(out var shortForm))
+            if (Alias.IsSome(out var alias))
             {
-                yield return shortForm;
+                yield return alias;
             }
         }
     }

@@ -77,7 +77,7 @@
 //                             IsFlag: false,
 //                             IsRequired: true,
 //                             DefaultValue: null,
-//                             ShortForm: null,
+//                             Alias: null,
 //                             Description: null),
 //                     ],
 //                     description: null)

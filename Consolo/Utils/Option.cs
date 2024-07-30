@@ -9,6 +9,8 @@ readonly struct Option<T>(T? value)
     public bool HasValue { get; } = value is not null;
     private T? Value => value;
 
+    public bool IsNone => !HasValue;
+
     internal bool IsSome(out T v)
     {
         v = value!;

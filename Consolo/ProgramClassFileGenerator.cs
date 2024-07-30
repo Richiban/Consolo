@@ -170,13 +170,13 @@ internal class ProgramClassFileGenerator(
                 case CommandParameter.Option { IsFlag: true } flag:
                     {
                         _codeBuilder.AppendLine(
-                            $"MatchNextFlag([\"--{flag.Name}\"{(flag.ShortForm.IsSome(out var shortForm) ? $", \"-{shortForm}\"" : "")}], ref {flag.SourceName}, remainingArgs);");
+                            $"MatchNextFlag([\"--{flag.Name}\"{(flag.Alias.IsSome(out var alias) ? $", \"-{alias}\"" : "")}], ref {flag.SourceName}, remainingArgs);");
                         break;
                     }
                 case CommandParameter.Option option:
                     {
                         _codeBuilder.AppendLine(
-                            $"if (MatchNextOption([\"--{option.Name}\"{(option.ShortForm.IsSome(out var shortForm) ? $", \"-{shortForm}\"" : "")}], ref {option.SourceName}, s => {ConvertParameter(option.Type, "s")}, remainingArgs) == 2)");
+                            $"if (MatchNextOption([\"--{option.Name}\"{(option.Alias.IsSome(out var alias) ? $", \"-{alias}\"" : "")}], ref {option.SourceName}, s => {ConvertParameter(option.Type, "s")}, remainingArgs) == 2)");
                         using (_codeBuilder.IndentBraces())
                         {
                             WriteError($"Missing value for option '--{option.Name}'");
@@ -218,9 +218,9 @@ internal class ProgramClassFileGenerator(
     {
         return parameter switch
         {
-            CommandParameter.Option p when IsFlag(p) && p.ShortForm.IsSome(out var shortForm) => $"[-{shortForm} | --{p.Name}]",
+            CommandParameter.Option p when IsFlag(p) && p.Alias.IsSome(out var alias) => $"[-{alias} | --{p.Name}]",
             CommandParameter.Option p when IsFlag(p) => $"[<{p.Name}>]",
-            CommandParameter.Option p when p.ShortForm.IsSome(out var shortForm) => $"[-{shortForm} | --{p.Name} <{p.SourceName}>]",
+            CommandParameter.Option p when p.Alias.IsSome(out var alias) => $"[-{alias} | --{p.Name} <{p.SourceName}>]",
             CommandParameter.Option p => $"[--{p.Name}]",
             var p => $"<{p.Name}>",
         };
@@ -244,8 +244,8 @@ internal class ProgramClassFileGenerator(
 
     private string GetSoloHelpFirstColumn(CommandParameter.Option parameter)
     {
-        var parameterName = parameter.ShortForm.IsSome(out var shortForm)
-            ? $"-{shortForm} | --{parameter.Name}"
+        var parameterName = parameter.Alias.IsSome(out var alias)
+            ? $"-{alias} | --{parameter.Name}"
             : $"--{parameter.Name}";
 
         return parameter switch

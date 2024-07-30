@@ -9,6 +9,6 @@ internal record ParameterModel(
     bool IsRequired,
     Option<string> DefaultValue,
     Option<string> Description,
-    Option<string> ShortForm,
+    Option<string> Alias,
     ITypeSymbol Type,
     Location? Location);

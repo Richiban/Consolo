@@ -26,14 +26,11 @@ internal class ConsoloAttributeFileGenerator : CodeFileGenerator
             AllowMultiple = false)]
         internal class {{ConsoloAttributeDefinition.LongName}} : Attribute
         {
-            public {{ConsoloAttributeDefinition.LongName}}(params string[] names)
+            public {{ConsoloAttributeDefinition.LongName}}(string? name = null)
             {
-                Names = names;
             }
 
-            public string[] Names { get; }
-
-            public string? ShortForm { get; set; }
+            public string? Alias { get; set; }
         }
         
         #nullable disable

@@ -25,9 +25,7 @@ internal class MethodModelBuilder
         if (!methodSymbol.IsStatic)
         {
             return ResultWithDiagnostics.DiagnosticOnly<MethodModel>(
-                DiagnosticModel.MethodMustBeStatic(
-                    methodSymbol,
-                    methodSymbol.Locations.FirstOrDefault()));
+                DiagnosticModel.MethodMustBeStatic(methodSymbol));
         }
 
         var xmlComments = XmlCommentModelBuilder.GetXmlComments(methodSymbol);
@@ -66,23 +64,13 @@ internal class MethodModelBuilder
 
         while (symbol != null)
         {
-            if (AttributeUsageUtils.GetUsage(symbol) is { } attr)
+            if (AttributeUsageUtils.GetUsage(symbol).IsSome(out var attr))
             {
-                var commandName = attr.Names.LastOrDefault() ?? symbol.Name;
+                var commandName = attr.Name | symbol.Name;
                 var xmlComment = XmlCommentModelBuilder.GetXmlComments(symbol)
                     .Result.FlatMap(r => r.Summary);
 
-                if (commandName == "" && path is { Count: > 0 })
-                {
-                    var parent = path.Last();
-                    path.RemoveAt(path.Count - 1);
-                    path.Add(new CommandPathItem(parent.Name, xmlComment));
-                }
-                else
-                {
-                    path.Add(new(commandName, xmlComment));
-                }
-
+                path.Add(new(commandName, xmlComment));
             }
 
             symbol = symbol.ContainingType;
@@ -97,22 +85,10 @@ internal class MethodModelBuilder
         IParameterSymbol parameterSymbol,
         Option<XmlCommentModel> methodXmlComments)
     {
-        var attr = AttributeUsageUtils.GetUsage(parameterSymbol);
         var diagnostics = new List<DiagnosticModel>();
 
-        if (attr is { Names: { Count: > 1 and var count } })
-        {
-            diagnostics.Add(
-                DiagnosticModel.MultipleParameterNamesSupplied(
-                    parameterSymbol,
-                    count,
-                    Location: parameterSymbol.Locations.FirstOrDefault()
-                )
-            );
-        }
-
-        var name = attr?.Names?.FirstOrDefault() ?? parameterSymbol.Name;
-
+        var name = parameterSymbol.Name;
+        var alias = (Option<string>)None;
         var type = parameterSymbol.Type.GetFullyQualifiedName();
         var isFlag = type == "System.Boolean";
         var isRequired = !parameterSymbol.HasExplicitDefaultValue;
@@ -121,7 +97,54 @@ internal class MethodModelBuilder
             ? SourceValueUtils.SourceValue(parameterSymbol.ExplicitDefaultValue)
             : null;
         var xmlComment = methodXmlComments.FlatMap(x => x[parameterSymbol.Name]);
-        var shortForm = attr?.ShortForm;
+
+        if (AttributeUsageUtils.GetUsage(parameterSymbol).IsSome(out var attr))
+        {
+            if (attr.Name.IsSome(out var givenName))
+            {
+                if (givenName.Contains(" "))
+                {
+                    diagnostics.Add(
+                        DiagnosticModel.IllegalParameterName(
+                            parameterSymbol,
+                            givenName
+                        )
+                    );
+                }
+
+                // diagnostics.Add(
+                //     DiagnosticModel.AttributeProblem(
+                //         ConsoloAttributeDefinition.ShortName,
+                //         CandidateReason.MissingName,
+                //         Location: parameterSymbol.Locations.FirstOrDefault()
+                //     )
+                // );
+            }
+
+            if (attr.Alias.IsSome(out var givenAlias))
+            {
+                if (isRequired)
+                {
+                    diagnostics.Add(
+                        DiagnosticModel.AliasOnPositionalParameter(
+                            parameterSymbol
+                        )
+                    );
+                }
+                else if (givenAlias.Length != 1)
+                {
+                    diagnostics.Add(
+                        DiagnosticModel.AliasMustBeOneCharacter(parameterSymbol)
+                    );
+
+                    alias = None;
+                }
+                else
+                {
+                    alias = givenAlias;
+                }
+            }
+        }
 
         return new ResultWithDiagnostics<ParameterModel>(
             new ParameterModel(
@@ -131,7 +154,7 @@ internal class MethodModelBuilder
                 IsRequired: isRequired,
                 DefaultValue: defaultValue,
                 Description: xmlComment,
-                ShortForm: shortForm,
+                Alias: alias,
                 Type: parameterSymbol.Type,
                 Location: parameterSymbol.Locations.FirstOrDefault()),
             diagnostics

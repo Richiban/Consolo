@@ -1,12 +1,11 @@
-using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
 namespace Consolo;
 
-public static class AttributeUsageUtils
+static class AttributeUsageUtils
 {
-    public static ConsoloAttributeUsage? GetUsage(ISymbol symbol)
+    public static Option<ConsoloAttributeUsage> GetUsage(ISymbol symbol)
     {
         var attributeData = symbol.GetAttributes()
             .FirstOrDefault(attr => ConsoloAttributeDefinition.Matches(attr.AttributeClass));
@@ -16,15 +15,14 @@ public static class AttributeUsageUtils
             return null;
         }
 
-        var names = attributeData.ConstructorArguments
-            .SelectMany(arg => arg.Values.Select(val => val.Value?.ToString())
-            .Where(val => val is not null))
-            .ToImmutableArray();
+        var name = attributeData.ConstructorArguments
+            .Select(arg => arg.Value?.ToString())
+            .SingleOrDefault();
 
-        var shortForm = attributeData.NamedArguments
-            .FirstOrDefault(kvp => kvp.Key == "ShortForm")
+        var alias = attributeData.NamedArguments
+            .FirstOrDefault(kvp => kvp.Key == "Alias")
             .Value.Value?.ToString();
 
-        return new ConsoloAttributeUsage(names, shortForm);
+        return new ConsoloAttributeUsage(name, alias);
     }
 }
