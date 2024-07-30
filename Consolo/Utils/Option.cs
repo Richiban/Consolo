@@ -18,6 +18,12 @@ readonly struct Option<T>(T? value)
         return HasValue;
     }
 
+    public void Deconstruct(out bool hasValue, out T? value)
+    {
+        hasValue = HasValue;
+        value = Value;
+    }
+
     internal Option<R> Map<R>(Func<T, R> mapper)
     {
         if (HasValue)

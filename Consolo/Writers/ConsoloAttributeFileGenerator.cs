@@ -15,24 +15,22 @@ internal class ConsoloAttributeFileGenerator : CodeFileGenerator
         $$"""
         using System;
 
-        namespace Consolo;
-
-        #nullable enable
-        [AttributeUsage(
-            AttributeTargets.Method 
-            | AttributeTargets.Class
-            | AttributeTargets.Parameter,
-            Inherited = false,
-            AllowMultiple = false)]
-        internal class {{ConsoloAttributeDefinition.LongName}} : Attribute
+        namespace Consolo
         {
-            public {{ConsoloAttributeDefinition.LongName}}(string? name = null)
+            [AttributeUsage(
+                AttributeTargets.Method 
+                | AttributeTargets.Class
+                | AttributeTargets.Parameter,
+                Inherited = false,
+                AllowMultiple = false)]
+            internal class {{ConsoloAttributeDefinition.LongName}} : Attribute
             {
-            }
+                public {{ConsoloAttributeDefinition.LongName}}(string name = null)
+                {
+                }
 
-            public string? Alias { get; set; }
+                public string Alias { get; set; }
+            }
         }
-        
-        #nullable disable
         """;
 }

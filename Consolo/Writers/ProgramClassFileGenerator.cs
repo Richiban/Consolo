@@ -29,32 +29,49 @@ internal class ProgramClassFileGenerator(
 
     public override string GetCode()
     {
-        _codeBuilder.AppendLines(
+        {
+            _codeBuilder.AppendLines(
             "using System;",
             "using System.Linq;",
             "using System.Collections.Generic;",
             "using System.Collections.Immutable;");
 
-        _codeBuilder.AppendLine();
+            _codeBuilder.AppendLine("namespace " + assemblyName);
+            using var _ = _codeBuilder.IndentBraces();
 
-        _codeBuilder.AppendLine("var consoleColor = Console.ForegroundColor;");
-        _codeBuilder.AppendLine("var helpTextColor = ConsoleColor.Green;");
+            _codeBuilder.AppendLine("/// <summary>");
+            _codeBuilder.AppendLine("/// Entrypoint class for " + assemblyName);
+            _codeBuilder.AppendLine("/// </summary>");
+            _codeBuilder.AppendLine("public static class Program");
+            using var _2 = _codeBuilder.IndentBraces();
 
-        _codeBuilder.AppendLine();
-        _codeBuilder.AppendLine("// Commands marked * have an associated method");
-        WriteCommandDebug(rootCommand);
-        _codeBuilder.AppendLine();
+            _codeBuilder.AppendLine("/// <summary>");
+            _codeBuilder.AppendLine("/// Entrypoint for " + assemblyName);
+            _codeBuilder.AppendLine("/// </summary>");
+            _codeBuilder.AppendLine("public static void Main(string[] args)");
+            using var _3 = _codeBuilder.IndentBraces();
 
-        _codeBuilder.AppendLine("args = args.SelectMany(arg => arg is ['-', not '-', ..] ? arg.Skip(1).Select(c => $\"-{c}\") : [arg]).ToArray();");
-        _codeBuilder.AppendLine();
+            _codeBuilder.AppendLine();
 
-        _codeBuilder.AppendLine("var isHelp = args.Intersect([\"--help\", \"-h\", \"-?\"]).Any();");
-        _codeBuilder.AppendLine();
+            _codeBuilder.AppendLine("var consoleColor = Console.ForegroundColor;");
+            _codeBuilder.AppendLine("var helpTextColor = ConsoleColor.Green;");
 
-        WriteCommandGroup(rootCommand, []);
+            _codeBuilder.AppendLine();
+            _codeBuilder.AppendLine("// Commands marked * have an associated method");
+            WriteCommandDebug(rootCommand);
+            _codeBuilder.AppendLine();
 
-        _codeBuilder.AppendLine();
-        WriteHelperMethods();
+            _codeBuilder.AppendLine("args = args.SelectMany(arg => arg.StartsWith(' ') && ! arg.StartsWith(\"--\") ? arg.Skip(1).Select(c => $\"-{c}\") : new [] { arg }).ToArray();");
+            _codeBuilder.AppendLine();
+
+            _codeBuilder.AppendLine("var isHelp = args.Any(arg => arg == \"--help\" || arg == \"-h\" || arg == \"-?\");");
+            _codeBuilder.AppendLine();
+
+            WriteCommandGroup(rootCommand, []);
+
+            _codeBuilder.AppendLine();
+            WriteHelperMethods();
+        }
 
         return _codeBuilder.ToString();
     }
@@ -169,14 +186,16 @@ internal class ProgramClassFileGenerator(
             {
                 case CommandParameter.Option { IsFlag: true } flag:
                     {
+                        var toSeek = GetNamesForOption(flag);
+
                         _codeBuilder.AppendLine(
-                            $"MatchNextFlag([\"--{flag.Name}\"{(flag.Alias.IsSome(out var alias) ? $", \"-{alias}\"" : "")}], ref {flag.SourceName}, remainingArgs);");
+                            $"MatchNextFlag(new [] {{ {GetNamesForOption(flag).Select(v => $"\"{v}\"").StringJoin(", ")} }}, ref {flag.SourceName}, remainingArgs);");
                         break;
                     }
                 case CommandParameter.Option option:
                     {
                         _codeBuilder.AppendLine(
-                            $"if (MatchNextOption([\"--{option.Name}\"{(option.Alias.IsSome(out var alias) ? $", \"-{alias}\"" : "")}], ref {option.SourceName}, s => {ConvertParameter(option.Type, "s")}, remainingArgs) == 2)");
+                            $"if (MatchNextOption(new [] {{ {GetNamesForOption(option).Select(v => $"\"{v}\"").StringJoin(", ")} }}, ref {option.SourceName}, s => {ConvertParameter(option.Type, "s")}, remainingArgs) == 2)");
                         using (_codeBuilder.IndentBraces())
                         {
                             WriteError($"Missing value for option '--{option.Name}'");
@@ -237,16 +256,14 @@ internal class ProgramClassFileGenerator(
         return parameter switch
         {
             { Type: ParameterType.Enum e } =>
-                $"<{e.EnumValues.Select(v => v.SourceName).StringJoin("|")}>",
+                $"<{e.EnumValues.Select(v => v.SourceName).Truncate(3, "..").StringJoin("|")}>",
             var p => $"{p.Name}",
         };
     }
 
     private string GetSoloHelpFirstColumn(CommandParameter.Option parameter)
     {
-        var parameterName = parameter.Alias.IsSome(out var alias)
-            ? $"-{alias} | --{parameter.Name}"
-            : $"--{parameter.Name}";
+        var parameterName = GetNamesForOption(parameter).StringJoin(" | ");
 
         return parameter switch
         {
@@ -259,6 +276,15 @@ internal class ProgramClassFileGenerator(
         };
     }
 
+    private string[] GetNamesForOption(CommandParameter.Option option) =>
+        (option.Name, option.Alias) switch
+        {
+            ((true, var n), (true, var a)) => [$"-{a}", $"--{n}"],
+            ((true, var n), _) => [$"--{n}"],
+            (_, (true, var a)) => [$"-{a}"],
+            _ => throw new InvalidOperationException("Option must have a name")
+        };
+
     private void WriteError(string errorMessage)
     {
         _codeBuilder.AppendLine($"Console.ForegroundColor = ConsoleColor.Red;");
@@ -270,107 +296,107 @@ internal class ProgramClassFileGenerator(
     {
         _codeBuilder.AppendLine(
             """
-            #pragma warning disable CS8321
-            bool MatchNextPositional<T>(ref T value, Func<string, T> mapper, ISet<int> remainingArgs)
-            {
-                foreach (var index in remainingArgs)
-                {
-                    var arg = args[index];
-                    if (!arg.StartsWith("-"))
+                    #pragma warning disable CS8321
+                    bool MatchNextPositional<T>(ref T value, Func<string, T> mapper, ISet<int> remainingArgs)
                     {
-                        value = mapper(arg);
-                        remainingArgs.Remove(index);
-                        return true;
-                    }
-                }
-
-                return false;
-            }
-
-            bool MatchNextFlag(ImmutableList<string> optionNames, ref bool value, ISet<int> remainingArgs)
-            {
-                foreach (var index in remainingArgs)
-                {
-                    var arg = args[index];
-                
-                    if (arg.EndsWith(":true", StringComparison.InvariantCultureIgnoreCase) || arg.EndsWith("=true", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        var optionName = arg.Substring(0, arg.Length - 5);
-
-                        if (optionNames.Contains(optionName))
+                        foreach (var index in remainingArgs)
                         {
-                            value = true;
-                            remainingArgs.Remove(index);
-                            return true;
+                            var arg = args[index];
+                            if (!arg.StartsWith("-"))
+                            {
+                                value = mapper(arg);
+                                remainingArgs.Remove(index);
+                                return true;
+                            }
                         }
-                    }
-                
-                    if (arg.EndsWith(":false", StringComparison.InvariantCultureIgnoreCase) || arg.EndsWith("=false", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        var optionName = arg.Substring(0, arg.Length - 6);
 
-                        if (optionNames.Contains(optionName))
-                        {
-                            value = false;
-                            remainingArgs.Remove(index);
-                            return true;
-                        }
+                        return false;
                     }
 
-                    if (optionNames.Contains(arg))
+                    bool MatchNextFlag(string[] optionNames, ref bool value, ISet<int> remainingArgs)
                     {
-                        value = true;
-                        remainingArgs.Remove(index);
-                        return true;
-                    }
-                }
-
-                return false;
-            }
-
-            // Returns 0 if the option is not found
-            // Returns 1 if the option is found and the value is found
-            // Returns 2 if the option is found but the value is missing
-            int MatchNextOption<T>(ImmutableList<string> optionNames, ref T value, Func<string, T> mapper, ISet<int> remainingArgs)
-            {
-                foreach (var i in remainingArgs)
-                {
-                    var arg = args[i];
-
-                    if (optionNames.Contains(arg))
-                    {
-                        if (arg.Contains(':'))
+                        foreach (var index in remainingArgs)
                         {
-                            var parts = arg.Split(':', 2);
-                            value = mapper(parts[1]);
-                            remainingArgs.Remove(i);
-                            return 1;
-                        }
-
-                        if (arg.Contains('='))
-                        {
-                            var parts = arg.Split('=', 2);
-                            value = mapper(parts[1]);
-                            remainingArgs.Remove(i);
-                            return 1;
-                        }
-
-                        if (i + 1 < args.Length && remainingArgs.Contains(i + 1) && !args[i + 1].StartsWith("-"))
-                        {
-                            value = mapper(args[i + 1]);
-                            remainingArgs.Remove(i);
-                            remainingArgs.Remove(i + 1);
-                            return 1;
-                        }
+                            var arg = args[index];
                         
-                        return 2;
-                    }
-                }
+                            if (arg.EndsWith(":true", StringComparison.InvariantCultureIgnoreCase) || arg.EndsWith("=true", StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                var optionName = arg.Substring(0, arg.Length - 5);
 
-                return 0;
-            }
-            
-            #pragma warning restore CS8321
+                                if (optionNames.Contains(optionName))
+                                {
+                                    value = true;
+                                    remainingArgs.Remove(index);
+                                    return true;
+                                }
+                            }
+                        
+                            if (arg.EndsWith(":false", StringComparison.InvariantCultureIgnoreCase) || arg.EndsWith("=false", StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                var optionName = arg.Substring(0, arg.Length - 6);
+
+                                if (optionNames.Contains(optionName))
+                                {
+                                    value = false;
+                                    remainingArgs.Remove(index);
+                                    return true;
+                                }
+                            }
+
+                            if (optionNames.Contains(arg))
+                            {
+                                value = true;
+                                remainingArgs.Remove(index);
+                                return true;
+                            }
+                        }
+
+                        return false;
+                    }
+
+                    // Returns 0 if the option is not found
+                    // Returns 1 if the option is found and the value is found
+                    // Returns 2 if the option is found but the value is missing
+                    int MatchNextOption<T>(string[] optionNames, ref T value, Func<string, T> mapper, ISet<int> remainingArgs)
+                    {
+                        foreach (var i in remainingArgs)
+                        {
+                            var arg = args[i];
+
+                            if (optionNames.Contains(arg))
+                            {
+                                if (arg.Contains(':'))
+                                {
+                                    var parts = arg.Split(':', 2);
+                                    value = mapper(parts[1]);
+                                    remainingArgs.Remove(i);
+                                    return 1;
+                                }
+
+                                if (arg.Contains('='))
+                                {
+                                    var parts = arg.Split('=', 2);
+                                    value = mapper(parts[1]);
+                                    remainingArgs.Remove(i);
+                                    return 1;
+                                }
+
+                                if (i + 1 < args.Length && remainingArgs.Contains(i + 1) && !args[i + 1].StartsWith("-"))
+                                {
+                                    value = mapper(args[i + 1]);
+                                    remainingArgs.Remove(i);
+                                    remainingArgs.Remove(i + 1);
+                                    return 1;
+                                }
+                                
+                                return 2;
+                            }
+                        }
+
+                        return 0;
+                    }
+                    
+                    #pragma warning restore CS8321
             """);
     }
 
@@ -387,73 +413,43 @@ internal class ProgramClassFileGenerator(
                 method.MandatoryParameters.Select(GetHelpTextInline)
             );
 
-            _codeBuilder.AppendLine(
-                $"Console.WriteLine("
+            _codeBuilder.AppendLines(
+                $"Console.WriteLine(\"{assemblyName}\");",
+                $"Console.WriteLine();"
             );
 
-            using (_codeBuilder.Indent())
+            if (command is SubCommand s)
             {
                 _codeBuilder.AppendLines(
-                    "\"\"\"",
-                    $"{assemblyName}",
-                    ""
-                );
-
-                if (command is SubCommand s)
-                {
-                    _codeBuilder.AppendLines(
-                        $"{s.CommandName}"
-                    );
-                }
-
-                _codeBuilder.AppendLines(
-                    "\"\"\""
+                    $"Console.WriteLine(\"{s.CommandName}\");"
                 );
             }
-
-            _codeBuilder.AppendLines(
-                $");"
-            );
 
             if (command.Description.HasValue)
             {
                 _codeBuilder.AppendLine("Console.ForegroundColor = helpTextColor;");
 
                 _codeBuilder.AppendLines(
-                    $"Console.WriteLine(",
-                    $"    \"\"\"",
-                    $"        {command.Description.Trim()}",
-                    "",
-                    $"    \"\"\"",
-                    ");"
+                    $"Console.WriteLine(\"    {command.Description.Trim()}\");"
                 );
 
                 _codeBuilder.AppendLine("Console.ForegroundColor = consoleColor;");
             }
-            else
-            {
-                _codeBuilder.AppendLines(
-                    "Console.WriteLine();"
-                );
-            }
 
             _codeBuilder.AppendLines(
-                $"Console.WriteLine(",
-                "    \"\"\"",
-                $"    Usage:",
-                $"        {assemblyName} {String.Join(" ", allHelpText)} [options]",
-                "    \"\"\"",
-                ");");
+                "Console.WriteLine();"
+            );
+
+            _codeBuilder.AppendLines(
+                $"Console.WriteLine(\"Usage:\");",
+                $"Console.WriteLine($\"    {assemblyName} {String.Join(" ", allHelpText)} [options]\");"
+            );
 
             if (method.MandatoryParameters.Any())
             {
                 _codeBuilder.AppendLines(
-                    $"Console.WriteLine(",
-                    "    \"\"\"",
-                    "",
-                    $"    Parameters:",
-                    "    \"\"\"",
-                    ");"
+                    $"Console.WriteLine();",
+                    $"Console.WriteLine(\"Parameters:\");"
                 );
 
                 var helpNames =
@@ -475,12 +471,8 @@ internal class ProgramClassFileGenerator(
 
             {
                 _codeBuilder.AppendLines(
-                    $"Console.WriteLine(",
-                    "    \"\"\"",
-                    "",
-                    $"    Options:",
-                    "    \"\"\"",
-                    ");"
+                    $"Console.WriteLine();",
+                    $"Console.WriteLine(\"Options:\");"
                 );
 
                 var helpNames = method.Options

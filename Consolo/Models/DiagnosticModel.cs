@@ -82,4 +82,12 @@ record DiagnosticModel(string Code, string Message, Location? Location, Diagnost
             Location: parameterSymbol.Locations.FirstOrDefault(),
             Severity: DiagnosticSeverity.Error
         );
+
+    internal static DiagnosticModel Test(string message) =>
+        new DiagnosticModel(
+            Code: "Consolo0011",
+            Message: message,
+            Location: null,
+            Severity: DiagnosticSeverity.Warning
+        );
 }

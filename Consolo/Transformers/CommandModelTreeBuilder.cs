@@ -102,12 +102,14 @@ class CommandTreeBuilder
                 XmlComment: methodModel.Description
             );
 
+            // If the given name for the current path item is empty, it should be merged 
+            // with its parent
             if (methodModel.ProvidedName == "" && pathItems.LastOrDefault() is { } last)
             {
                 pathItems.RemoveAt(pathItems.Count - 1);
                 newItem = new CommandPathItem(
                     Name: last.Name,
-                    XmlComment: last.XmlComment + "\n" + methodModel.Description
+                    XmlComment: methodModel.Description
                 );
             }
 
@@ -132,22 +134,44 @@ class CommandTreeBuilder
             .Select(arg => MapParameter(arg, diagnostics))
             .ToList();
 
-    private static CommandParameter MapParameter(ParameterModel param, List<DiagnosticModel> diagnostics) =>
-        param.IsRequired
-            ? new CommandParameter.Positional(
+    private static CommandParameter MapParameter(ParameterModel param, List<DiagnosticModel> diagnostics)
+    {
+        if (param.IsRequired)
+        {
+            return new CommandParameter.Positional(
                 name: param.Name,
-                sourceName: param.OriginalName,
+                sourceName: param.SourceName,
                 type: MapType(param, diagnostics),
-                description: param.Description | param.Type.Name)
-            : new CommandParameter.Option(
-                name: param.Name,
-                alias: param.Alias,
+                description: param.Description | param.Type.Name);
+        }
+        else
+        {
+            var name = Some(param.Name);
+            var alias = param.Alias;
+            var description = param.Description;
+
+            if (param.Name.Length == 1 && alias.IsNone)
+            {
+                name = None;
+                alias = Some(param.Name);
+
+                if (param.Description.IsNone)
+                {
+                    description = param.SourceName;
+                }
+            }
+
+            return new CommandParameter.Option(
+                name: name,
+                alias: alias,
                 type: MapType(param, diagnostics),
                 defaultValue: param.DefaultValue | "default",
-                description: param.Description | param.Type.Name,
-                sourceName: param.OriginalName,
+                description: description | param.Type.Name,
+                sourceName: param.SourceName,
                 isFlag: param.IsFlag
             );
+        }
+    }
 
     private static ParameterType MapType(ParameterModel param, List<DiagnosticModel> diagnostics)
     {

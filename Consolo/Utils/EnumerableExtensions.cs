@@ -96,4 +96,27 @@ internal static class EnumerableExtensions
 
         return max;
     }
+
+    public static IEnumerable<T> Truncate<T>(
+        this IEnumerable<T> source,
+        int count,
+        T truncateValue)
+    {
+        if (count < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(count));
+        }
+
+        using var e = source.GetEnumerator();
+
+        while (count-- > 0 && e.MoveNext())
+        {
+            yield return e.Current;
+        }
+
+        if (e.MoveNext())
+        {
+            yield return truncateValue;
+        }
+    }
 }

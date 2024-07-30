@@ -4,7 +4,7 @@ namespace Consolo;
 
 internal record ParameterModel(
     string Name,
-    string OriginalName,
+    string SourceName,
     bool IsFlag,
     bool IsRequired,
     Option<string> DefaultValue,
