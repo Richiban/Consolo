@@ -9,6 +9,30 @@ internal static class EnumerableExtensions
         StringJoin<T>(this IEnumerable<T> source, string separator) =>
         string.Join(separator, source);
 
+    public static IEnumerable<T> WhereIsSome<T>(this IEnumerable<Option<T>> source)
+    {
+        foreach (var item in source)
+        {
+            if (item.IsSome(out var value))
+            {
+                yield return value;
+            }
+        }
+    }
+
+    public static bool Contains<T>(this ISet<T> source, Option<T> option) =>
+        option.IsSome(out var value) && source.Contains(value);
+
+    public static void AddRange<T>(
+        this ISet<T> source,
+        IEnumerable<T> values)
+    {
+        foreach (var value in values)
+        {
+            source.Add(value);
+        }
+    }
+
     public static ResultWithDiagnostics<IReadOnlyCollection<TResult>>
          CollectResults<TResult>(
             this IEnumerable<ResultWithDiagnostics<Option<TResult>>> source)

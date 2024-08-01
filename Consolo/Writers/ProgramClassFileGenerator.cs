@@ -264,7 +264,7 @@ internal class ProgramClassFileGenerator(
         return parameter switch
         {
             { Type: ParameterType.Enum e } =>
-                $"{parameterName} {e.EnumValues.Select(v => v.SourceName).StringJoin("|")}",
+                $"{parameterName} {e.EnumValues.Select(v => v.SourceName).Truncate(3, "..").StringJoin("|")}",
             { Type: ParameterType.Bool } =>
                 $"{parameterName}",
             _ =>
@@ -499,8 +499,16 @@ internal class ProgramClassFileGenerator(
 
                     foreach (var (valueName, valueDescription) in allowedValues)
                     {
-                        _codeBuilder.AppendLine(
-                            $"Console.WriteLine(\"      {new string(' ', longestParameter)}- {valueName}: {valueDescription}\");");
+                        if (valueDescription.HasValue)
+                        {
+                            _codeBuilder.AppendLine(
+                                $"Console.WriteLine(\"      {new string(' ', longestParameter)}- {valueName}: {valueDescription}\");");
+                        }
+                        else
+                        {
+                            _codeBuilder.AppendLine(
+                            $"Console.WriteLine(\"      {new string(' ', longestParameter)}- {valueName}\");");
+                        }
                     }
 
                     _codeBuilder.AppendLine("Console.ForegroundColor = consoleColor;");

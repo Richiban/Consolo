@@ -13,11 +13,21 @@ record DiagnosticModel(string Code, string Message, Location? Location, Diagnost
             Location: null,
             DiagnosticSeverity.Error);
 
-    public static DiagnosticModel CommandNameAlreadyInUse(string commandName, Location location) =>
+    public static DiagnosticModel DuplicateCommand(string commandName, Option<Location> location) =>
         new DiagnosticModel(
             Code: "Consolo0003",
             Message: $"The command name '{commandName}' is already in use.",
-            Location: location,
+            Location: location | null!,
+            DiagnosticSeverity.Error);
+
+    public static DiagnosticModel DuplicateCommand(
+        string commandName,
+        string parentCommandName, 
+        Option<Location> location) =>
+        new DiagnosticModel(
+            Code: "Consolo0003",
+            Message: $"The command name '{commandName}' is already in group '{parentCommandName}'.",
+            Location: location | null!,
             DiagnosticSeverity.Error);
 
     internal static DiagnosticModel ErrorProcessingMethod(
@@ -54,7 +64,7 @@ record DiagnosticModel(string Code, string Message, Location? Location, Diagnost
         string suppliedName) => 
         new DiagnosticModel(
             Code: "Consolo0007",
-            Message: $"Parameter {parameterSymbol.Name} has an invalid name '{suppliedName}' specified in the attribute.",
+            Message: $"Parameter {parameterSymbol.Name} has an invalid name ('{suppliedName}') specified in the attribute.",
             Location: parameterSymbol.Locations.FirstOrDefault(),
             Severity: DiagnosticSeverity.Error
         );
@@ -89,5 +99,24 @@ record DiagnosticModel(string Code, string Message, Location? Location, Diagnost
             Message: message,
             Location: null,
             Severity: DiagnosticSeverity.Warning
+        );
+
+    internal static DiagnosticModel DuplicateRootCommand(Option<Location> location) =>
+        new DiagnosticModel(
+            Code: "Consolo0012",
+            Message: "A root command has already been defined.",
+            Location: location | null!,
+            Severity: DiagnosticSeverity.Error
+        );
+
+    internal static DiagnosticModel DuplicateParameter(
+        string name,
+        string commandName,
+        Option<Location> location) =>
+        new DiagnosticModel(
+            Code: "Consolo0013",
+            Message: $"The parameter '{name}' is already defined in command '{commandName}'.",
+            Location: location | null!,
+            Severity: DiagnosticSeverity.Error
         );
 }

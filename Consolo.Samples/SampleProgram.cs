@@ -3,7 +3,6 @@ using System.CommandLine.Collections;
 
 namespace Consolo.Samples
 {
-
     /// <summary>
     /// A sample program that demonstrates how to use Consolo
     /// </summary>
@@ -39,15 +38,25 @@ namespace Consolo.Samples
         /// <summary>
         /// A sample test command
         /// </summary>
-        /// <param name="argA"></param>
-        /// <param name="argB"></param>
+        /// <param name="argA">The first test parameter</param>
+        /// <param name="argB">The second test parameter</param>
+        /// <param name="testEnum">A test value using an Enum</param>
         [Consolo("test")]
         public static void TestMethod(
             [Consolo("a")] bool argA = false,
-            [Consolo("b")] bool argB = false
+            [Consolo("b")] bool argB = false,
+            TestEnum testEnum = TestEnum.A
         )
         {
             Console.WriteLine(new { argA, argB });
+        }
+
+        public enum TestEnum
+        {
+            A,
+            B,
+            C,
+            D
         }
     }
 

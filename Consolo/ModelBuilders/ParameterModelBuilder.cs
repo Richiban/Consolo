@@ -36,6 +36,15 @@ static class ParameterModelBuilder
                         )
                     );
                 }
+                else if (givenName == "")
+                {
+                    diagnostics.Add(
+                        DiagnosticModel.IllegalParameterName(
+                            parameterSymbol,
+                            givenName
+                        )
+                    );
+                }
                 else
                 {
                     name = givenName;

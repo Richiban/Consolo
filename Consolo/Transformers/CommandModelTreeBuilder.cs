@@ -52,14 +52,26 @@ class CommandTreeBuilder
 
                 if (pathEntry.Name == "")
                 {
+                    if (currentLevel.Method.HasValue)
+                    {
+                        if (currentLevel is CommandTree.SubCommand s)
+                        {
+                            diagnostics.Add(DiagnosticModel.DuplicateCommand(s.CommandName, methodModel.Location));
+                        }
+                        else
+                        {
+                            diagnostics.Add(DiagnosticModel.DuplicateRootCommand(methodModel.Location));
+                        }
+
+                        continue;
+                    }
                     currentLevel.Method = MapMethod(methodModel, diagnostics);
 
                     continue;
                 }
 
-                var sub = currentLevel.SubCommands.FirstOrDefault(it => it.CommandName == pathEntry.Name);
 
-                switch (sub)
+                switch (currentLevel.SubCommands.FirstOrDefault(it => it.CommandName == pathEntry.Name))
                 {
                     case null when i == currentPath.Count - 1:
                         {
@@ -85,8 +97,20 @@ class CommandTreeBuilder
                             currentLevel = newLevel;
                             break;
                         }
+                    case {} sub when i == currentPath.Count - 1:
+                        {
+                            if (currentLevel is CommandTree.SubCommand s)
+                            {
+                                diagnostics.Add(DiagnosticModel.DuplicateCommand(sub.CommandName, s.CommandName, methodModel.Location));
+                            }
+                            else
+                            {
+                                diagnostics.Add(DiagnosticModel.DuplicateCommand(sub.CommandName, methodModel.Location));
+                            }
+                            continue;
+                        }
 
-                    default:
+                    case {} sub:
                         currentLevel = sub;
                         break;
                 }
@@ -102,17 +126,6 @@ class CommandTreeBuilder
                 XmlComment: methodModel.Description
             );
 
-            // If the given name for the current path item is empty, it should be merged 
-            // with its parent
-            // if (methodModel.ProvidedName == "" && pathItems.LastOrDefault() is { } last)
-            // {
-            //     pathItems.RemoveAt(pathItems.Count - 1);
-            //     newItem = new CommandPathItem(
-            //         Name: last.Name,
-            //         XmlComment: methodModel.Description
-            //     );
-            // }
-
             pathItems.Add(newItem);
 
             return pathItems;
@@ -125,17 +138,37 @@ class CommandTreeBuilder
         new CommandMethod(
             FullyQualifiedClassName: methodModel.FullyQualifiedClassName,
             MethodName: methodModel.MethodName,
-            Parameters: MapParameters(methodModel.Parameters, diagnostics),
+            Parameters: MapParameters(methodModel, diagnostics),
             Description: methodModel.Description);
 
     private static IReadOnlyCollection<CommandParameter> MapParameters(
-        IReadOnlyCollection<ParameterModel> methodModelArguments,
-        List<DiagnosticModel> diagnostics) => methodModelArguments
-            .Select(arg => MapParameter(arg, diagnostics))
-            .ToList();
-
-    private static CommandParameter MapParameter(ParameterModel param, List<DiagnosticModel> diagnostics)
+        MethodModel methodModel,
+        List<DiagnosticModel> diagnostics)
     {
+        var claimedParameterNames = new HashSet<string>();
+
+        return methodModel.Parameters
+            .Select(arg => MapParameter(arg, methodModel, claimedParameterNames, diagnostics))
+            .WhereIsSome()
+            .ToList();
+    }
+
+    private static Option<CommandParameter> MapParameter(
+        ParameterModel param,
+        MethodModel methodModel,
+        HashSet<string> claimedParameterNames,
+        List<DiagnosticModel> diagnostics)
+    {
+        if (claimedParameterNames.Contains(param.Name) || claimedParameterNames.Contains(param.Alias))
+        {
+            diagnostics.Add(DiagnosticModel.DuplicateParameter(
+                param.Name, methodModel.MethodName, methodModel.Location));
+
+            return None;
+        }
+
+        claimedParameterNames.AddRange(param.GetAllNames());
+
         if (param.IsRequired)
         {
             return new CommandParameter.Positional(
