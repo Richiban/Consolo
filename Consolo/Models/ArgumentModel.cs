@@ -10,5 +10,5 @@ internal record ParameterModel(
     Option<string> DefaultValue,
     Option<string> Description,
     Option<string> Alias,
-    ITypeSymbol Type,
+    TypeModel Type,
     Location? Location);

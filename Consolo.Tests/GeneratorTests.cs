@@ -8,113 +8,132 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using NUnit.Framework;
 
-namespace Consolo.Tests
+namespace Consolo.Tests;
+
+[TestFixture]
+internal class GeneratorTests
 {
-    [TestFixture]
-    internal class GeneratorTests
+    [Test]
+    public void ConsoloAttributeFileTest()
     {
-        [Test]
-        public void ConsoloAttributeFileTest()
+        var source =
+            """
+                using Consolo;
+
+                public static class TestClass
+                {
+                    [Consolo]
+                    public static void TestMethod()
+                    {
+                    }
+                }
+                """;
+
+        var (outputCompilation, diagnostics) = RunGenerator(source);
+
+        Assert.That(
+            diagnostics
+                .Where(d => d.Severity is DiagnosticSeverity.Error or DiagnosticSeverity.Warning), 
+            Is.Empty
+        );
+
         {
-            var source = @"public static class TestClass
-{
-    [Consolo]
-    public static void TestMethod()
-    {
-    }
-}
-";
-
-            var (outputCompilation, diagnostics) = RunGenerator(source);
-
-            Assert.That(diagnostics, Is.Empty);
-
-            {
-                var fileNames = string.Join(
-                    ",\n",
-                    outputCompilation.SyntaxTrees.Select(s => s.FilePath));
-
-                Assert.That(
-                    outputCompilation.SyntaxTrees.Count,
-                    Is.EqualTo(expected: 4),
-                    $"We expected four syntax trees: the original one plus the three we generated. Found: {fileNames}");
-            }
-
-            var ConsoloAttributeFile = GetConsoloAttributeFile(outputCompilation);
-
-            var src = ConsoloAttributeFile.GetText().ToString();
-
-            src.ShouldBe(
-                @"using System;
-
-[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-public class ConsoloAttribute : Attribute
-{
-    public ConsoloAttribute(string name = null)
-    {
-        Name = name;
-    }
-
-    public string Name { get; }
-}");
-        }
-
-        [Test]
-        public void InstanceMethodGivesDiagnosticError()
-        {
-            var source = @"
-namespace TestSamples
-{
-    public class TestClass
-    {
-        [Consolo]
-        public void TestMethod()
-        {
-        }
-    }
-}
-";
-
-            var (_, diagnostics) = RunGenerator(source);
-
-            Assert.That(diagnostics, Has.Length.EqualTo(expected: 1));
-            var diagnostic = diagnostics.Single();
-            Assert.That(diagnostic.Severity, Is.EqualTo(DiagnosticSeverity.Error));
-            Assert.That(diagnostic.Id, Is.EqualTo("Consolo0001"));
+            var fileNames = string.Join(
+                ",\n",
+                outputCompilation.SyntaxTrees.Select(s => s.FilePath));
 
             Assert.That(
-                diagnostic.GetMessage(),
-                Is.EqualTo(
-                    "Method TestSamples.TestClass.TestMethod() must be static in order to use the Consolo attribute."));
+                outputCompilation.SyntaxTrees.Count,
+                Is.EqualTo(expected: 3),
+                $"We expected four syntax trees: the original one plus the three we generated. Found: {fileNames}");
         }
 
-        [Test]
-        public void StaticMethodWithAutoName()
-        {
-            var source = @"
+        var ConsoloAttributeFile = GetConsoloAttributeFile(outputCompilation);
 
-using System;
+        var src = ConsoloAttributeFile.GetText().ToString();
 
-namespace TestSamples
-{
-    public class TestClass
-    {
-        [Consolo]
-        public static void TestMethod()
-        {
-        }
+        src.ShouldBe(
+            """
+            using System;
+
+            namespace Consolo
+            {
+                [AttributeUsage(
+                    AttributeTargets.Method 
+                    | AttributeTargets.Class
+                    | AttributeTargets.Parameter,
+                    Inherited = false,
+                    AllowMultiple = false)]
+                internal class ConsoloAttribute : Attribute
+                {
+                    public ConsoloAttribute(string name = null)
+                    {
+                    }
+
+                    public string Alias { get; set; }
+                }
+            }
+            """);
     }
-}
-";
 
-            var (compilation, diagnostics) = RunGenerator(source);
+    [Test]
+    public void InstanceMethodGivesDiagnosticError()
+    {
+        var source = 
+            """
+            using Consolo;
 
-            Assert.That(diagnostics, Is.Empty);
+            namespace TestSamples
+            {
+                public class TestClass
+                {
+                    [Consolo]
+                    public void TestMethod()
+                    {
+                    }
+                }
+            }
+            """;
 
-            var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
+        var (_, diagnostics) = RunGenerator(source);
+        var errors = diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error);
 
-            programText.ShouldBe(
-                @"using System;
+        var error = errors.ShouldHaveSingleItem();
+        Assert.That(error.Severity, Is.EqualTo(DiagnosticSeverity.Error));
+        Assert.That(error.Id, Is.EqualTo("Consolo0005"));
+
+        Assert.That(
+            error.GetMessage(),
+            Is.EqualTo(
+                "Method TestSamples.TestClass.TestMethod() must be static in order to use the Consolo attribute."));
+    }
+
+    [Test]
+    public void StaticMethodWithAutoName()
+    {
+        var source = 
+        """
+        using Consolo;
+
+        namespace TestSamples;
+
+        public class TestClass
+        {
+            [Consolo]
+            public static void TestMethod()
+            {
+            }
+        }
+        """;
+
+        var (compilation, diagnostics) = RunGenerator(source);
+
+        Assert.That(diagnostics, Is.Empty);
+
+        var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
+
+        programText.ShouldBe(
+            @"using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 
@@ -147,12 +166,12 @@ public static class Program
     }
 }
 ");
-        }
+    }
 
-        [Test]
-        public void ExplicitNameChangesCommandName()
-        {
-            var source = @"
+    [Test]
+    public void ExplicitNameChangesCommandName()
+    {
+        var source = @"
 
 using System;
 
@@ -168,14 +187,14 @@ namespace TestSamples
 }
 ";
 
-            var (compilation, diagnostics) = RunGenerator(source);
+        var (compilation, diagnostics) = RunGenerator(source);
 
-            Assert.That(diagnostics, Is.Empty);
+        Assert.That(diagnostics, Is.Empty);
 
-            var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
+        var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
 
-            programText.ShouldBe(
-                @"using System;
+        programText.ShouldBe(
+            @"using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 
@@ -208,12 +227,12 @@ public static class Program
     }
 }
 ");
-        }
+    }
 
-        [Test]
-        public void NestedAttributeUsage()
-        {
-            var source = @"
+    [Test]
+    public void NestedAttributeUsage()
+    {
+        var source = @"
 namespace TestSamples
 {
     [Consolo]
@@ -245,15 +264,15 @@ namespace TestSamples
 }
 ";
 
-            var (outputCompilation, diagnostics) = RunGenerator(source);
+        var (outputCompilation, diagnostics) = RunGenerator(source);
 
-            Assert.That(diagnostics, Is.Empty);
+        Assert.That(diagnostics, Is.Empty);
 
-            var programSource =
-                GetProgramSyntaxTree(outputCompilation).GetText().ToString();
+        var programSource =
+            GetProgramSyntaxTree(outputCompilation).GetText().ToString();
 
-            programSource.ShouldBe(
-                @"using System;
+        programSource.ShouldBe(
+            @"using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 
@@ -314,86 +333,87 @@ public static class Program
     }
 }
 ");
-        }
-
-        [Test]
-        public void EmptyCommandNameResultsInShortenedPath()
-        {
-            var source = @"
-
-using System;
-
-namespace TestSamples
-{
-    [Consolo(""aaa"")
-    public class TestClass
-    {
-        [Consolo("""")]
-        public static void TestMethodA()
-        {
-        }
-
-        [Consolo(""bbb"")]
-        public static void TestMethodB()
-        {
-        }
     }
-}
-";
 
-            var (compilation, diagnostics) = RunGenerator(source);
-
-            Assert.That(diagnostics, Is.Empty);
-
-            var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
-
-            programText.ShouldBe(
-                @"using System;
-using System.CommandLine;
-using System.CommandLine.Invocation;
-
-
-public static class Program
-{
-    public static int Main(string[] args)
+    [Test]
+    public void EmptyCommandNameResultsInShortenedPath()
     {
-        var testMethodBCommand = new Command(""bbb"")
-        {
-        };
+        var source = 
+            """
+            using Consolo;
 
-        testMethodBCommand.Handler = CommandHandler.Create(TestSamples.TestClass.TestMethodB);
+            namespace TestSamples
+            {
+                [Consolo("aaa")
+                public class TestClass
+                {
+                    [Consolo("")]
+                    public static void TestMethodA()
+                    {
+                    }
 
-        var testMethodACommand = new Command(""aaa"")
-        {
-            testMethodBCommand
-        };
+                    [Consolo("bbb")]
+                    public static void TestMethodB()
+                    {
+                    }
+                }
+            }
+            """;
 
-        testMethodACommand.Handler = CommandHandler.Create(TestSamples.TestClass.TestMethodA);
+        var (compilation, diagnostics) = RunGenerator(source);
 
-        var rootCommand = new RootCommand()
-        {
-            testMethodACommand
-        };
+        diagnostics
+            .Where(d => d.Severity == DiagnosticSeverity.Error)
+            .ShouldBeEmpty();
 
-        if (Repl.IsCall(args))
-        {
-            Repl.EnterNewLoop(rootCommand, ""Select a command"");
+        var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
 
-            return 0;
-        }
-        else
-        {
-            return rootCommand.Invoke(args);
-        }
+        programText.ShouldBe(
+            """
+            using System;
+
+            public static class Program
+            {
+                public static int Main(string[] args)
+                {
+                    var testMethodBCommand = new Command(""bbb"")
+                    {
+                    };
+
+                    testMethodBCommand.Handler = CommandHandler.Create(TestSamples.TestClass.TestMethodB);
+
+                    var testMethodACommand = new Command(""aaa"")
+                    {
+                        testMethodBCommand
+                    };
+
+                    testMethodACommand.Handler = CommandHandler.Create(TestSamples.TestClass.TestMethodA);
+
+                    var rootCommand = new RootCommand()
+                    {
+                        testMethodACommand
+                    };
+
+                    if (Repl.IsCall(args))
+                    {
+                        Repl.EnterNewLoop(rootCommand, ""Select a command"");
+
+                        return 0;
+                    }
+                    else
+                    {
+                        return rootCommand.Invoke(args);
+                    }
+                }
+            }
+            """
+        );
     }
-}
-");
-        }
 
-        [Test]
-        public void RootWithCommandHandlerTest()
-        {
-            var source = @"
+    [Test]
+    public void RootWithCommandHandlerTest()
+    {
+        var source = @"
 using System;
 
 namespace TestSamples
@@ -407,14 +427,14 @@ namespace TestSamples
     }
 }";
 
-            var (compilation, diagnostics) = RunGenerator(source);
+        var (compilation, diagnostics) = RunGenerator(source);
 
-            Assert.That(diagnostics, Is.Empty);
+        Assert.That(diagnostics, Is.Empty);
 
-            var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
+        var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
 
-            programText.ShouldBe(
-                @"using System;
+        programText.ShouldBe(
+            @"using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 
@@ -442,12 +462,12 @@ public static class Program
     }
 }
 ");
-        }
+    }
 
-        [Test]
-        public void LargeExampleInvolvingNestedAttributesEmptyAttributesAndRootCommand()
-        {
-            var source = @"using System;
+    [Test]
+    public void LargeExampleInvolvingNestedAttributesEmptyAttributesAndRootCommand()
+    {
+        var source = @"using System;
 
 namespace Consolo.Samples
 {
@@ -501,14 +521,14 @@ namespace Consolo.Samples
     }
 }";
 
-            var (compilation, diagnostics) = RunGenerator(source);
+        var (compilation, diagnostics) = RunGenerator(source);
 
-            Assert.That(diagnostics, Is.Empty);
+        Assert.That(diagnostics, Is.Empty);
 
-            var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
+        var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
 
-            programText.ShouldBe(
-                @"using System;
+        programText.ShouldBe(
+            @"using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 
@@ -570,52 +590,51 @@ public static class Program
         }
     }
 }");
-        }
+    }
 
-        private static SyntaxTree GetOriginalSourceFile(Compilation outputCompilation)
-        {
-            return outputCompilation.SyntaxTrees.Single(s => s.FilePath == "");
-        }
+    private static SyntaxTree GetOriginalSourceFile(Compilation outputCompilation)
+    {
+        return outputCompilation.SyntaxTrees.Single(s => s.FilePath == "");
+    }
 
-        private static SyntaxTree GetReplFile(Compilation outputCompilation)
-        {
-            return outputCompilation.SyntaxTrees.Single(
-                s => s.FilePath.EndsWith("Repl.g.cs"));
-        }
+    private static SyntaxTree GetReplFile(Compilation outputCompilation)
+    {
+        return outputCompilation.SyntaxTrees.Single(
+            s => s.FilePath.EndsWith("Repl.g.cs"));
+    }
 
-        private static SyntaxTree GetConsoloAttributeFile(Compilation outputCompilation)
-        {
-            return outputCompilation.SyntaxTrees.Single(
-                s => s.FilePath.EndsWith("ConsoloAttribute.g.cs"));
-        }
+    private static SyntaxTree GetConsoloAttributeFile(Compilation outputCompilation)
+    {
+        return outputCompilation.SyntaxTrees.Single(
+            s => s.FilePath.EndsWith("ConsoloAttribute.g.cs"));
+    }
 
-        private static SyntaxTree GetProgramSyntaxTree(Compilation outputCompilation)
-        {
-            return outputCompilation.SyntaxTrees.Single(
-                x => x.FilePath.EndsWith("Program.g.cs"));
-        }
+    private static SyntaxTree GetProgramSyntaxTree(Compilation outputCompilation)
+    {
+        return outputCompilation.SyntaxTrees.Single(
+            x => x.FilePath.EndsWith("Program.g.cs"));
+    }
 
-        private static (Compilation, ImmutableArray<Diagnostic>) RunGenerator(
-            string source)
-        {
-            var inputCompilation = CSharpCompilation.Create(
-                "compilation",
-                [CSharpSyntaxTree.ParseText(source)],
-                [
-                    MetadataReference.CreateFromFile(
+    private static (Compilation, ImmutableArray<Diagnostic>) RunGenerator(
+        string source)
+    {
+        var inputCompilation = CSharpCompilation.Create(
+            "compilation",
+            [CSharpSyntaxTree.ParseText(source)],
+            [
+                MetadataReference.CreateFromFile(
                         typeof(Binder).GetTypeInfo().Assembly.Location)
-                ],
-                new CSharpCompilationOptions(OutputKind.ConsoleApplication));
+            ],
+            new CSharpCompilationOptions(OutputKind.ConsoleApplication));
 
-            var generator = new ConsoloSourceGenerator();
+        var generator = new ConsoloSourceGenerator();
 
-            var driver = CSharpGeneratorDriver.Create(generator)
-                .RunGeneratorsAndUpdateCompilation(
-                    inputCompilation,
-                    out var outputCompilation,
-                    out var diagnostics);
+        var driver = CSharpGeneratorDriver.Create(generator)
+            .RunGeneratorsAndUpdateCompilation(
+                inputCompilation,
+                out var outputCompilation,
+                out var diagnostics);
 
-            return (outputCompilation, diagnostics);
-        }
+        return (outputCompilation, diagnostics);
     }
 }

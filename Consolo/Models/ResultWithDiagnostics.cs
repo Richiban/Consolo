@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Consolo;
 
@@ -22,6 +24,16 @@ class ResultWithDiagnostics<T>
     {
         result = Result;
         diagnostics = Diagnostics;
+    }
+
+    public ResultWithDiagnostics<R> FlatMap<R>(Func<T, ResultWithDiagnostics<R>> func)
+    {
+        var newResult = func(Result);
+
+        return new ResultWithDiagnostics<R>(
+            newResult.Result,
+            Diagnostics.Concat(newResult.Diagnostics).ToList()
+        );
     }
 }
 

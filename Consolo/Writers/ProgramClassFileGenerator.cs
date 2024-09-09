@@ -135,7 +135,7 @@ internal class ProgramClassFileGenerator(
         using (_codeBuilder.IndentBraces())
         {
             _codeBuilder.AppendLine(
-                $"var remainingArgs = new SortedSet<int>(Enumerable.Range({path.Length}, args.Length - {path.Length}));");
+                $"var unclaimedArgs = new SortedSet<int>(Enumerable.Range({path.Length}, args.Length - {path.Length}));");
 
             _codeBuilder.AppendLine("var processingError = false;");
 
@@ -143,11 +143,11 @@ internal class ProgramClassFileGenerator(
 
             WriteParameterAssignments(method);
 
-            _codeBuilder.AppendLines($"if (remainingArgs.Any())");
+            _codeBuilder.AppendLines($"if (unclaimedArgs.Any())");
 
             using (_codeBuilder.IndentBraces())
             {
-                WriteError("Unrecognised args: \" + string.Join(\", \", remainingArgs.Select(i => args[i])) + \"");
+                WriteError("Unrecognised args: \" + string.Join(\", \", unclaimedArgs.Select(i => args[i])) + \"");
                 _codeBuilder.AppendLine("processingError = true;");
             }
 
@@ -185,13 +185,13 @@ internal class ProgramClassFileGenerator(
                         var toSeek = GetNamesForOption(flag);
 
                         _codeBuilder.AppendLine(
-                            $"MatchNextFlag(new [] {{ {GetNamesForOption(flag).Select(v => $"\"{v}\"").StringJoin(", ")} }}, ref {flag.SourceName}, remainingArgs);");
+                            $"MatchNextFlag(new [] {{ {GetNamesForOption(flag).Select(v => $"\"{v}\"").StringJoin(", ")} }}, ref {flag.SourceName}, unclaimedArgs);");
                         break;
                     }
                 case CommandParameter.Option option:
                     {
                         _codeBuilder.AppendLine(
-                            $"if (MatchNextOption(new [] {{ {GetNamesForOption(option).Select(v => $"\"{v}\"").StringJoin(", ")} }}, ref {option.SourceName}, s => {ConvertParameter(option.Type, "s")}, remainingArgs) == 2)");
+                            $"if (MatchNextOption(new [] {{ {GetNamesForOption(option).Select(v => $"\"{v}\"").StringJoin(", ")} }}, ref {option.SourceName}, s => {ConvertParameter(option.Type, "s")}, unclaimedArgs) == 2)");
                         using (_codeBuilder.IndentBraces())
                         {
                             WriteError($"Missing value for option '--{option.Name}'");
@@ -202,7 +202,7 @@ internal class ProgramClassFileGenerator(
                 case var positional:
                     {
                         _codeBuilder.AppendLine(
-                    $"if (!MatchNextPositional(ref {positional.SourceName}, s => {ConvertParameter(positional.Type, "s")}, remainingArgs))");
+                    $"if (!MatchNextPositional(ref {positional.SourceName}, s => {ConvertParameter(positional.Type, "s")}, unclaimedArgs))");
                         using (_codeBuilder.IndentBraces())
                         {
                             WriteError($"Missing value for argument '{positional.SourceName}'");
@@ -293,15 +293,15 @@ internal class ProgramClassFileGenerator(
         _codeBuilder.AppendLine(
             """
                     #pragma warning disable CS8321
-                    bool MatchNextPositional<T>(ref T value, Func<string, T> mapper, ISet<int> remainingArgs)
+                    bool MatchNextPositional<T>(ref T value, Func<string, T> mapper, ISet<int> unclaimedArgs)
                     {
-                        foreach (var index in remainingArgs)
+                        foreach (var index in unclaimedArgs)
                         {
                             var arg = args[index];
                             if (!arg.StartsWith("-"))
                             {
                                 value = mapper(arg);
-                                remainingArgs.Remove(index);
+                                unclaimedArgs.Remove(index);
                                 return true;
                             }
                         }
@@ -309,9 +309,9 @@ internal class ProgramClassFileGenerator(
                         return false;
                     }
 
-                    bool MatchNextFlag(string[] optionNames, ref bool value, ISet<int> remainingArgs)
+                    bool MatchNextFlag(string[] optionNames, ref bool value, ISet<int> unclaimedArgs)
                     {
-                        foreach (var index in remainingArgs)
+                        foreach (var index in unclaimedArgs)
                         {
                             var arg = args[index];
                         
@@ -322,7 +322,7 @@ internal class ProgramClassFileGenerator(
                                 if (optionNames.Contains(optionName))
                                 {
                                     value = true;
-                                    remainingArgs.Remove(index);
+                                    unclaimedArgs.Remove(index);
                                     return true;
                                 }
                             }
@@ -334,7 +334,7 @@ internal class ProgramClassFileGenerator(
                                 if (optionNames.Contains(optionName))
                                 {
                                     value = false;
-                                    remainingArgs.Remove(index);
+                                    unclaimedArgs.Remove(index);
                                     return true;
                                 }
                             }
@@ -342,7 +342,7 @@ internal class ProgramClassFileGenerator(
                             if (optionNames.Contains(arg))
                             {
                                 value = true;
-                                remainingArgs.Remove(index);
+                                unclaimedArgs.Remove(index);
                                 return true;
                             }
                         }
@@ -353,9 +353,9 @@ internal class ProgramClassFileGenerator(
                     // Returns 0 if the option is not found
                     // Returns 1 if the option is found and the value is found
                     // Returns 2 if the option is found but the value is missing
-                    int MatchNextOption<T>(string[] optionNames, ref T value, Func<string, T> mapper, ISet<int> remainingArgs)
+                    int MatchNextOption<T>(string[] optionNames, ref T value, Func<string, T> mapper, ISet<int> unclaimedArgs)
                     {
-                        foreach (var i in remainingArgs)
+                        foreach (var i in unclaimedArgs)
                         {
                             var arg = args[i];
 
@@ -365,7 +365,7 @@ internal class ProgramClassFileGenerator(
                                 {
                                     var parts = arg.Split(':', 2);
                                     value = mapper(parts[1]);
-                                    remainingArgs.Remove(i);
+                                    unclaimedArgs.Remove(i);
                                     return 1;
                                 }
 
@@ -373,15 +373,15 @@ internal class ProgramClassFileGenerator(
                                 {
                                     var parts = arg.Split('=', 2);
                                     value = mapper(parts[1]);
-                                    remainingArgs.Remove(i);
+                                    unclaimedArgs.Remove(i);
                                     return 1;
                                 }
 
-                                if (i + 1 < args.Length && remainingArgs.Contains(i + 1) && !args[i + 1].StartsWith("-"))
+                                if (i + 1 < args.Length && unclaimedArgs.Contains(i + 1) && !args[i + 1].StartsWith("-"))
                                 {
                                     value = mapper(args[i + 1]);
-                                    remainingArgs.Remove(i);
-                                    remainingArgs.Remove(i + 1);
+                                    unclaimedArgs.Remove(i);
+                                    unclaimedArgs.Remove(i + 1);
                                     return 1;
                                 }
                                 

@@ -1,113 +1,121 @@
-﻿// using System;
-// using System.Linq;
-// using System.Text;
-// using System.Threading.Tasks;
-// using System.Xml.Schema;
-// using NUnit.Framework;
+﻿using System;
+using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Xml.Schema;
+using Microsoft.CodeAnalysis;
+using NUnit.Framework;
+using Shouldly;
 
+namespace Consolo.Tests;
 
-// using Shouldly;
+[TestFixture]
+class TransformerTests
+{
+    [Test]
+    public void TestLeafCommandWithProvidedNameInCommandGroup()
+    {
+        var models = new[]
+        {
+            new MethodModel(
+                MethodName: "SomeFunction",
+                ProvidedName: "shortcut",
+                ParentCommandPath: [new ("SomeParent", null)],
+                FullyQualifiedClassName: "SomeNamespace.SomeClass",
+                Parameters: [],
+                Description: null,
+                Location: null)
+        };
 
-// namespace Consolo.Tests
-// {
-//     [TestFixture]
-//     class TransformerTests
-//     {
-//         [Test]
-//         public void TestLeafCommandWithProvidedNameInCommandGroup()
-//         {
-//             var models = new[]
-//             {
-//                 new MethodModel(
-//                     methodName: "SomeFunction",
-//                     providedName: "shortcut",
-//                     groupCommandPath: [ new ("SomeParent", null)],
-//                     fullyQualifiedClassName: "SomeNamespace.SomeClass",
-//                     arguments: [],
-//                     description: null)
-//             };
+        var sut = new CommandTreeBuilder();
 
-//             var sut = new CommandModelTransformer(new ConsoloDiagnosticsManager());
+        var (root, diagnostics) = sut.Transform(models);
 
-//             var actual = sut.Transform(models);
+        var group = root.SubCommands
+            .ShouldHaveSingleItem();
 
-//             actual.ShouldBeOfType<CommandModel.RootCommandModel>();
+        group.CommandName.ShouldBe("some-parent");
+        group.Method.HasValue.ShouldBeFalse();
 
-//             var group = actual.SubCommands.ShouldHaveSingleItem()
-//                 .ShouldBeOfType<CommandModel.SubCommandModel>();
+        var leaf = group.SubCommands
+            .ShouldHaveSingleItem();
 
-//             group.CommandName.ShouldBe("some-parent");
-//             @group.GetVariableName().ShouldBe("someParentCommand");
-//             group.Method.ShouldBeNull();
+        leaf.CommandName.ShouldBe("shortcut");
 
-//             var leaf = group.SubCommands.ShouldHaveSingleItem()
-//                 .ShouldBeOfType<CommandModel.SubCommandModel>();
+        var method = (leaf.Method | null!).ShouldNotBeNull();
 
-//             leaf.CommandName.ShouldBe("shortcut");
-//             leaf.GetVariableName().ShouldBe("someFunctionCommand");
+        method.FullyQualifiedName.ShouldBe("SomeNamespace.SomeClass.SomeFunction");
+        method.Parameters.ShouldBeEmpty();
+    }
 
-//             var method = leaf.Method.ShouldNotBeNull();
-            
-//             method.FullyQualifiedName.ShouldBe("SomeNamespace.SomeClass.SomeFunction");
-//             method.Parameters.ShouldBeEmpty();
-//         }
+    [Test]
+    public void CommandThatHasAHandlerAsWellAsSubcommands()
+    {
+        var models = new[]
+        {
+                new MethodModel(
+                    MethodName: "ListRemotes",
+                    ProvidedName: "",
+                    ParentCommandPath: [new ("remote", null)],
+                    FullyQualifiedClassName: "GitNamespace.RemoteActions",
+                    Parameters: [],
+                    Description: null,
+                    Location: null),
+                new MethodModel(
+                    MethodName: "CreateRemote",
+                    ProvidedName: "add",
+                    ParentCommandPath: [new ("remote", null)],
+                    FullyQualifiedClassName: "GitNamespace.RemoteActions",
+                    Parameters:
+                    [
+                        new ParameterModel(
+                            Name: "name",
+                            SourceName: "remoteName",
+                            Type: new TypeModel(
+                                Name: "String",
+                                FullyQualifiedName: "System.String",
+                                SpecialType: SpecialType.None,
+                                TypeKind: TypeKind.Class,
+                                HasParseMethod: false,
+                                HasCastFromString: false,
+                                HasConstructorWithSingleStringParameter: false,
+                                AllowedValues: ImmutableArray<TypeValueModel>.Empty),
+                            IsFlag: false,
+                            IsRequired: true,
+                            DefaultValue: null,
+                            Alias: null,
+                            Description: null,
+                            Location: null),
+                    ],
+                    Description: null,
+                    Location: null)
+            };
 
-//         [Test]
-//         public void CommandThatHasAHandlerAsWellAsSubcommands()
-//         {
-//             var models = new[]
-//             {
-//                 new MethodModel(
-//                     methodName: "ListRemotes",
-//                     providedName: "",
-//                     groupCommandPath: [new ("remote", null)],
-//                     fullyQualifiedClassName: "GitNamespace.RemoteActions",
-//                     arguments: [],
-//                     description: null),
-//                 new MethodModel(
-//                     methodName: "CreateRemote",
-//                     providedName: "add",
-//                     groupCommandPath: [new ("remote", null)],
-//                     fullyQualifiedClassName: "GitNamespace.RemoteActions",
-//                     arguments:
-//                     [
-//                         new ParameterModel(
-//                             "remoteName",
-//                             "System.String",
-//                             IsFlag: false,
-//                             IsRequired: true,
-//                             DefaultValue: null,
-//                             Alias: null,
-//                             Description: null),
-//                     ],
-//                     description: null)
-//             };
+        var sut = new CommandTreeBuilder();
 
-//             var sut = new CommandModelTransformer();
+        var (root, diagnostics) = sut.Transform(models);
 
-//             var root = sut.Transform(models);
+        var group = root.SubCommands.ShouldHaveSingleItem();
 
-//             var group = root.SubCommands.ShouldHaveSingleItem()
-//                 .ShouldBeOfType<CommandModel.SubCommandModel>();
+        group.CommandName.ShouldBe("remote");
 
-//             group.CommandName.ShouldBe("remote");
-            
-//             var groupMethod = group.Method.ShouldNotBeNull();
-            
-//             groupMethod.FullyQualifiedName.ShouldBe("GitNamespace.RemoteActions.ListRemotes");
-//             groupMethod.Parameters.ShouldBeEmpty();
-//             @group.GetVariableName().ShouldBe("listRemotesCommand");
-            
-//             var subCommand = group.SubCommands.ShouldHaveSingleItem();
+        var groupMethod = (group.Method | null!).ShouldNotBeNull();
 
-//             subCommand.CommandName.ShouldBe("add");
-            
-//             var subCommandMethod = subCommand.Method.ShouldNotBeNull();
-            
-//             subCommandMethod.FullyQualifiedName.ShouldBe("GitNamespace.RemoteActions.CreateRemote");
-//             subCommandMethod.Parameters.ShouldHaveSingleItem();
-//             subCommand.GetVariableName().ShouldBe("createRemoteCommand");
-//             subCommand.SubCommands.ShouldBeEmpty();
-//         }
-//     }
-// }
+        groupMethod.FullyQualifiedName.ShouldBe("GitNamespace.RemoteActions.ListRemotes");
+        groupMethod.Parameters.ShouldBeEmpty();
+
+        var subCommand = group.SubCommands.ShouldHaveSingleItem();
+
+        subCommand.CommandName.ShouldBe("add");
+
+        var subCommandMethod = (subCommand.Method | null!).ShouldNotBeNull();
+
+        subCommandMethod.FullyQualifiedName.ShouldBe("GitNamespace.RemoteActions.CreateRemote");
+        subCommandMethod.Parameters.ShouldHaveSingleItem();
+        subCommand.SubCommands.ShouldBeEmpty();
+    }
+}

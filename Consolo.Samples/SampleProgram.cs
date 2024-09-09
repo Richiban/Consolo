@@ -36,7 +36,9 @@ namespace Consolo.Samples
         }
 
         /// <summary>
-        /// A sample test command
+        /// A sample test command with a really long description that spans multiple lines
+        /// and should cause a newline to be inserted in the help text so that we can see
+        /// how it is formatted in the auto-generated help.
         /// </summary>
         /// <param name="argA">The first test parameter</param>
         /// <param name="argB">The second test parameter</param>
@@ -48,11 +50,14 @@ namespace Consolo.Samples
             TestEnum testEnum = TestEnum.A
         )
         {
-            Console.WriteLine(new { argA, argB });
+            Console.WriteLine(new { argA, argB, testEnum });
         }
 
         public enum TestEnum
         {
+            /// <summary>
+            /// Test value A
+            /// </summary>
             A,
             B,
             C,

@@ -84,18 +84,23 @@ static class ParameterModelBuilder
             }
         }
 
-        return new ResultWithDiagnostics<ParameterModel>(
-            new ParameterModel(
-                Name: name,
-                SourceName: parameterSymbol.Name,
-                IsFlag: isFlag,
-                IsRequired: isRequired,
-                DefaultValue: defaultValue,
-                Description: xmlComment,
-                Alias: alias,
-                Type: parameterSymbol.Type,
-                Location: parameterSymbol.Locations.FirstOrDefault()),
-            diagnostics
-        );
+        return TypeModelBuilder
+            .GetTypeModel(parameterSymbol.Type)
+            .FlatMap(parameterType => 
+                new ResultWithDiagnostics<ParameterModel>(
+                    new ParameterModel(
+                        Name: name,
+                        SourceName: parameterSymbol.Name,
+                        IsFlag: isFlag,
+                        IsRequired: isRequired,
+                        DefaultValue: defaultValue,
+                        Description: xmlComment,
+                        Alias: alias,
+                        Type: parameterType,
+                        Location: parameterSymbol.Locations.FirstOrDefault()
+                    ),
+                    diagnostics
+                )
+            );
     }
 }

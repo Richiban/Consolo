@@ -1,6 +1,4 @@
 ﻿using Microsoft.CodeAnalysis;
-using static Consolo.Prelude;
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -70,7 +68,6 @@ class CommandTreeBuilder
                     continue;
                 }
 
-
                 switch (currentLevel.SubCommands.FirstOrDefault(it => it.CommandName == pathEntry.Name))
                 {
                     case null when i == currentPath.Count - 1:
@@ -97,7 +94,7 @@ class CommandTreeBuilder
                             currentLevel = newLevel;
                             break;
                         }
-                    case {} sub when i == currentPath.Count - 1:
+                    case { } sub when i == currentPath.Count - 1:
                         {
                             if (currentLevel is CommandTree.SubCommand s)
                             {
@@ -110,7 +107,7 @@ class CommandTreeBuilder
                             continue;
                         }
 
-                    case {} sub:
+                    case { } sub:
                         currentLevel = sub;
                         break;
                 }
@@ -211,67 +208,27 @@ class CommandTreeBuilder
         switch (param.Type)
         {
             case { SpecialType: SpecialType.System_String }:
-                return new ParameterType.AsIs(param.Type.GetFullyQualifiedName());
+                return new ParameterType.AsIs(param.Type.FullyQualifiedName);
             case { SpecialType: SpecialType.System_Boolean }:
                 return new ParameterType.Bool();
             case { TypeKind: TypeKind.Enum }:
-                var enumValues = MapEnumValues(param, diagnostics);
+                var enumValues = MapEnumValues(param);
 
-                return new ParameterType.Enum(param.Type.GetFullyQualifiedName(), enumValues);
-            case INamedTypeSymbol t when t.HasParseMethod():
-                return new ParameterType.Parse(t.GetFullyQualifiedName(), "Parse");
-            case INamedTypeSymbol t when t.HasCastFromString():
-                return new ParameterType.ExplicitCast(t.GetFullyQualifiedName());
-            case INamedTypeSymbol t when t.HasConstructorWithSingleStringParameter():
-                return new ParameterType.Constructor(t.GetFullyQualifiedName());
+                return new ParameterType.Enum(param.Type.FullyQualifiedName, enumValues);
+            case { HasParseMethod: true } t:
+                return new ParameterType.Parse(t.FullyQualifiedName, "Parse");
+            case { HasCastFromString: true } t:
+                return new ParameterType.ExplicitCast(t.FullyQualifiedName);
+            case { HasConstructorWithSingleStringParameter: true } t:
+                return new ParameterType.Constructor(t.FullyQualifiedName);
             default:
                 diagnostics.Add(DiagnosticModel.UnsupportedParameterType(param));
-                return new ParameterType.AsIs(param.Type.GetFullyQualifiedName());
+                return new ParameterType.AsIs(param.Type.FullyQualifiedName);
         };
     }
 
-    private static ImmutableArray<EnumValue> MapEnumValues(ParameterModel param, List<DiagnosticModel> diagnostics)
-    {
-        return param.Type
-            .GetMembers()
-            .Where(member => member.Kind == SymbolKind.Field)
-            .Select(GetEnumValue)
+    private static ImmutableArray<EnumValue> MapEnumValues(ParameterModel param) =>
+        param.Type.AllowedValues
+            .Select(value => new EnumValue(value.Value, value.Description))
             .ToImmutableArray();
-
-        EnumValue GetEnumValue(ISymbol member)
-        {
-            var name = member.Name;
-            var xmlComments = XmlCommentModelBuilder.GetXmlComments(member);
-
-            diagnostics.AddRange(xmlComments.Diagnostics);
-
-            return new(name, xmlComments.Result.FlatMap(c => c.Summary));
-        }
-    }
-
-    private readonly struct ListWalker<T>
-    {
-        public ListWalker(IReadOnlyList<T> list)
-            : this(list, index: 0)
-        {
-        }
-
-        private ListWalker(IReadOnlyList<T> list, int index)
-        {
-            List = list;
-            Index = index;
-        }
-
-        public int Index { get; }
-        public IReadOnlyList<T> List { get; }
-        public T Current => List[Index];
-        public ListWalker<T> Next => new(List, Index + 1);
-        public bool AtEnd => Index >= List.Count;
-
-        public void Deconstruct(out T current, out ListWalker<T> next)
-        {
-            current = Current;
-            next = Next;
-        }
-    }
 }
