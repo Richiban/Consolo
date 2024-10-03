@@ -58,7 +58,7 @@ public class ConsoloSourceGenerator : ISourceGenerator
                     Severity: DiagnosticSeverity.Info)
                 );
 
-            if (methodResults.Result.Count == 0)
+            if (methodResults.Result.Count == 0 && methodResults.Diagnostics.Count == 0)
             {
                 diagnosticsManager.ReportDiagnostic(DiagnosticModel.NoMethodsFound());
 

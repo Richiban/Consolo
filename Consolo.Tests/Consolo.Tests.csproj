@@ -17,6 +17,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Include="snapshots\**\*" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\Consolo\Consolo.csproj" />
     </ItemGroup>
 

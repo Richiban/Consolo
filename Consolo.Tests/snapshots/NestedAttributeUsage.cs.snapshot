@@ -1,0 +1,490 @@
+using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+namespace compilation
+{
+    /// <summary>
+    /// Entrypoint class for compilation
+    /// </summary>
+    public static class Program
+    {
+        /// <summary>
+        /// Entrypoint for compilation
+        /// </summary>
+        public static void Main(string[] args)
+        {
+
+            var consoleColor = Console.ForegroundColor;
+            var helpTextColor = ConsoleColor.Green;
+
+            // Commands marked * have an associated method
+            // {root} command
+                // outer-test command
+                    // inner-test1 command
+                        // test-method1 command*
+                // outer-test command
+                    // inner-test1 command
+                        // test-method2 command*
+                // outer-test command
+                    // inner-test2 command
+                        // test-method3 command*
+
+            args = args.SelectMany(arg => arg.StartsWith(' ') && ! arg.StartsWith("--") ? arg.Skip(1).Select(c => $"-{c}") : new [] { arg }).ToArray();
+
+            var isHelp = args.Any(arg => arg == "--help" || arg == "-h" || arg == "-?");
+
+            {
+                if (args.Length >= 1 && args[0] == "outer-test")
+                {
+                    if (args.Length >= 2 && args[1] == "inner-test1")
+                    {
+                        if (args.Length >= 3 && args[2] == "test-method1")
+                        {
+                            if (!isHelp)
+                            {
+                                var unclaimedArgs = new SortedSet<int>(Enumerable.Range(3, args.Length - 3));
+                                var processingError = false;
+
+                                if (unclaimedArgs.Any())
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Red;
+                                    Console.Error.WriteLine($"Unrecognised args: " + string.Join(", ", unclaimedArgs.Select(i => args[i])) + "");
+                                    Console.ForegroundColor = consoleColor;
+                                    processingError = true;
+                                }
+
+                                if (!processingError)
+                                {
+                                    TestSamples.OuterTest.InnerTest1.TestMethod1();
+                                    return;
+                                }
+                            }
+
+                            Console.WriteLine("compilation");
+                            Console.WriteLine();
+                            Console.WriteLine("test-method1");
+                            Console.ForegroundColor = helpTextColor;
+                            Console.WriteLine();
+                            Console.ForegroundColor = consoleColor;
+                            Console.WriteLine("Usage:");
+                            Console.WriteLine($"    compilation outer-test inner-test1 test-method1 [options]");
+                            Console.WriteLine();
+                            Console.WriteLine("Options:");
+                            Console.Write("    -? | -h | --help  ");
+                            Console.ForegroundColor = helpTextColor;
+                            Console.WriteLine("Show help and usage information");
+                            Console.ForegroundColor = consoleColor;
+                            Console.WriteLine();
+                            Console.WriteLine("Commands:");
+                            return;
+                        }
+                        if (!isHelp)
+                        {
+                            if (args.Length == 2)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.Error.WriteLine($"Missing command after: " + string.Join(" ", args.Skip(1)) + "");
+                                Console.ForegroundColor = consoleColor;
+                            }
+                            else
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.Error.WriteLine($"Unknown command: " + string.Join(" ", args.Skip(2)) + "");
+                                Console.ForegroundColor = consoleColor;
+                            }
+                        }
+
+                        Console.WriteLine("compilation");
+                        Console.WriteLine();
+                        Console.WriteLine("inner-test1");
+                        Console.WriteLine("Commands:");
+                        Console.Write("    test-method1 ");
+                        Console.ForegroundColor = helpTextColor;
+                        Console.WriteLine("  ");
+                        Console.ForegroundColor = consoleColor;
+                        return;
+                    }
+                    if (!isHelp)
+                    {
+                        if (args.Length == 1)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.Error.WriteLine($"Missing command after: " + string.Join(" ", args.Skip(0)) + "");
+                            Console.ForegroundColor = consoleColor;
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.Error.WriteLine($"Unknown command: " + string.Join(" ", args.Skip(1)) + "");
+                            Console.ForegroundColor = consoleColor;
+                        }
+                    }
+
+                    Console.WriteLine("compilation");
+                    Console.WriteLine();
+                    Console.WriteLine("outer-test");
+                    Console.WriteLine("Commands:");
+                    Console.Write("    inner-test1 ..");
+                    Console.ForegroundColor = helpTextColor;
+                    Console.WriteLine("  ");
+                    Console.ForegroundColor = consoleColor;
+                    return;
+                }
+                if (args.Length >= 1 && args[0] == "outer-test")
+                {
+                    if (args.Length >= 2 && args[1] == "inner-test1")
+                    {
+                        if (args.Length >= 3 && args[2] == "test-method2")
+                        {
+                            if (!isHelp)
+                            {
+                                var unclaimedArgs = new SortedSet<int>(Enumerable.Range(3, args.Length - 3));
+                                var processingError = false;
+
+                                var arg1 = default(System.String);
+                                if (!MatchNextPositional(ref arg1, s => s, unclaimedArgs))
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Red;
+                                    Console.Error.WriteLine($"Missing value for argument 'arg1'");
+                                    Console.ForegroundColor = consoleColor;
+                                    processingError = true;
+                                }
+
+                                var arg2 = default(System.String);
+                                if (!MatchNextPositional(ref arg2, s => s, unclaimedArgs))
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Red;
+                                    Console.Error.WriteLine($"Missing value for argument 'arg2'");
+                                    Console.ForegroundColor = consoleColor;
+                                    processingError = true;
+                                }
+
+                                if (unclaimedArgs.Any())
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Red;
+                                    Console.Error.WriteLine($"Unrecognised args: " + string.Join(", ", unclaimedArgs.Select(i => args[i])) + "");
+                                    Console.ForegroundColor = consoleColor;
+                                    processingError = true;
+                                }
+
+                                if (!processingError)
+                                {
+                                    TestSamples.OuterTest.InnerTest1.TestMethod2(arg1, arg2);
+                                    return;
+                                }
+                            }
+
+                            Console.WriteLine("compilation");
+                            Console.WriteLine();
+                            Console.WriteLine("test-method2");
+                            Console.ForegroundColor = helpTextColor;
+                            Console.WriteLine();
+                            Console.ForegroundColor = consoleColor;
+                            Console.WriteLine("Usage:");
+                            Console.WriteLine($"    compilation outer-test inner-test1 test-method2 <arg1> <arg2> [options]");
+                            Console.WriteLine();
+                            Console.WriteLine("Parameters:");
+                            Console.Write("    arg1  ");
+                            Console.ForegroundColor = helpTextColor;
+                            Console.WriteLine("String");
+                            Console.ForegroundColor = consoleColor;
+                            Console.Write("    arg2  ");
+                            Console.ForegroundColor = helpTextColor;
+                            Console.WriteLine("String");
+                            Console.ForegroundColor = consoleColor;
+                            Console.WriteLine();
+                            Console.WriteLine("Options:");
+                            Console.Write("    -? | -h | --help  ");
+                            Console.ForegroundColor = helpTextColor;
+                            Console.WriteLine("Show help and usage information");
+                            Console.ForegroundColor = consoleColor;
+                            Console.WriteLine();
+                            Console.WriteLine("Commands:");
+                            return;
+                        }
+                        if (!isHelp)
+                        {
+                            if (args.Length == 2)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.Error.WriteLine($"Missing command after: " + string.Join(" ", args.Skip(1)) + "");
+                                Console.ForegroundColor = consoleColor;
+                            }
+                            else
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.Error.WriteLine($"Unknown command: " + string.Join(" ", args.Skip(2)) + "");
+                                Console.ForegroundColor = consoleColor;
+                            }
+                        }
+
+                        Console.WriteLine("compilation");
+                        Console.WriteLine();
+                        Console.WriteLine("inner-test1");
+                        Console.WriteLine("Commands:");
+                        Console.Write("    test-method2 <arg1> <arg2> ");
+                        Console.ForegroundColor = helpTextColor;
+                        Console.WriteLine("  ");
+                        Console.ForegroundColor = consoleColor;
+                        return;
+                    }
+                    if (!isHelp)
+                    {
+                        if (args.Length == 1)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.Error.WriteLine($"Missing command after: " + string.Join(" ", args.Skip(0)) + "");
+                            Console.ForegroundColor = consoleColor;
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.Error.WriteLine($"Unknown command: " + string.Join(" ", args.Skip(1)) + "");
+                            Console.ForegroundColor = consoleColor;
+                        }
+                    }
+
+                    Console.WriteLine("compilation");
+                    Console.WriteLine();
+                    Console.WriteLine("outer-test");
+                    Console.WriteLine("Commands:");
+                    Console.Write("    inner-test1 ..");
+                    Console.ForegroundColor = helpTextColor;
+                    Console.WriteLine("  ");
+                    Console.ForegroundColor = consoleColor;
+                    return;
+                }
+                if (args.Length >= 1 && args[0] == "outer-test")
+                {
+                    if (args.Length >= 2 && args[1] == "inner-test2")
+                    {
+                        if (args.Length >= 3 && args[2] == "test-method3")
+                        {
+                            if (!isHelp)
+                            {
+                                var unclaimedArgs = new SortedSet<int>(Enumerable.Range(3, args.Length - 3));
+                                var processingError = false;
+
+                                if (unclaimedArgs.Any())
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Red;
+                                    Console.Error.WriteLine($"Unrecognised args: " + string.Join(", ", unclaimedArgs.Select(i => args[i])) + "");
+                                    Console.ForegroundColor = consoleColor;
+                                    processingError = true;
+                                }
+
+                                if (!processingError)
+                                {
+                                    TestSamples.OuterTest.InnerTest2.TestMethod3();
+                                    return;
+                                }
+                            }
+
+                            Console.WriteLine("compilation");
+                            Console.WriteLine();
+                            Console.WriteLine("test-method3");
+                            Console.ForegroundColor = helpTextColor;
+                            Console.WriteLine();
+                            Console.ForegroundColor = consoleColor;
+                            Console.WriteLine("Usage:");
+                            Console.WriteLine($"    compilation outer-test inner-test2 test-method3 [options]");
+                            Console.WriteLine();
+                            Console.WriteLine("Options:");
+                            Console.Write("    -? | -h | --help  ");
+                            Console.ForegroundColor = helpTextColor;
+                            Console.WriteLine("Show help and usage information");
+                            Console.ForegroundColor = consoleColor;
+                            Console.WriteLine();
+                            Console.WriteLine("Commands:");
+                            return;
+                        }
+                        if (!isHelp)
+                        {
+                            if (args.Length == 2)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.Error.WriteLine($"Missing command after: " + string.Join(" ", args.Skip(1)) + "");
+                                Console.ForegroundColor = consoleColor;
+                            }
+                            else
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.Error.WriteLine($"Unknown command: " + string.Join(" ", args.Skip(2)) + "");
+                                Console.ForegroundColor = consoleColor;
+                            }
+                        }
+
+                        Console.WriteLine("compilation");
+                        Console.WriteLine();
+                        Console.WriteLine("inner-test2");
+                        Console.WriteLine("Commands:");
+                        Console.Write("    test-method3 ");
+                        Console.ForegroundColor = helpTextColor;
+                        Console.WriteLine("  ");
+                        Console.ForegroundColor = consoleColor;
+                        return;
+                    }
+                    if (!isHelp)
+                    {
+                        if (args.Length == 1)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.Error.WriteLine($"Missing command after: " + string.Join(" ", args.Skip(0)) + "");
+                            Console.ForegroundColor = consoleColor;
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.Error.WriteLine($"Unknown command: " + string.Join(" ", args.Skip(1)) + "");
+                            Console.ForegroundColor = consoleColor;
+                        }
+                    }
+
+                    Console.WriteLine("compilation");
+                    Console.WriteLine();
+                    Console.WriteLine("outer-test");
+                    Console.WriteLine("Commands:");
+                    Console.Write("    inner-test2 ..");
+                    Console.ForegroundColor = helpTextColor;
+                    Console.WriteLine("  ");
+                    Console.ForegroundColor = consoleColor;
+                    return;
+                }
+                if (!isHelp)
+                {
+                    if (args.Length == 0)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.Error.WriteLine($"Missing command");
+                        Console.ForegroundColor = consoleColor;
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.Error.WriteLine($"Unknown command: " + string.Join(" ", args.Skip(0)) + "");
+                        Console.ForegroundColor = consoleColor;
+                    }
+                }
+
+                Console.WriteLine("compilation");
+                Console.WriteLine("Commands:");
+                Console.Write("    outer-test ..");
+                Console.ForegroundColor = helpTextColor;
+                Console.WriteLine("  ");
+                Console.ForegroundColor = consoleColor;
+                Console.Write("    outer-test ..");
+                Console.ForegroundColor = helpTextColor;
+                Console.WriteLine("  ");
+                Console.ForegroundColor = consoleColor;
+                Console.Write("    outer-test ..");
+                Console.ForegroundColor = helpTextColor;
+                Console.WriteLine("  ");
+                Console.ForegroundColor = consoleColor;
+                return;
+            }
+
+                    #pragma warning disable CS8321
+        bool MatchNextPositional<T>(ref T value, Func<string, T> mapper, ISet<int> unclaimedArgs)
+        {
+            foreach (var index in unclaimedArgs)
+            {
+                var arg = args[index];
+                if (!arg.StartsWith("-"))
+                {
+                    value = mapper(arg);
+                    unclaimedArgs.Remove(index);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        bool MatchNextFlag(string[] optionNames, ref bool value, ISet<int> unclaimedArgs)
+        {
+            foreach (var index in unclaimedArgs)
+            {
+                var arg = args[index];
+            
+                if (arg.EndsWith(":true", StringComparison.InvariantCultureIgnoreCase) || arg.EndsWith("=true", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    var optionName = arg.Substring(0, arg.Length - 5);
+
+                    if (optionNames.Contains(optionName))
+                    {
+                        value = true;
+                        unclaimedArgs.Remove(index);
+                        return true;
+                    }
+                }
+            
+                if (arg.EndsWith(":false", StringComparison.InvariantCultureIgnoreCase) || arg.EndsWith("=false", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    var optionName = arg.Substring(0, arg.Length - 6);
+
+                    if (optionNames.Contains(optionName))
+                    {
+                        value = false;
+                        unclaimedArgs.Remove(index);
+                        return true;
+                    }
+                }
+
+                if (optionNames.Contains(arg))
+                {
+                    value = true;
+                    unclaimedArgs.Remove(index);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // Returns 0 if the option is not found
+        // Returns 1 if the option is found and the value is found
+        // Returns 2 if the option is found but the value is missing
+        int MatchNextOption<T>(string[] optionNames, ref T value, Func<string, T> mapper, ISet<int> unclaimedArgs)
+        {
+            foreach (var i in unclaimedArgs)
+            {
+                var arg = args[i];
+
+                if (optionNames.Contains(arg))
+                {
+                    if (arg.Contains(':'))
+                    {
+                        var parts = arg.Split(':', 2);
+                        value = mapper(parts[1]);
+                        unclaimedArgs.Remove(i);
+                        return 1;
+                    }
+
+                    if (arg.Contains('='))
+                    {
+                        var parts = arg.Split('=', 2);
+                        value = mapper(parts[1]);
+                        unclaimedArgs.Remove(i);
+                        return 1;
+                    }
+
+                    if (i + 1 < args.Length && unclaimedArgs.Contains(i + 1) && !args[i + 1].StartsWith("-"))
+                    {
+                        value = mapper(args[i + 1]);
+                        unclaimedArgs.Remove(i);
+                        unclaimedArgs.Remove(i + 1);
+                        return 1;
+                    }
+                    
+                    return 2;
+                }
+            }
+
+            return 0;
+        }
+        
+        #pragma warning restore CS8321
+        }
+    }
+}

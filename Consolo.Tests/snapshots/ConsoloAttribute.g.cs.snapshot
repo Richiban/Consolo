@@ -1,0 +1,19 @@
+using System;
+
+namespace Consolo
+{
+    [AttributeUsage(
+        AttributeTargets.Method 
+        | AttributeTargets.Class
+        | AttributeTargets.Parameter,
+        Inherited = false,
+        AllowMultiple = false)]
+    internal class ConsoloAttribute : Attribute
+    {
+        public ConsoloAttribute(string name = null)
+        {
+        }
+
+        public string Alias { get; set; }
+    }
+}

@@ -1,0 +1,198 @@
+using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+namespace compilation
+{
+    /// <summary>
+    /// Entrypoint class for compilation
+    /// </summary>
+    public static class Program
+    {
+        /// <summary>
+        /// Entrypoint for compilation
+        /// </summary>
+        public static void Main(string[] args)
+        {
+
+            var consoleColor = Console.ForegroundColor;
+            var helpTextColor = ConsoleColor.Green;
+
+            // Commands marked * have an associated method
+            // {root} command
+                // explicit command*
+
+            args = args.SelectMany(arg => arg.StartsWith(' ') && ! arg.StartsWith("--") ? arg.Skip(1).Select(c => $"-{c}") : new [] { arg }).ToArray();
+
+            var isHelp = args.Any(arg => arg == "--help" || arg == "-h" || arg == "-?");
+
+            {
+                if (args.Length >= 1 && args[0] == "explicit")
+                {
+                    if (!isHelp)
+                    {
+                        var unclaimedArgs = new SortedSet<int>(Enumerable.Range(1, args.Length - 1));
+                        var processingError = false;
+
+                        if (unclaimedArgs.Any())
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.Error.WriteLine($"Unrecognised args: " + string.Join(", ", unclaimedArgs.Select(i => args[i])) + "");
+                            Console.ForegroundColor = consoleColor;
+                            processingError = true;
+                        }
+
+                        if (!processingError)
+                        {
+                            TestSamples.TestClass.TestMethod();
+                            return;
+                        }
+                    }
+
+                    Console.WriteLine("compilation");
+                    Console.WriteLine();
+                    Console.WriteLine("explicit");
+                    Console.ForegroundColor = helpTextColor;
+                    Console.WriteLine();
+                    Console.ForegroundColor = consoleColor;
+                    Console.WriteLine("Usage:");
+                    Console.WriteLine($"    compilation explicit [options]");
+                    Console.WriteLine();
+                    Console.WriteLine("Options:");
+                    Console.Write("    -? | -h | --help  ");
+                    Console.ForegroundColor = helpTextColor;
+                    Console.WriteLine("Show help and usage information");
+                    Console.ForegroundColor = consoleColor;
+                    Console.WriteLine();
+                    Console.WriteLine("Commands:");
+                    return;
+                }
+                if (!isHelp)
+                {
+                    if (args.Length == 0)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.Error.WriteLine($"Missing command");
+                        Console.ForegroundColor = consoleColor;
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.Error.WriteLine($"Unknown command: " + string.Join(" ", args.Skip(0)) + "");
+                        Console.ForegroundColor = consoleColor;
+                    }
+                }
+
+                Console.WriteLine("compilation");
+                Console.WriteLine("Commands:");
+                Console.Write("    explicit ");
+                Console.ForegroundColor = helpTextColor;
+                Console.WriteLine("  ");
+                Console.ForegroundColor = consoleColor;
+                return;
+            }
+
+                    #pragma warning disable CS8321
+        bool MatchNextPositional<T>(ref T value, Func<string, T> mapper, ISet<int> unclaimedArgs)
+        {
+            foreach (var index in unclaimedArgs)
+            {
+                var arg = args[index];
+                if (!arg.StartsWith("-"))
+                {
+                    value = mapper(arg);
+                    unclaimedArgs.Remove(index);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        bool MatchNextFlag(string[] optionNames, ref bool value, ISet<int> unclaimedArgs)
+        {
+            foreach (var index in unclaimedArgs)
+            {
+                var arg = args[index];
+            
+                if (arg.EndsWith(":true", StringComparison.InvariantCultureIgnoreCase) || arg.EndsWith("=true", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    var optionName = arg.Substring(0, arg.Length - 5);
+
+                    if (optionNames.Contains(optionName))
+                    {
+                        value = true;
+                        unclaimedArgs.Remove(index);
+                        return true;
+                    }
+                }
+            
+                if (arg.EndsWith(":false", StringComparison.InvariantCultureIgnoreCase) || arg.EndsWith("=false", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    var optionName = arg.Substring(0, arg.Length - 6);
+
+                    if (optionNames.Contains(optionName))
+                    {
+                        value = false;
+                        unclaimedArgs.Remove(index);
+                        return true;
+                    }
+                }
+
+                if (optionNames.Contains(arg))
+                {
+                    value = true;
+                    unclaimedArgs.Remove(index);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // Returns 0 if the option is not found
+        // Returns 1 if the option is found and the value is found
+        // Returns 2 if the option is found but the value is missing
+        int MatchNextOption<T>(string[] optionNames, ref T value, Func<string, T> mapper, ISet<int> unclaimedArgs)
+        {
+            foreach (var i in unclaimedArgs)
+            {
+                var arg = args[i];
+
+                if (optionNames.Contains(arg))
+                {
+                    if (arg.Contains(':'))
+                    {
+                        var parts = arg.Split(':', 2);
+                        value = mapper(parts[1]);
+                        unclaimedArgs.Remove(i);
+                        return 1;
+                    }
+
+                    if (arg.Contains('='))
+                    {
+                        var parts = arg.Split('=', 2);
+                        value = mapper(parts[1]);
+                        unclaimedArgs.Remove(i);
+                        return 1;
+                    }
+
+                    if (i + 1 < args.Length && unclaimedArgs.Contains(i + 1) && !args[i + 1].StartsWith("-"))
+                    {
+                        value = mapper(args[i + 1]);
+                        unclaimedArgs.Remove(i);
+                        unclaimedArgs.Remove(i + 1);
+                        return 1;
+                    }
+                    
+                    return 2;
+                }
+            }
+
+            return 0;
+        }
+        
+        #pragma warning restore CS8321
+        }
+    }
+}
