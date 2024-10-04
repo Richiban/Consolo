@@ -197,20 +197,19 @@ internal class GeneratorTests
             """
             using Consolo;
 
-            namespace TestSamples
+            namespace TestSamples;
+            
+            [Consolo("aaa")
+            public class TestClass
             {
-                [Consolo("aaa")
-                public class TestClass
+                [Consolo("")]
+                public static void TestMethodA()
                 {
-                    [Consolo("")]
-                    public static void TestMethodA()
-                    {
-                    }
+                }
 
-                    [Consolo("bbb")]
-                    public static void TestMethodB()
-                    {
-                    }
+                [Consolo("bbb")]
+                public static void TestMethodB()
+                {
                 }
             }
             """;
