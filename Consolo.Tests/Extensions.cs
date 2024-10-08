@@ -18,7 +18,7 @@ public static class Extensions
             throw new ArgumentNullException(nameof(snapshotName));
         }
 
-        var snapshotPath = $"snapshots/{snapshotName}.cs.snapshot";
+        var snapshotPath = $"snapshots/{snapshotName}.snapshot";
 
         if (Environment.GetEnvironmentVariable("WriteSnapshots") == "true")
         {
