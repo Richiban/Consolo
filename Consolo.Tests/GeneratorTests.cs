@@ -360,30 +360,3 @@ internal class GeneratorTests
     }
 }
 
-public static class Ext
-{
-    public static void ShouldMatchSnapshot(this string target, [CallerMemberName] string? snapshotName = null)
-    {
-        if (snapshotName is null)
-        {
-            throw new ArgumentNullException(nameof(snapshotName));
-        }
-
-        var snapshotPath = $"snapshots/{snapshotName}.cs.snapshot";
-
-        if (Environment.GetEnvironmentVariable("WriteSnapshots") == "true")
-        {
-            File.WriteAllText(snapshotPath, target);
-            Console.WriteLine($"Wrote {target.Length} chars to '{snapshotPath}'");
-            
-            Assert.Inconclusive();
-        }
-
-        target.ShouldBe(File.ReadAllText(snapshotPath));
-    }    
-
-    public static IReadOnlyCollection<Diagnostic> WarningsAndErrors(this IEnumerable<Diagnostic> diagnostics) =>
-        diagnostics
-            .Where(d => d.Severity is DiagnosticSeverity.Error or DiagnosticSeverity.Warning)
-            .ToList();
-}

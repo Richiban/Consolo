@@ -76,7 +76,6 @@ namespace compilation
                             Console.WriteLine("Show help and usage information");
                             Console.ForegroundColor = consoleColor;
                             Console.WriteLine();
-                            Console.WriteLine("Commands:");
                             return;
                         }
                         if (!isHelp)
@@ -200,7 +199,6 @@ namespace compilation
                             Console.WriteLine("Show help and usage information");
                             Console.ForegroundColor = consoleColor;
                             Console.WriteLine();
-                            Console.WriteLine("Commands:");
                             return;
                         }
                         if (!isHelp)
@@ -296,7 +294,6 @@ namespace compilation
                             Console.WriteLine("Show help and usage information");
                             Console.ForegroundColor = consoleColor;
                             Console.WriteLine();
-                            Console.WriteLine("Commands:");
                             return;
                         }
                         if (!isHelp)

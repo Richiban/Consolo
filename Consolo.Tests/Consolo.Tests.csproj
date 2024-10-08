@@ -1,13 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>net8.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
     </PropertyGroup>
-
-    <ItemGroup>        
+    <ItemGroup>
+        <PackageReference Include="diffplex" Version="1.7.2" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.10.0" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0-preview-20211109-03" />
         <PackageReference Include="Moq" Version="4.16.1" />
@@ -15,13 +14,19 @@
         <PackageReference Include="NUnit3TestAdapter" Version="4.1.0" />
         <PackageReference Include="Shouldly" Version="4.0.3" />
     </ItemGroup>
-
     <ItemGroup>
         <None Include="snapshots\**\*" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
-
     <ItemGroup>
         <ProjectReference Include="..\Consolo\Consolo.csproj" />
+        <ProjectReference Include="..\Consolo.Samples\Consolo.Samples.csproj" />
     </ItemGroup>
-
+    <ItemGroup>
+        <Using Include="NUnit.Framework" />
+        <Using Include="Consolo" />
+        <Using Include="System" />
+        <Using Include="Shouldly" />
+        <Using Include="System.Linq" />
+        <Using Include="System.Collections.Generic" />
+    </ItemGroup>
 </Project>

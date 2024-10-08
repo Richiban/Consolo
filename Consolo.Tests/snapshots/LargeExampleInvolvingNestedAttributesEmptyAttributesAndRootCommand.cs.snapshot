@@ -84,7 +84,6 @@ namespace compilation
                         Console.WriteLine("Show help and usage information");
                         Console.ForegroundColor = consoleColor;
                         Console.WriteLine();
-                        Console.WriteLine("Commands:");
                         return;
                     }
                     if (args.Length >= 2 && args[1] == "add")
@@ -152,7 +151,6 @@ namespace compilation
                         Console.WriteLine("Show help and usage information");
                         Console.ForegroundColor = consoleColor;
                         Console.WriteLine();
-                        Console.WriteLine("Commands:");
                         return;
                     }
                     if (!isHelp)
@@ -238,7 +236,6 @@ namespace compilation
                     Console.WriteLine("Show help and usage information");
                     Console.ForegroundColor = consoleColor;
                     Console.WriteLine();
-                    Console.WriteLine("Commands:");
                     return;
                 }
                 if (!isHelp)

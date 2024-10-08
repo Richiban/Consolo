@@ -523,6 +523,11 @@ internal class ProgramClassFileGenerator(
 
     private void WriteSubCommandHelpTextInline(CommandTree command)
     {
+        if (!command.SubCommands.Any())
+        {
+            return;
+        }
+        
         _codeBuilder.AppendLines(
             "Console.WriteLine(\"Commands:\");"
         );

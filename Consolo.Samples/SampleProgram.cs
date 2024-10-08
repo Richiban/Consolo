@@ -1,5 +1,4 @@
 ﻿using System;
-using System.CommandLine.Collections;
 
 namespace Consolo.Samples
 {
