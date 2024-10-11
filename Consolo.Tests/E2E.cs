@@ -7,26 +7,26 @@ namespace Consolo.Tests.E2E;
 [TestFixture]
 internal class E2ETests
 {
-    private readonly StringBuilder _errorOutput = new();
-    private readonly StringBuilder _standardOutput = new();
-    private readonly TextWriter _a = Console.Out;
-    private readonly TextWriter _b = Console.Error;
+    private readonly StringBuilder _testError = new();
+    private readonly StringBuilder _testOutput = new();
+    private static readonly TextWriter _defaultOut = Console.Out;
+    private static readonly TextWriter _defaultError = Console.Error;
 
     [SetUp]
     public void SetUp()
     {
-        Console.SetOut(new StringWriter(_standardOutput));
-        Console.SetError(new StringWriter(_errorOutput));
+        Console.SetOut(new StringWriter(_testOutput));
+        Console.SetError(new StringWriter(_testError));
     }
 
     [TearDown]
     public void TearDown()
     {
-        _standardOutput.Clear();
-        _errorOutput.Clear();
+        _testOutput.Clear();
+        _testError.Clear();
 
-        Console.SetOut(_a);
-        Console.SetError(_b);
+        Console.SetOut(_defaultOut);
+        Console.SetError(_defaultError);
     }
 
     [Test]
@@ -34,7 +34,7 @@ internal class E2ETests
     {
         Program.Main([]);
 
-        _standardOutput.ToString().ShouldMatchSnapshot();
+        _testOutput.ToString().ShouldMatchSnapshot();
     }
 
     [Test]
@@ -42,8 +42,8 @@ internal class E2ETests
     {
         Program.Main(["log"]);
 
-        _errorOutput.ToString().ShouldBe($"Missing value for argument 'lines'{Environment.NewLine}");
-        _standardOutput.ToString().ShouldMatchSnapshot();
+        _testError.ToString().ShouldBe($"Missing value for argument 'lines'{Environment.NewLine}");
+        _testOutput.ToString().ShouldMatchSnapshot();
     }
 
     [Test]
@@ -51,8 +51,8 @@ internal class E2ETests
     {
         Program.Main(["log", "1"]);
 
-        _errorOutput.ToString().ShouldBeEmpty();
-        _standardOutput.ToString().ShouldMatchSnapshot();
+        _testError.ToString().ShouldBeEmpty();
+        _testOutput.ToString().ShouldMatchSnapshot();
     }
 
     [Test]
@@ -60,8 +60,8 @@ internal class E2ETests
     {
         Program.Main(["log", "1", "--pretty", "oneline"]);
 
-        _errorOutput.ToString().ShouldBeEmpty();
-        _standardOutput.ToString().ShouldMatchSnapshot();
+        _testError.ToString().ShouldBeEmpty();
+        _testOutput.ToString().ShouldMatchSnapshot();
     }
 
     [Test]
@@ -69,8 +69,8 @@ internal class E2ETests
     {
         Program.Main(["log", "--foo"]);
 
-        _errorOutput.ToString().ShouldBe($"Missing value for argument 'lines'{Environment.NewLine}Unrecognised args: --foo{Environment.NewLine}");
-        _standardOutput.ToString().ShouldMatchSnapshot();
+        _testError.ToString().ShouldBe($"Missing value for argument 'lines'{Environment.NewLine}Unrecognised args: --foo{Environment.NewLine}");
+        _testOutput.ToString().ShouldMatchSnapshot();
     }
 
     [Test]
@@ -79,5 +79,13 @@ internal class E2ETests
         var ex = Assert.Throws<FormatException>(() => Program.Main(["log", "x"]));
 
         ex.Message.ShouldBe("The input string 'x' was not in a correct format.");
+    }
+
+    [Test]
+    public void LogCommandWithUnparseablePrettyValueResultsInException()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => Program.Main(["log", "1", "--pretty", "invalid"]));
+
+        ex.Message.ShouldBe("Requested value 'invalid' was not found.");
     }
 }

@@ -180,8 +180,6 @@ internal class GeneratorTests
 
         var (outputCompilation, diagnostics) = RunGenerator(source);
 
-        Environment.GetEnvironmentVariable("WriteSnapshots")?.ShouldBe("true");
-
         diagnostics.WarningsAndErrors().ShouldBeEmpty();
 
         var programSource =
