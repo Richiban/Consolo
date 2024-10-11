@@ -1,15 +1,13 @@
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using System.Runtime.CompilerServices;
 using System.IO;
 using DiffPlex.DiffBuilder;
 using DiffPlex.DiffBuilder.Model;
-using DiffPlex.Model;
 using System.Text;
 
 namespace Consolo.Tests;
 
-public static class Extensions
+internal static class Extensions
 {
     public static void ShouldMatchSnapshot(this string target, [CallerMemberName] string? snapshotName = null)
     {

@@ -35,9 +35,15 @@ public class ConsoloSourceGenerator : ISourceGenerator
 
         try
         {
-            if (context.SyntaxReceiver is not ConsoloSyntaxReceiver receiver ||
-                receiver.QualifyingMembers.Count == 0)
+            if (context.SyntaxReceiver is not ConsoloSyntaxReceiver receiver)
             {
+                return;
+            }
+
+            if (receiver.QualifyingMembers.Count == 0)
+            {
+                diagnosticsManager.ReportDiagnostic(DiagnosticModel.NoMethodsFound());
+
                 return;
             }
 

@@ -1,20 +1,8 @@
-﻿using System;
-using System.Collections.Immutable;
-using System.Reflection;
-using System.Linq;
-using Shouldly;
-using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using NUnit.Framework;
-using System.IO;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+﻿using Microsoft.CodeAnalysis;
 
-namespace Consolo.Tests;
+namespace Consolo.Tests.Generator;
 
-[TestFixture]
-internal class GeneratorTests
+internal class SnapshotTests : GeneratorTests
 {
     [Test]
     public void ConsoloAttributeFileTest()
@@ -57,36 +45,6 @@ internal class GeneratorTests
     }
 
     [Test]
-    public void InstanceMethodGivesDiagnosticError()
-    {
-        var source =
-            """
-            using Consolo;
-
-            namespace TestSamples;
-            
-            public static class TestClass
-            {
-                [Consolo]
-                public void TestMethod()
-                {
-                }
-            }
-            """;
-
-        var (_, diagnostics) = RunGenerator(source);
-        var errors = diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error);
-
-        var error = errors.ShouldHaveSingleItem();
-
-        error.ShouldSatisfyAllConditions(
-            () => error.Id.ShouldBe("Consolo0005"),
-            () => error.Severity.ShouldBe(DiagnosticSeverity.Error),
-            () => error.GetMessage().ShouldBe("Method TestSamples.TestClass.TestMethod() must be static in order to use the Consolo attribute.")
-        );
-    }
-
-    [Test]
     public void StaticMethodWithAutoName()
     {
         var source =
@@ -116,7 +74,7 @@ internal class GeneratorTests
     [Test]
     public void ExplicitNameChangesCommandName()
     {
-        var source = 
+        var source =
             """
             using System;
             using Consolo;
@@ -224,7 +182,7 @@ internal class GeneratorTests
     [Test]
     public void RootWithCommandHandlerTest()
     {
-        var source = 
+        var source =
             """
             using System;
             using Consolo;
@@ -309,52 +267,6 @@ internal class GeneratorTests
         var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
 
         programText.ShouldMatchSnapshot();
-    }
-
-    private static SyntaxTree GetOriginalSourceFile(Compilation outputCompilation)
-    {
-        return outputCompilation.SyntaxTrees.Single(s => s.FilePath == "");
-    }
-
-    private static SyntaxTree GetReplFile(Compilation outputCompilation)
-    {
-        return outputCompilation.SyntaxTrees.Single(
-            s => s.FilePath.EndsWith("Repl.g.cs"));
-    }
-
-    private static SyntaxTree GetConsoloAttributeFile(Compilation outputCompilation)
-    {
-        return outputCompilation.SyntaxTrees.Single(
-            s => s.FilePath.EndsWith("ConsoloAttribute.g.cs"));
-    }
-
-    private static SyntaxTree GetProgramSyntaxTree(Compilation outputCompilation)
-    {
-        return outputCompilation.SyntaxTrees.Single(
-            x => x.FilePath.EndsWith("Program.g.cs"));
-    }
-
-    private static (Compilation, ImmutableArray<Diagnostic>) RunGenerator(
-        string source)
-    {
-        var inputCompilation = CSharpCompilation.Create(
-            "compilation",
-            [CSharpSyntaxTree.ParseText(source)],
-            [
-                MetadataReference.CreateFromFile(
-                        typeof(Binder).GetTypeInfo().Assembly.Location)
-            ],
-            new CSharpCompilationOptions(OutputKind.ConsoleApplication));
-
-        var generator = new ConsoloSourceGenerator();
-
-        var driver = CSharpGeneratorDriver.Create(generator)
-            .RunGeneratorsAndUpdateCompilation(
-                inputCompilation,
-                out var outputCompilation,
-                out var diagnostics);
-
-        return (outputCompilation, diagnostics);
     }
 }
 

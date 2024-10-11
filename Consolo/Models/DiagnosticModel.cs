@@ -9,7 +9,7 @@ record DiagnosticModel(string Code, string Message, Location? Location, Diagnost
     public static DiagnosticModel NoMethodsFound() =>
         new DiagnosticModel(
             Code: "Consolo0002",
-            Message: $"No command methods found. Make sure you're using the {ConsoloAttributeDefinition.ShortName} attribute",
+            Message: $"No command methods found. Make sure you're using the {ConsoloAttributeDefinition.ShortName} attribute.",
             Location: null,
             DiagnosticSeverity.Error);
 
@@ -88,7 +88,7 @@ record DiagnosticModel(string Code, string Message, Location? Location, Diagnost
     internal static DiagnosticModel AliasOnPositionalParameter(IParameterSymbol parameterSymbol) =>
         new DiagnosticModel(
             Code: "Consolo0010",
-            Message: $"Positional parameters should not be given an alias.",
+            Message: $"Positional parameters cannot have an alias.",
             Location: parameterSymbol.Locations.FirstOrDefault(),
             Severity: DiagnosticSeverity.Error
         );
@@ -115,7 +115,7 @@ record DiagnosticModel(string Code, string Message, Location? Location, Diagnost
         Option<Location> location) =>
         new DiagnosticModel(
             Code: "Consolo0013",
-            Message: $"The parameter '{name}' is already defined in command '{commandName}'.",
+            Message: $"The parameter name or alias '{name}' is already in use in command '{commandName}'.",
             Location: location | null!,
             Severity: DiagnosticSeverity.Error
         );

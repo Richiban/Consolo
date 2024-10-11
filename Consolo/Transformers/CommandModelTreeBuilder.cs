@@ -156,10 +156,18 @@ class CommandTreeBuilder
         HashSet<string> claimedParameterNames,
         List<DiagnosticModel> diagnostics)
     {
-        if (claimedParameterNames.Contains(param.Name) || claimedParameterNames.Contains(param.Alias))
+        if (claimedParameterNames.Contains(param.Name))
         {
             diagnostics.Add(DiagnosticModel.DuplicateParameter(
-                param.Name, methodModel.MethodName, methodModel.Location));
+                param.Name, methodModel.MethodName, param.Location));
+
+            return None;
+        }
+
+        if (param.Alias.IsSome(out var a) && claimedParameterNames.Contains(a))
+        {
+            diagnostics.Add(DiagnosticModel.DuplicateParameter(
+                a, methodModel.MethodName, param.Location));
 
             return None;
         }
