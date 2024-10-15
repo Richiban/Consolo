@@ -1,11 +1,17 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
+
 using Microsoft.CodeAnalysis;
 
 namespace Consolo;
 
 static class ParameterModelBuilder
 {
+    private static readonly Regex parameterNameSpec =
+        new(pattern: "^[a-z]([-a-zA-Z]*)$",
+            options: RegexOptions.Compiled);
+
     public static ResultWithDiagnostics<ParameterModel> GetParameterModel(
         IParameterSymbol parameterSymbol,
         Option<XmlCommentModel> methodXmlComments)
@@ -22,41 +28,25 @@ static class ParameterModelBuilder
             ? SourceValueUtils.SourceValue(parameterSymbol.ExplicitDefaultValue)
             : null;
         var xmlComment = methodXmlComments.FlatMap(x => x[parameterSymbol.Name]);
+        var syntax = parameterSymbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax();
+        var nameLocation = (Option<Location>)None;
+        var aliasLocation = (Option<Location>)None;
 
         if (AttributeUsageUtils.GetUsage(parameterSymbol).IsSome(out var attr))
         {
             if (attr.Name.IsSome(out var givenName))
             {
-                if (givenName.Contains(" "))
+                if (!parameterNameSpec.IsMatch(givenName))
                 {
                     diagnostics.Add(
-                        DiagnosticModel.IllegalParameterName(
-                            parameterSymbol,
-                            givenName
-                        )
-                    );
-                }
-                else if (givenName == "")
-                {
-                    diagnostics.Add(
-                        DiagnosticModel.IllegalParameterName(
-                            parameterSymbol,
-                            givenName
-                        )
+                        DiagnosticModel.IllegalParameterName(attr.NameLocation | attr.AttributeLocation)
                     );
                 }
                 else
                 {
                     name = givenName;
+                    nameLocation = attr.NameLocation;
                 }
-
-                // diagnostics.Add(
-                //     DiagnosticModel.AttributeProblem(
-                //         ConsoloAttributeDefinition.ShortName,
-                //         CandidateReason.MissingName,
-                //         Location: parameterSymbol.Locations.FirstOrDefault()
-                //     )
-                // );
             }
 
             if (attr.Alias.IsSome(out var givenAlias))
@@ -64,15 +54,13 @@ static class ParameterModelBuilder
                 if (isRequired)
                 {
                     diagnostics.Add(
-                        DiagnosticModel.AliasOnPositionalParameter(
-                            parameterSymbol
-                        )
+                        DiagnosticModel.AliasOnPositionalParameter(attr.AliasLocation | attr.AttributeLocation)
                     );
                 }
-                else if (givenAlias.Length != 1)
+                else if (givenAlias.Length != 1 || givenAlias[0] is not (>= 'a' and <= 'z'))
                 {
                     diagnostics.Add(
-                        DiagnosticModel.AliasMustBeOneCharacter(parameterSymbol)
+                        DiagnosticModel.IllegalAlias(attr.AliasLocation | attr.AttributeLocation)
                     );
 
                     alias = None;
@@ -80,13 +68,14 @@ static class ParameterModelBuilder
                 else
                 {
                     alias = givenAlias;
+                    aliasLocation = attr.AliasLocation;
                 }
             }
         }
 
         return TypeModelBuilder
             .GetTypeModel(parameterSymbol.Type)
-            .FlatMap(parameterType => 
+            .FlatMap(parameterType =>
                 new ResultWithDiagnostics<ParameterModel>(
                     new ParameterModel(
                         Name: name,
@@ -97,7 +86,9 @@ static class ParameterModelBuilder
                         Description: xmlComment,
                         Alias: alias,
                         Type: parameterType,
-                        Location: parameterSymbol.Locations.FirstOrDefault()
+                        Location: parameterSymbol.Locations.FirstOrDefault(),
+                        NameLocation: nameLocation,
+                        AliasLocation: aliasLocation
                     ),
                     diagnostics
                 )

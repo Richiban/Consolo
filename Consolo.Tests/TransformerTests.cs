@@ -89,7 +89,9 @@ class TransformerTests
                             DefaultValue: null,
                             Alias: null,
                             Description: null,
-                            Location: null),
+                            Location: null,
+                            NameLocation: null,
+                            AliasLocation: null),
                     ],
                     Description: null,
                     Location: null)

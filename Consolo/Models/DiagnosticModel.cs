@@ -59,13 +59,11 @@ record DiagnosticModel(string Code, string Message, Location? Location, Diagnost
             Severity: DiagnosticSeverity.Error
         );
 
-    internal static DiagnosticModel IllegalParameterName(
-        IParameterSymbol parameterSymbol,
-        string suppliedName) => 
+    internal static DiagnosticModel IllegalParameterName(Option<Location> nameLocation) =>
         new DiagnosticModel(
             Code: "Consolo0007",
-            Message: $"Parameter {parameterSymbol.Name} has an invalid name ('{suppliedName}') specified in the attribute.",
-            Location: parameterSymbol.Locations.FirstOrDefault(),
+            Message: $"Parameter names must have the form [a-z][-a-zA-Z]*.",
+            Location: nameLocation | null!,
             Severity: DiagnosticSeverity.Error
         );
 
@@ -73,23 +71,23 @@ record DiagnosticModel(string Code, string Message, Location? Location, Diagnost
         new DiagnosticModel(
             Code: "Consolo0008",
             Message: $"Parameter '{param.Name}' has a type that is unsupported ({param.Type.Name}).",
-            Location: param.Location,
+            Location: param.Location | null!,
             Severity: DiagnosticSeverity.Error
         );
 
-    internal static DiagnosticModel AliasMustBeOneCharacter(IParameterSymbol param) =>
+    internal static DiagnosticModel IllegalAlias(Option<Location> aliasLocation) =>
         new DiagnosticModel(
             Code: "Consolo0009",
-            Message: $"A parameter's alias must be exactly one character.",
-            Location: param.Locations.FirstOrDefault(),
+            Message: $"Parameter aliases must be a single character in the range [a-z].",
+            Location: aliasLocation | null!,
             Severity: DiagnosticSeverity.Error
         );
 
-    internal static DiagnosticModel AliasOnPositionalParameter(IParameterSymbol parameterSymbol) =>
+    internal static DiagnosticModel AliasOnPositionalParameter(Option<Location> aliasLocation) =>
         new DiagnosticModel(
             Code: "Consolo0010",
             Message: $"Positional parameters cannot have an alias.",
-            Location: parameterSymbol.Locations.FirstOrDefault(),
+            Location: aliasLocation | null!,
             Severity: DiagnosticSeverity.Error
         );
 
@@ -109,7 +107,7 @@ record DiagnosticModel(string Code, string Message, Location? Location, Diagnost
             Severity: DiagnosticSeverity.Error
         );
 
-    internal static DiagnosticModel DuplicateParameter(
+    internal static DiagnosticModel DuplicateNameOrAlias(
         string name,
         string commandName,
         Option<Location> location) =>

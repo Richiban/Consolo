@@ -158,16 +158,16 @@ class CommandTreeBuilder
     {
         if (claimedParameterNames.Contains(param.Name))
         {
-            diagnostics.Add(DiagnosticModel.DuplicateParameter(
-                param.Name, methodModel.MethodName, param.Location));
+            diagnostics.Add(DiagnosticModel.DuplicateNameOrAlias(
+                param.Name, methodModel.MethodName, param.NameLocation | param.Location));
 
             return None;
         }
 
         if (param.Alias.IsSome(out var a) && claimedParameterNames.Contains(a))
         {
-            diagnostics.Add(DiagnosticModel.DuplicateParameter(
-                a, methodModel.MethodName, param.Location));
+            diagnostics.Add(DiagnosticModel.DuplicateNameOrAlias(
+                a, methodModel.MethodName, param.AliasLocation | param.Location));
 
             return None;
         }

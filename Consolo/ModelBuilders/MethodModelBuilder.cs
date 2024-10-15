@@ -2,6 +2,7 @@
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Consolo;
 
@@ -68,9 +69,6 @@ internal class MethodModelBuilder
                     .Result.FlatMap(r => r.Summary);
 
                 path.Add(new(commandName, xmlComment));
-
-                // TODO remove
-                //diagnostics.Add(DiagnosticModel.Test($"Command name: {commandName}, XML comment: {xmlComment}"));
             }
 
             symbol = symbol.ContainingType;

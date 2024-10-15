@@ -20,6 +20,11 @@ internal class MethodScanner(
                     var semanticModel =
                         compilation.GetSemanticModel(method.SyntaxTree);
 
+                    var temp = method.AttributeLists
+                        .SelectMany(list => list.Attributes)
+                        .Where(attr => attr.Name.ToString() is "Consolo" or "ConsoloAttribute")
+                        .SelectMany(attr => attr.ArgumentList?.Arguments.Select(arg => arg.Expression) ?? []);
+
                     return (method, semanticModel);
                 })
             .Select(pair => pair.semanticModel.GetDeclaredSymbol(pair.method)!)

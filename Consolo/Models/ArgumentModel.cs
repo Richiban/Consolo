@@ -11,4 +11,6 @@ internal record ParameterModel(
     Option<string> Description,
     Option<string> Alias,
     TypeModel Type,
-    Location? Location);
+    Option<Location> Location,
+    Option<Location> NameLocation,
+    Option<Location> AliasLocation);

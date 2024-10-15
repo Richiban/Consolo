@@ -1,5 +1,6 @@
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Consolo;
 
@@ -23,6 +24,12 @@ static class AttributeUsageUtils
             .FirstOrDefault(kvp => kvp.Key == "Alias")
             .Value.Value?.ToString();
 
-        return new ConsoloAttributeUsage(name, alias);
+        var attributeSyntax = attributeData.ApplicationSyntaxReference?.GetSyntax() as AttributeSyntax;
+
+        var attributeLocation = attributeSyntax?.GetLocation();
+        var nameLocation = attributeSyntax?.ArgumentList?.Arguments.FirstOrDefault(arg => arg.NameEquals is null)?.GetLocation();
+        var aliasLocation = attributeSyntax?.ArgumentList?.Arguments.FirstOrDefault(arg => arg.NameEquals is not null)?.GetLocation();
+
+        return new ConsoloAttributeUsage(name, alias, attributeLocation, nameLocation, aliasLocation);
     }
 }
