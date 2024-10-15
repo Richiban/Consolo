@@ -7,7 +7,7 @@
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     </PropertyGroup>
     <PropertyGroup>
-        <Version>0.9.6</Version>
+        <Version>0.9.7</Version>
         <authors>richiban</authors>
         <AssemblyName>Consolo</AssemblyName>
         <PackageId>Consolo</PackageId>
