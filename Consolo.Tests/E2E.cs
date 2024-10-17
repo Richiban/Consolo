@@ -38,6 +38,14 @@ internal class E2ETests
     }
 
     [Test]
+    public void ExplicitHelpResultsInHelpText()
+    {
+        Program.Main(["--help"]);
+
+        _testOutput.ToString().ShouldMatchSnapshot();
+    }
+
+    [Test]
     public void LogCommandWithMissingArgResultsInErrorAndHelpText()
     {
         Program.Main(["log"]);
@@ -55,10 +63,12 @@ internal class E2ETests
         _testOutput.ToString().ShouldMatchSnapshot();
     }
 
-    [Test]
-    public void LogCommandWithPrettyArgumentRunsCommand()
+    [TestCase([new[] { "--pretty", "oneline" }])]
+    [TestCase([new[] { "--pretty=oneline" }])]
+    [TestCase([new[] { "--pretty:oneline" }])]
+    public void LogCommandWithPrettyArgumentRunsCommand(string[] args)
     {
-        Program.Main(["log", "1", "--pretty", "oneline"]);
+        Program.Main(["log", "1", ..args]);
 
         _testError.ToString().ShouldBeEmpty();
         _testOutput.ToString().ShouldMatchSnapshot();
@@ -87,5 +97,46 @@ internal class E2ETests
         var ex = Assert.Throws<ArgumentException>(() => Program.Main(["log", "1", "--pretty", "invalid"]));
 
         ex.Message.ShouldBe("Requested value 'invalid' was not found.");
+    }
+
+    [Test]
+    public void VersionCommandPrintsVersion()
+    {
+        Program.Main(["--version"]);
+
+        _testError.ToString().ShouldBeEmpty();
+        _testOutput.ToString().ShouldMatchSnapshot();
+    }
+
+    [TestCase("name", "--loud")]
+    [TestCase("--loud", "name")]
+    [TestCase("name", "-l")]
+    [TestCase("-l", "name")]
+    public void GreetCommandIsAgnosticToArgumentOrder(string arg1, string arg2)
+    {
+        Program.Main(["greet", arg1, arg2]);
+
+        _testError.ToString().ShouldBeEmpty();
+        _testOutput.ToString().ShouldMatchSnapshot();
+    }
+
+    [TestCase("-?")]
+    [TestCase("-h")]
+    [TestCase("--help")]
+    public void LogHelp(string helpArg)
+    {
+        Program.Main(["log", helpArg]);
+
+        _testError.ToString().ShouldBeEmpty();
+        _testOutput.ToString().ShouldMatchSnapshot();
+    }
+
+    [Test]
+    public void RemoteCommandParsesUrlCorrectly()
+    {
+        Program.Main(["remote", "add", "name", "http://example.com"]);
+
+        _testError.ToString().ShouldBeEmpty();
+        _testOutput.ToString().ShouldMatchSnapshot();
     }
 }

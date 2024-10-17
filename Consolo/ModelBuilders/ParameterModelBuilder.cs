@@ -9,7 +9,7 @@ namespace Consolo;
 static class ParameterModelBuilder
 {
     private static readonly Regex parameterNameSpec =
-        new(pattern: "^[a-z]([-a-zA-Z]*)$",
+        new(pattern: "^[a-z]([-a-zA-Z0-9]*)$",
             options: RegexOptions.Compiled);
 
     public static ResultWithDiagnostics<ParameterModel> GetParameterModel(

@@ -62,7 +62,7 @@ record DiagnosticModel(string Code, string Message, Location? Location, Diagnost
     internal static DiagnosticModel IllegalParameterName(Option<Location> nameLocation) =>
         new DiagnosticModel(
             Code: "Consolo0007",
-            Message: $"Parameter names must have the form [a-z][-a-zA-Z]*.",
+            Message: $"Parameter names must have the form [a-z][-a-zA-Z0-9]*.",
             Location: nameLocation | null!,
             Severity: DiagnosticSeverity.Error
         );

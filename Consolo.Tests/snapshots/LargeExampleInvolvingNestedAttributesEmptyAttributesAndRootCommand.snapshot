@@ -24,6 +24,7 @@ namespace compilation
                     // remove command*
                     // add command*
                 // branch command*
+                // --version command*
 
             args = args.SelectMany(arg => arg.StartsWith(' ') && ! arg.StartsWith("--") ? arg.Skip(1).Select(c => $"-{c}") : new [] { arg }).ToArray();
 
@@ -40,7 +41,7 @@ namespace compilation
                             var processingError = false;
 
                             var remoteName = default(System.String);
-                            if (!MatchNextPositional(ref remoteName, s => s, unclaimedArgs))
+                            if (!MatchNextPositional(args, ref remoteName, s => s, unclaimedArgs))
                             {
                                 Console.ForegroundColor = ConsoleColor.Red;
                                 Console.Error.WriteLine($"Missing value for argument 'remoteName'");
@@ -94,7 +95,7 @@ namespace compilation
                             var processingError = false;
 
                             var remoteName = default(System.String);
-                            if (!MatchNextPositional(ref remoteName, s => s, unclaimedArgs))
+                            if (!MatchNextPositional(args, ref remoteName, s => s, unclaimedArgs))
                             {
                                 Console.ForegroundColor = ConsoleColor.Red;
                                 Console.Error.WriteLine($"Missing value for argument 'remoteName'");
@@ -103,7 +104,7 @@ namespace compilation
                             }
 
                             var url = default(System.String);
-                            if (!MatchNextPositional(ref url, s => s, unclaimedArgs))
+                            if (!MatchNextPositional(args, ref url, s => s, unclaimedArgs))
                             {
                                 Console.ForegroundColor = ConsoleColor.Red;
                                 Console.Error.WriteLine($"Missing value for argument 'url'");
@@ -238,6 +239,46 @@ namespace compilation
                     Console.WriteLine();
                     return;
                 }
+                if (args.Length >= 1 && args[0] == "--version")
+                {
+                    if (!isHelp)
+                    {
+                        var unclaimedArgs = new SortedSet<int>(Enumerable.Range(1, args.Length - 1));
+                        var processingError = false;
+
+                        if (unclaimedArgs.Any())
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.Error.WriteLine($"Unrecognised args: " + string.Join(", ", unclaimedArgs.Select(i => args[i])) + "");
+                            Console.ForegroundColor = consoleColor;
+                            processingError = true;
+                        }
+
+                        if (!processingError)
+                        {
+                            PrintVersion();
+                            return;
+                        }
+                    }
+
+                    Console.WriteLine("compilation");
+                    Console.WriteLine();
+                    Console.WriteLine("--version");
+                    Console.ForegroundColor = helpTextColor;
+                    Console.WriteLine("    Prints the version of the application");
+                    Console.WriteLine();
+                    Console.ForegroundColor = consoleColor;
+                    Console.WriteLine("Usage:");
+                    Console.WriteLine($"    compilation --version [options]");
+                    Console.WriteLine();
+                    Console.WriteLine("Options:");
+                    Console.Write("    -? | -h | --help  ");
+                    Console.ForegroundColor = helpTextColor;
+                    Console.WriteLine("Show help and usage information");
+                    Console.ForegroundColor = consoleColor;
+                    Console.WriteLine();
+                    return;
+                }
                 if (!isHelp)
                 {
                     if (args.Length == 0)
@@ -256,23 +297,24 @@ namespace compilation
 
                 Console.WriteLine("compilation");
                 Console.WriteLine("Commands:");
-                Console.Write("    remote   ");
+                Console.Write("    remote    ");
                 Console.ForegroundColor = helpTextColor;
                 Console.WriteLine("  ");
                 Console.ForegroundColor = consoleColor;
-                Console.Write("    remote ..");
+                Console.Write("    remote .. ");
                 Console.ForegroundColor = helpTextColor;
                 Console.WriteLine("  ");
                 Console.ForegroundColor = consoleColor;
-                Console.Write("    branch   ");
+                Console.Write("    branch    ");
                 Console.ForegroundColor = helpTextColor;
                 Console.WriteLine("  ");
                 Console.ForegroundColor = consoleColor;
                 return;
             }
+        }
 
-                    #pragma warning disable CS8321
-        bool MatchNextPositional<T>(ref T value, Func<string, T> mapper, ISet<int> unclaimedArgs)
+                #pragma warning disable CS8321
+        static bool MatchNextPositional<T>(string[] args, ref T value, Func<string, T> mapper, ISet<int> unclaimedArgs)
         {
             foreach (var index in unclaimedArgs)
             {
@@ -288,7 +330,7 @@ namespace compilation
             return false;
         }
 
-        bool MatchNextFlag(string[] optionNames, ref bool value, ISet<int> unclaimedArgs)
+        static bool MatchNextFlag(string[] args, string[] optionNames, ref bool value, ISet<int> unclaimedArgs)
         {
             foreach (var index in unclaimedArgs)
             {
@@ -332,7 +374,7 @@ namespace compilation
         // Returns 0 if the option is not found
         // Returns 1 if the option is found and the value is found
         // Returns 2 if the option is found but the value is missing
-        int MatchNextOption<T>(string[] optionNames, ref T value, Func<string, T> mapper, ISet<int> unclaimedArgs)
+        static int MatchNextOption<T>(string[] args, string[] optionNames, ref T value, Func<string, T> mapper, ISet<int> unclaimedArgs)
         {
             foreach (var i in unclaimedArgs)
             {
@@ -340,22 +382,6 @@ namespace compilation
 
                 if (optionNames.Contains(arg))
                 {
-                    if (arg.Contains(':'))
-                    {
-                        var parts = arg.Split(':', 2);
-                        value = mapper(parts[1]);
-                        unclaimedArgs.Remove(i);
-                        return 1;
-                    }
-
-                    if (arg.Contains('='))
-                    {
-                        var parts = arg.Split('=', 2);
-                        value = mapper(parts[1]);
-                        unclaimedArgs.Remove(i);
-                        return 1;
-                    }
-
                     if (i + 1 < args.Length && unclaimedArgs.Contains(i + 1) && !args[i + 1].StartsWith("-"))
                     {
                         value = mapper(args[i + 1]);
@@ -366,12 +392,40 @@ namespace compilation
                     
                     return 2;
                 }
+
+                if (arg.Contains(':'))
+                {
+                    var parts = arg.Split(':', 2);
+
+                    if (optionNames.Contains(parts[0]))
+                    {
+                        value = mapper(parts[1]);
+                        unclaimedArgs.Remove(i);
+                        return 1;
+                    }
+                }
+
+                if (arg.Contains('='))
+                {
+                    var parts = arg.Split('=', 2);
+
+                    if (optionNames.Contains(parts[0]))
+                    {
+                        value = mapper(parts[1]);
+                        unclaimedArgs.Remove(i);
+                        return 1;
+                    }
+                }
+
             }
 
             return 0;
         }
         
         #pragma warning restore CS8321
-        }
+        static void PrintVersion()
+{
+    Console.WriteLine(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString());
+}
     }
 }

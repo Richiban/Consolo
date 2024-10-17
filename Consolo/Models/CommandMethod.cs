@@ -10,7 +10,10 @@ internal record CommandMethod(
         IReadOnlyCollection<CommandParameter> Parameters,
         Option<string> Description)
 {
-    public string FullyQualifiedName { get; } = $"{FullyQualifiedClassName}.{MethodName}";
+    public string FullyQualifiedName { get; } =
+        FullyQualifiedClassName is not "" 
+            ? $"{FullyQualifiedClassName}.{MethodName}" 
+            : MethodName;
 
     public ImmutableArray<CommandParameter.Positional> MandatoryParameters { get; } =
         Parameters

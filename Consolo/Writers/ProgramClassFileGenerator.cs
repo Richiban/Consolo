@@ -49,28 +49,31 @@ internal class ProgramClassFileGenerator(
             _codeBuilder.AppendLine("/// Entrypoint for " + assemblyName);
             _codeBuilder.AppendLine("/// </summary>");
             _codeBuilder.AppendLine("public static void Main(string[] args)");
-            using var _3 = _codeBuilder.IndentBraces();
+            {
+                using var _3 = _codeBuilder.IndentBraces();
 
-            _codeBuilder.AppendLine();
+                _codeBuilder.AppendLine();
 
-            _codeBuilder.AppendLine("var consoleColor = Console.ForegroundColor;");
-            _codeBuilder.AppendLine("var helpTextColor = ConsoleColor.Green;");
+                _codeBuilder.AppendLine("var consoleColor = Console.ForegroundColor;");
+                _codeBuilder.AppendLine("var helpTextColor = ConsoleColor.Green;");
 
-            _codeBuilder.AppendLine();
-            _codeBuilder.AppendLine("// Commands marked * have an associated method");
-            WriteCommandDebug(rootCommand);
-            _codeBuilder.AppendLine();
+                _codeBuilder.AppendLine();
+                _codeBuilder.AppendLine("// Commands marked * have an associated method");
+                WriteCommandDebug(rootCommand);
+                _codeBuilder.AppendLine();
 
-            _codeBuilder.AppendLine("args = args.SelectMany(arg => arg.StartsWith(' ') && ! arg.StartsWith(\"--\") ? arg.Skip(1).Select(c => $\"-{c}\") : new [] { arg }).ToArray();");
-            _codeBuilder.AppendLine();
+                _codeBuilder.AppendLine("args = args.SelectMany(arg => arg.StartsWith(' ') && ! arg.StartsWith(\"--\") ? arg.Skip(1).Select(c => $\"-{c}\") : new [] { arg }).ToArray();");
+                _codeBuilder.AppendLine();
 
-            _codeBuilder.AppendLine("var isHelp = args.Any(arg => arg == \"--help\" || arg == \"-h\" || arg == \"-?\");");
-            _codeBuilder.AppendLine();
+                _codeBuilder.AppendLine("var isHelp = args.Any(arg => arg == \"--help\" || arg == \"-h\" || arg == \"-?\");");
+                _codeBuilder.AppendLine();
 
-            WriteCommandGroup(rootCommand, []);
+                WriteCommandGroup(rootCommand, []);
+            }
 
             _codeBuilder.AppendLine();
             WriteHelperMethods();
+            WriteVersionMethod();
         }
 
         return _codeBuilder.ToString();
@@ -185,13 +188,13 @@ internal class ProgramClassFileGenerator(
                         var toSeek = GetNamesForOption(flag);
 
                         _codeBuilder.AppendLine(
-                            $"MatchNextFlag(new [] {{ {GetNamesForOption(flag).Select(v => $"\"{v}\"").StringJoin(", ")} }}, ref {flag.SourceName}, unclaimedArgs);");
+                            $"MatchNextFlag(args, new [] {{ {GetNamesForOption(flag).Select(v => $"\"{v}\"").StringJoin(", ")} }}, ref {flag.SourceName}, unclaimedArgs);");
                         break;
                     }
                 case CommandParameter.Option option:
                     {
                         _codeBuilder.AppendLine(
-                            $"if (MatchNextOption(new [] {{ {GetNamesForOption(option).Select(v => $"\"{v}\"").StringJoin(", ")} }}, ref {option.SourceName}, s => {ConvertParameter(option.Type, "s")}, unclaimedArgs) == 2)");
+                            $"if (MatchNextOption(args, new [] {{ {GetNamesForOption(option).Select(v => $"\"{v}\"").StringJoin(", ")} }}, ref {option.SourceName}, s => {ConvertParameter(option.Type, "s")}, unclaimedArgs) == 2)");
                         using (_codeBuilder.IndentBraces())
                         {
                             WriteError($"Missing value for option '--{option.Name}'");
@@ -202,7 +205,7 @@ internal class ProgramClassFileGenerator(
                 case var positional:
                     {
                         _codeBuilder.AppendLine(
-                    $"if (!MatchNextPositional(ref {positional.SourceName}, s => {ConvertParameter(positional.Type, "s")}, unclaimedArgs))");
+                    $"if (!MatchNextPositional(args, ref {positional.SourceName}, s => {ConvertParameter(positional.Type, "s")}, unclaimedArgs))");
                         using (_codeBuilder.IndentBraces())
                         {
                             WriteError($"Missing value for argument '{positional.SourceName}'");
@@ -287,13 +290,25 @@ internal class ProgramClassFileGenerator(
         _codeBuilder.AppendLine($"Console.Error.WriteLine($\"{errorMessage}\");");
         _codeBuilder.AppendLine($"Console.ForegroundColor = consoleColor;");
     }
+    
+    private void WriteVersionMethod()
+    {
+        _codeBuilder.AppendLine(
+            """
+            static void PrintVersion()
+            {
+                Console.WriteLine(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString());
+            }
+            """
+            );
+    }
 
     private void WriteHelperMethods()
     {
         _codeBuilder.AppendLine(
             """
                     #pragma warning disable CS8321
-                    bool MatchNextPositional<T>(ref T value, Func<string, T> mapper, ISet<int> unclaimedArgs)
+                    static bool MatchNextPositional<T>(string[] args, ref T value, Func<string, T> mapper, ISet<int> unclaimedArgs)
                     {
                         foreach (var index in unclaimedArgs)
                         {
@@ -309,7 +324,7 @@ internal class ProgramClassFileGenerator(
                         return false;
                     }
 
-                    bool MatchNextFlag(string[] optionNames, ref bool value, ISet<int> unclaimedArgs)
+                    static bool MatchNextFlag(string[] args, string[] optionNames, ref bool value, ISet<int> unclaimedArgs)
                     {
                         foreach (var index in unclaimedArgs)
                         {
@@ -353,7 +368,7 @@ internal class ProgramClassFileGenerator(
                     // Returns 0 if the option is not found
                     // Returns 1 if the option is found and the value is found
                     // Returns 2 if the option is found but the value is missing
-                    int MatchNextOption<T>(string[] optionNames, ref T value, Func<string, T> mapper, ISet<int> unclaimedArgs)
+                    static int MatchNextOption<T>(string[] args, string[] optionNames, ref T value, Func<string, T> mapper, ISet<int> unclaimedArgs)
                     {
                         foreach (var i in unclaimedArgs)
                         {
@@ -361,22 +376,6 @@ internal class ProgramClassFileGenerator(
 
                             if (optionNames.Contains(arg))
                             {
-                                if (arg.Contains(':'))
-                                {
-                                    var parts = arg.Split(':', 2);
-                                    value = mapper(parts[1]);
-                                    unclaimedArgs.Remove(i);
-                                    return 1;
-                                }
-
-                                if (arg.Contains('='))
-                                {
-                                    var parts = arg.Split('=', 2);
-                                    value = mapper(parts[1]);
-                                    unclaimedArgs.Remove(i);
-                                    return 1;
-                                }
-
                                 if (i + 1 < args.Length && unclaimedArgs.Contains(i + 1) && !args[i + 1].StartsWith("-"))
                                 {
                                     value = mapper(args[i + 1]);
@@ -387,6 +386,31 @@ internal class ProgramClassFileGenerator(
                                 
                                 return 2;
                             }
+            
+                            if (arg.Contains(':'))
+                            {
+                                var parts = arg.Split(':', 2);
+            
+                                if (optionNames.Contains(parts[0]))
+                                {
+                                    value = mapper(parts[1]);
+                                    unclaimedArgs.Remove(i);
+                                    return 1;
+                                }
+                            }
+            
+                            if (arg.Contains('='))
+                            {
+                                var parts = arg.Split('=', 2);
+            
+                                if (optionNames.Contains(parts[0]))
+                                {
+                                    value = mapper(parts[1]);
+                                    unclaimedArgs.Remove(i);
+                                    return 1;
+                                }
+                            }
+            
                         }
 
                         return 0;
@@ -539,6 +563,11 @@ internal class ProgramClassFileGenerator(
 
         foreach (var subCommand in command.SubCommands)
         {
+            if (!subCommand.ShowInHelp)
+            {
+                continue;
+            }
+
             foreach (var (column1, column2) in GetColumns(subCommand))
             {
                 _codeBuilder.AppendLine(

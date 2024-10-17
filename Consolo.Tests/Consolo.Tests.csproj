@@ -15,7 +15,7 @@
         <PackageReference Include="Shouldly" Version="4.0.3" />
     </ItemGroup>
     <ItemGroup>
-        <None Include="snapshots\**\*" CopyToOutputDirectory="PreserveNewest" />
+        <None Include="snapshots\**\*" CopyToOutputDirectory="Always" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Consolo\Consolo.csproj" />

@@ -125,7 +125,7 @@ internal class ErrorsAndDiagnosticsTests : GeneratorTests
         error.ShouldSatisfyAllConditions(
             () => error.Id.ShouldBe("Consolo0007"),
             () => error.Severity.ShouldBe(DiagnosticSeverity.Error),
-            () => error.GetMessage().ShouldBe("Parameter names must have the form [a-z][-a-zA-Z]*."),
+            () => error.GetMessage().ShouldBe("Parameter names must have the form [a-z][-a-zA-Z0-9]*."),
             () => error.Location.GetLineSpan().StartLinePosition.Line.ShouldBe(7),
             () => error.Location.GetLineSpan().StartLinePosition.Character.ShouldBe(43),
             () => error.Location.SourceTree.GetText().ToString(error.Location.SourceSpan).ShouldBe($"\"{paramName}\"")

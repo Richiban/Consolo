@@ -75,9 +75,16 @@ namespace Consolo.Samples
         [Consolo("")]
         public static void Greet(
             string name,
-            bool loud = false)
+            [Consolo(Alias = "l")] bool loud = false)
         {
-            Console.WriteLine($"Hello, {name}{(loud ? "!" : ".")}");
+            var message = $"Hello, {name}";
+
+            if (loud)
+            {
+                message = message.ToUpper() + "!";
+            }
+
+            Console.WriteLine(message);
         }
     }
 
@@ -133,8 +140,8 @@ namespace Consolo.Samples
         /// <param name="force">Whether to force the clean</param>
         [Consolo("")]
         public static void Clean(
-            [Consolo("x")] bool bypassGitIgnore = false,
-            [Consolo("d")] bool includeDirectories = false,
+            [Consolo(Alias = "x")] bool bypassGitIgnore = false,
+            [Consolo(Alias = "d")] bool includeDirectories = false,
             [Consolo(Alias = "f")] bool force = false)
         {
             Console.WriteLine($"Cleaning the working directory ({new { bypassGitIgnore, includeDirectories, force }})");

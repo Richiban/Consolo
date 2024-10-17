@@ -34,7 +34,7 @@ class CommandTreeBuilder
 
         foreach (var methodModel in methodModels)
         {
-            CommandTree currentLevel = root;
+            var currentLevel = (CommandTree)root;
             var currentPath = GetPath(methodModel);
 
             foreach (var (pathEntry, i) in currentPath.Select((a, b) => (a, b)))
