@@ -19,7 +19,7 @@ namespace compilation
             var helpTextColor = ConsoleColor.Green;
 
             // Commands marked * have an associated method
-            // {root} command
+            // {root} command*
                 // --version command*
 
             args = args.SelectMany(arg => arg.StartsWith(' ') && ! arg.StartsWith("--") ? arg.Skip(1).Select(c => $"-{c}") : new [] { arg }).ToArray();
@@ -69,21 +69,37 @@ namespace compilation
                 }
                 if (!isHelp)
                 {
-                    if (args.Length == 0)
+                    var unclaimedArgs = new SortedSet<int>(Enumerable.Range(0, args.Length - 0));
+                    var processingError = false;
+
+                    if (unclaimedArgs.Any())
                     {
                         Console.ForegroundColor = ConsoleColor.Red;
-                        Console.Error.WriteLine($"Missing command");
+                        Console.Error.WriteLine($"Unrecognised args: " + string.Join(", ", unclaimedArgs.Select(i => args[i])) + "");
                         Console.ForegroundColor = consoleColor;
+                        processingError = true;
                     }
-                    else
+
+                    if (!processingError)
                     {
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.Error.WriteLine($"Unknown command: " + string.Join(" ", args.Skip(0)) + "");
-                        Console.ForegroundColor = consoleColor;
+                        TestSamples.RootContainer.RootMethod();
+                        return;
                     }
                 }
 
                 Console.WriteLine("compilation");
+                Console.ForegroundColor = helpTextColor;
+                Console.WriteLine();
+                Console.ForegroundColor = consoleColor;
+                Console.WriteLine("Usage:");
+                Console.WriteLine($"    compilation  [options]");
+                Console.WriteLine();
+                Console.WriteLine("Options:");
+                Console.Write("    -? | -h | --help  ");
+                Console.ForegroundColor = helpTextColor;
+                Console.WriteLine("Show help and usage information");
+                Console.ForegroundColor = consoleColor;
+                Console.WriteLine();
                 Console.WriteLine("Commands:");
                 return;
             }

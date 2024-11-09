@@ -6,14 +6,14 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Consolo;
 
-internal class MethodModelBuilder
+internal static class MethodModelBuilder
 {
-    public ResultWithDiagnostics<IReadOnlyCollection<MethodModel>> BuildFrom(
+    public static ResultWithDiagnostics<IReadOnlyCollection<MethodModel>> BuildFrom(
         IEnumerable<IMethodSymbol?> qualifyingMethods) => qualifyingMethods
             .Select(TryMapMethod)
             .CollectResults();
 
-    private ResultWithDiagnostics<Option<MethodModel>> TryMapMethod(
+    private static ResultWithDiagnostics<Option<MethodModel>> TryMapMethod(
         IMethodSymbol? methodSymbol)
     {
         if (methodSymbol is null)
@@ -56,7 +56,7 @@ internal class MethodModelBuilder
             diagnostics);
     }
 
-    private ImmutableList<CommandPathItem> GetCommandPath(ISymbol symbol, List<DiagnosticModel> diagnostics)
+    private static ImmutableList<CommandPathItem> GetCommandPath(ISymbol symbol, List<DiagnosticModel> diagnostics)
     {
         var path = ImmutableList.CreateBuilder<CommandPathItem>();
 

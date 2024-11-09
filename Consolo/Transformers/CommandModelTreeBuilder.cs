@@ -25,9 +25,10 @@ namespace Consolo;
 ///  └ c
 ///    └ e
 /// </remarks>
-class CommandTreeBuilder
+static class CommandTreeBuilder
 {
-    public ResultWithDiagnostics<CommandTree.Root> Transform(IEnumerable<MethodModel> methodModels)
+    public static ResultWithDiagnostics<CommandTree.Root> Transform(
+        IEnumerable<MethodModel> methodModels)
     {
         var root = new CommandTree.Root();
         var diagnostics = new List<DiagnosticModel>();
@@ -37,7 +38,7 @@ class CommandTreeBuilder
             var currentLevel = (CommandTree)root;
             var currentPath = GetPath(methodModel);
 
-            foreach (var (pathEntry, i) in currentPath.Select((a, b) => (a, b)))
+            foreach (var (pathEntry, i) in currentPath.Indexed())
             {
                 if (i == 0 && pathEntry.Name == "")
                 {
@@ -45,6 +46,12 @@ class CommandTreeBuilder
                     {
                         root.Description = pathEntry.XmlComment;
                     }
+
+                    if (root.Method.IsNone)
+                    {
+                        root.Method = MapMethod(methodModel, diagnostics);
+                    }
+
                     continue;
                 }
 
@@ -54,65 +61,87 @@ class CommandTreeBuilder
                     {
                         if (currentLevel is CommandTree.SubCommand s)
                         {
-                            diagnostics.Add(DiagnosticModel.DuplicateCommand(s.CommandName, methodModel.Location));
+                            diagnostics.Add(
+                                DiagnosticModel.DuplicateCommand(
+                                    s.CommandName,
+                                    methodModel.Location));
                         }
                         else
                         {
-                            diagnostics.Add(DiagnosticModel.DuplicateRootCommand(methodModel.Location));
+                            diagnostics.Add(
+                                DiagnosticModel.DuplicateRootCommand(methodModel.Location));
                         }
 
                         continue;
                     }
+
                     currentLevel.Method = MapMethod(methodModel, diagnostics);
 
                     continue;
                 }
 
-                switch (currentLevel.SubCommands.FirstOrDefault(it => it.CommandName == pathEntry.Name))
+                switch (currentLevel.SubCommands.FirstOrDefault(
+                            it => it.CommandName == pathEntry.Name))
                 {
                     case null when i == currentPath.Count - 1:
-                        {
-                            var newLevel = new CommandTree.SubCommand(StringUtils.ToKebabCase(pathEntry.Name))
+                    {
+                        var newLevel =
+                            new CommandTree.SubCommand(StringUtils.ToKebabCase(pathEntry.Name))
                             {
                                 Method = MapMethod(methodModel, diagnostics),
                                 Description = pathEntry.XmlComment,
                             };
 
-                            currentLevel.SubCommands.Add(newLevel);
-                            currentLevel = newLevel;
-                            break;
-                        }
+                        currentLevel.SubCommands.Add(newLevel);
+                        currentLevel = newLevel;
+
+                        break;
+                    }
 
                     case null:
-                        {
-                            var newLevel = new CommandTree.SubCommand(StringUtils.ToKebabCase(pathEntry.Name))
+                    {
+                        var newLevel =
+                            new CommandTree.SubCommand(StringUtils.ToKebabCase(pathEntry.Name))
                             {
                                 Description = pathEntry.XmlComment,
                             };
 
-                            currentLevel.SubCommands.Add(newLevel);
-                            currentLevel = newLevel;
-                            break;
-                        }
+                        currentLevel.SubCommands.Add(newLevel);
+                        currentLevel = newLevel;
+
+                        break;
+                    }
+
                     case { } sub when i == currentPath.Count - 1:
+                    {
+                        if (currentLevel is CommandTree.SubCommand s)
                         {
-                            if (currentLevel is CommandTree.SubCommand s)
-                            {
-                                diagnostics.Add(DiagnosticModel.DuplicateCommand(sub.CommandName, s.CommandName, methodModel.Location));
-                            }
-                            else
-                            {
-                                diagnostics.Add(DiagnosticModel.DuplicateCommand(sub.CommandName, methodModel.Location));
-                            }
-                            continue;
+                            diagnostics.Add(
+                                DiagnosticModel.DuplicateCommand(
+                                    sub.CommandName,
+                                    s.CommandName,
+                                    methodModel.Location));
                         }
+                        else
+                        {
+                            diagnostics.Add(
+                                DiagnosticModel.DuplicateCommand(
+                                    sub.CommandName,
+                                    methodModel.Location));
+                        }
+
+                        continue;
+                    }
 
                     case { } sub:
                         currentLevel = sub;
+
                         break;
                 }
             }
         }
+
+        return new ResultWithDiagnostics<CommandTree.Root>(root, diagnostics);
 
         IReadOnlyList<CommandPathItem> GetPath(MethodModel methodModel)
         {
@@ -120,54 +149,56 @@ class CommandTreeBuilder
 
             var newItem = new CommandPathItem(
                 Name: methodModel.ProvidedName | methodModel.MethodName,
-                XmlComment: methodModel.Description
-            );
+                XmlComment: methodModel.Description);
 
             pathItems.Add(newItem);
 
             return pathItems;
         }
-
-        return new ResultWithDiagnostics<CommandTree.Root>(root, diagnostics);
     }
 
-    private static CommandMethod MapMethod(MethodModel methodModel, List<DiagnosticModel> diagnostics) =>
+    private static CommandMethod
+        MapMethod(MethodModel methodModel, List<DiagnosticModel> diagnostics) =>
         new CommandMethod(
             FullyQualifiedClassName: methodModel.FullyQualifiedClassName,
             MethodName: methodModel.MethodName,
             Parameters: MapParameters(methodModel, diagnostics),
             Description: methodModel.Description);
 
-    private static IReadOnlyCollection<CommandParameter> MapParameters(
-        MethodModel methodModel,
+    private static IReadOnlyCollection<CommandParameter> MapParameters(MethodModel methodModel,
         List<DiagnosticModel> diagnostics)
     {
         var claimedParameterNames = new HashSet<string>();
 
-        return methodModel.Parameters
+        return methodModel
+            .Parameters
             .Select(arg => MapParameter(arg, methodModel, claimedParameterNames, diagnostics))
             .WhereIsSome()
             .ToList();
     }
 
-    private static Option<CommandParameter> MapParameter(
-        ParameterModel param,
-        MethodModel methodModel,
-        HashSet<string> claimedParameterNames,
+    private static Option<CommandParameter> MapParameter(ParameterModel param,
+        MethodModel methodModel, HashSet<string> claimedParameterNames,
         List<DiagnosticModel> diagnostics)
     {
         if (claimedParameterNames.Contains(param.Name))
         {
-            diagnostics.Add(DiagnosticModel.DuplicateNameOrAlias(
-                param.Name, methodModel.MethodName, param.NameLocation | param.Location));
+            diagnostics.Add(
+                DiagnosticModel.DuplicateNameOrAlias(
+                    param.Name,
+                    methodModel.MethodName,
+                    param.NameLocation | param.Location));
 
             return None;
         }
 
         if (param.Alias.IsSome(out var a) && claimedParameterNames.Contains(a))
         {
-            diagnostics.Add(DiagnosticModel.DuplicateNameOrAlias(
-                a, methodModel.MethodName, param.AliasLocation | param.Location));
+            diagnostics.Add(
+                DiagnosticModel.DuplicateNameOrAlias(
+                    a,
+                    methodModel.MethodName,
+                    param.AliasLocation | param.Location));
 
             return None;
         }
@@ -206,8 +237,7 @@ class CommandTreeBuilder
                 defaultValue: param.DefaultValue | "default",
                 description: description | param.Type.Name,
                 sourceName: param.SourceName,
-                isFlag: param.IsFlag
-            );
+                isFlag: param.IsFlag);
         }
     }
 
@@ -217,26 +247,35 @@ class CommandTreeBuilder
         {
             case { SpecialType: SpecialType.System_String }:
                 return new ParameterType.AsIs(param.Type.FullyQualifiedName);
+
             case { SpecialType: SpecialType.System_Boolean }:
                 return new ParameterType.Bool();
+
             case { TypeKind: TypeKind.Enum }:
                 var enumValues = MapEnumValues(param);
 
                 return new ParameterType.Enum(param.Type.FullyQualifiedName, enumValues);
+
             case { HasParseMethod: true } t:
                 return new ParameterType.Parse(t.FullyQualifiedName, "Parse");
+
             case { HasCastFromString: true } t:
                 return new ParameterType.ExplicitCast(t.FullyQualifiedName);
+
             case { HasConstructorWithSingleStringParameter: true } t:
                 return new ParameterType.Constructor(t.FullyQualifiedName);
+
             default:
                 diagnostics.Add(DiagnosticModel.UnsupportedParameterType(param));
+
                 return new ParameterType.AsIs(param.Type.FullyQualifiedName);
-        };
+        }
+
+        ;
     }
 
     private static ImmutableArray<EnumValue> MapEnumValues(ParameterModel param) =>
-        param.Type.AllowedValues
-            .Select(value => new EnumValue(value.Value, value.Description))
+        param
+            .Type.AllowedValues.Select(value => new EnumValue(value.Value, value.Description))
             .ToImmutableArray();
 }

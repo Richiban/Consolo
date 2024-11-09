@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 
 namespace Consolo;
 internal static class EnumerableExtensions
@@ -142,5 +143,10 @@ internal static class EnumerableExtensions
         {
             yield return truncateValue;
         }
+    }
+
+    public static IEnumerable<(T item, int index)> Indexed<T>(this IEnumerable<T> source)
+    {
+        return source.Select(((item, i) => (item, i)));
     }
 }

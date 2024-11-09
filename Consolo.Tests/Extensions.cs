@@ -9,7 +9,8 @@ namespace Consolo.Tests;
 
 internal static class Extensions
 {
-    public static void ShouldMatchSnapshot(this string target, [CallerMemberName] string? snapshotName = null)
+    public static void ShouldMatchSnapshot(this string target,
+        [CallerMemberName] string? snapshotName = null)
     {
         if (snapshotName is null)
         {
@@ -49,16 +50,22 @@ internal static class Extensions
                         messageBuilder.Append("+ ");
 
                         messageBuilder.AppendLine(line.Text);
+
                         break;
+
                     case ChangeType.Deleted:
                         messageBuilder.Append("- ");
 
                         messageBuilder.AppendLine(line.Text);
+
                         break;
+
                     case ChangeType.Unchanged:
                         break;
+
                     default:
                         messageBuilder.AppendLine(line.Text);
+
                         break;
                 }
             }
@@ -67,8 +74,22 @@ internal static class Extensions
         }
     }
 
-    public static IReadOnlyCollection<Diagnostic> WarningsAndErrors(this IEnumerable<Diagnostic> diagnostics) =>
+    public static IReadOnlyCollection<Diagnostic>
+        WarningsAndErrors(this IEnumerable<Diagnostic> diagnostics) =>
         diagnostics
             .Where(d => d.Severity is DiagnosticSeverity.Error or DiagnosticSeverity.Warning)
             .ToList();
+
+    public static T ShouldBeSome<T>(this Option<T> target,
+        [CallerArgumentExpression("target")] string? expr = null) where T : class
+    {
+        if (target.IsSome(out var value))
+        {
+            return value;
+        }
+        
+        Assert.Fail($"Expected {expr} to be Some");
+
+        throw null!;
+    }
 }

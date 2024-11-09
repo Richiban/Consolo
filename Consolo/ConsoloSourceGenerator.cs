@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Schema;
-
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using CSharpExtensions = Microsoft.CodeAnalysis.CSharp.CSharpExtensions;
 
 namespace Consolo;
 
@@ -15,25 +15,30 @@ public class ConsoloSourceGenerator : ISourceGenerator
     {
         context.RegisterForPostInitialization(InjectStaticSourceFiles);
 
-        context.RegisterForSyntaxNotifications(
-            () => new ConsoloSyntaxReceiver());
+        context.RegisterForSyntaxNotifications(() => new ConsoloSyntaxReceiver());
     }
 
     private void InjectStaticSourceFiles(
         GeneratorPostInitializationContext postInitializationContext)
     {
-        var ConsoloAttributeFileGenerator =
-            new ConsoloAttributeFileGenerator();
+        var consoloAttributeFileGenerator = new ConsoloAttributeFileGenerator();
 
         postInitializationContext.AddSource(
-            ConsoloAttributeFileGenerator.FileName,
-            ConsoloAttributeFileGenerator.GetCode());
+            consoloAttributeFileGenerator.FileName,
+            consoloAttributeFileGenerator.GetCode());
     }
 
     public void Execute(GeneratorExecutionContext context)
     {
         var diagnosticsManager = new ConsoloDiagnosticsManager(context);
 
+        NewMethod(context, diagnosticsManager);
+    }
+
+    private static void NewMethod(
+        GeneratorExecutionContext context,
+        ConsoloDiagnosticsManager diagnosticsManager)
+    {
         try
         {
             if (context.SyntaxReceiver is not ConsoloSyntaxReceiver receiver)
@@ -41,52 +46,14 @@ public class ConsoloSourceGenerator : ISourceGenerator
                 return;
             }
 
-            if (receiver.QualifyingMembers.Count == 0)
+            if (!ConsoloSourceGenerator2
+                    .GenerateCommandTree(context, diagnosticsManager, receiver)
+                    .IsSome(out var rootCommandModel))
             {
-                diagnosticsManager.ReportDiagnostic(DiagnosticModel.NoMethodsFound());
-
                 return;
             }
 
-            var assemblyName = context.Compilation.AssemblyName;
-
-            var candidateMethods =
-                new MethodScanner(context.Compilation, diagnosticsManager)
-                    .GetCandidateMethods(receiver.QualifyingMembers);
-
-            var methodResults = new MethodModelBuilder()
-                .BuildFrom(candidateMethods);
-
-            diagnosticsManager.ReportDiagnostic(
-                new DiagnosticModel(
-                    Code: "Consolo0000",
-                    $"Found {methodResults.Result.Count} qualifying methods, {methodResults.Diagnostics.Count} diagnostics.",
-                    Location: null,
-                    Severity: DiagnosticSeverity.Info)
-                );
-
-            if (methodResults.Result.Count == 0 && methodResults.Diagnostics.Count == 0)
-            {
-                diagnosticsManager.ReportDiagnostic(DiagnosticModel.NoMethodsFound());
-
-                return;
-            }
-
-            diagnosticsManager.ReportDiagnostics(methodResults.Diagnostics);
-
-            var (rootCommandModel, transformingDiagnostics) =
-                new CommandTreeBuilder().Transform(methodResults.Result);
-
-            VersionCommandAdder.AddVersionCommand(rootCommandModel);
-
-            diagnosticsManager.ReportDiagnostics(transformingDiagnostics);
-
-            context.AddCodeFile(
-                new ProgramClassFileGenerator(
-                    assemblyName ?? "Unknown assembly",
-                    rootCommandModel
-                )
-            );
+            AddCodeFile(context, rootCommandModel);
         }
         catch (Exception ex)
         {
@@ -94,27 +61,13 @@ public class ConsoloSourceGenerator : ISourceGenerator
         }
     }
 
-    private class ConsoloSyntaxReceiver : ISyntaxReceiver
+    private static void AddCodeFile(
+        GeneratorExecutionContext context,
+        CommandTree.Root rootCommandModel)
     {
-        internal List<MethodDeclarationSyntax> QualifyingMembers { get; } = new();
+        var assemblyName = context.Compilation.AssemblyName;
 
-        public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
-        {
-            if (syntaxNode is not MethodDeclarationSyntax method)
-            {
-                return;
-            }
-
-            var attribute = method.AttributeLists.SelectMany(
-                    list => list.Attributes.Where(x => ConsoloAttributeDefinition.Matches(x)))
-                .FirstOrDefault();
-
-            if (attribute is null)
-            {
-                return;
-            }
-
-            QualifyingMembers.Add(method);
-        }
+        context.AddCodeFile(
+            new ProgramClassFileGenerator(assemblyName ?? "Unknown assembly", rootCommandModel));
     }
 }
