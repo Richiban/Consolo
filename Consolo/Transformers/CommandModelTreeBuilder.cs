@@ -205,12 +205,14 @@ static class CommandTreeBuilder
 
         claimedParameterNames.AddRange(param.GetAllNames());
 
+        var parameterType = MapType(param, diagnostics);
+
         if (param.IsRequired)
         {
             return new CommandParameter.Positional(
                 name: param.Name,
                 sourceName: param.SourceName,
-                type: MapType(param, diagnostics),
+                type: parameterType,
                 description: param.Description | param.Type.Name);
         }
         else
@@ -233,8 +235,8 @@ static class CommandTreeBuilder
             return new CommandParameter.Option(
                 name: name,
                 alias: alias,
-                type: MapType(param, diagnostics),
-                defaultValue: param.DefaultValue | "default",
+                type: parameterType,
+                defaultValue: param.DefaultValue | $"default({parameterType.FullyQualifiedTypeName})",
                 description: description | param.Type.Name,
                 sourceName: param.SourceName,
                 isFlag: param.IsFlag);

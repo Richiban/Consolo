@@ -20,8 +20,7 @@ namespace Consolo.TestSource.g
 
             // Commands marked * have an associated method
             // {root} command
-                // aaa command*
-                    // bbb command*
+                // default-value-test command*
                 // --version command*
 
             args = args.SelectMany(arg => arg.StartsWith(' ') && ! arg.StartsWith("--") ? arg.Skip(1).Select(c => $"-{c}") : new [] { arg }).ToArray();
@@ -29,51 +28,21 @@ namespace Consolo.TestSource.g
             var isHelp = args.Any(arg => arg == "--help" || arg == "-h" || arg == "-?");
 
             {
-                if (args.Length >= 1 && args[0] == "aaa")
+                if (args.Length >= 1 && args[0] == "default-value-test")
                 {
-                    if (args.Length >= 2 && args[1] == "bbb")
-                    {
-                        if (!isHelp)
-                        {
-                            var unclaimedArgs = new SortedSet<int>(Enumerable.Range(2, args.Length - 2));
-                            var processingError = false;
-
-                            if (unclaimedArgs.Any())
-                            {
-                                Console.ForegroundColor = ConsoleColor.Red;
-                                Console.Error.WriteLine($"Unrecognised args: " + string.Join(", ", unclaimedArgs.Select(i => args[i])) + "");
-                                Console.ForegroundColor = consoleColor;
-                                processingError = true;
-                            }
-
-                            if (!processingError)
-                            {
-                                TestSamples.TestClass.TestMethodB();
-                                return;
-                            }
-                        }
-
-                        Console.WriteLine("Consolo.TestSource");
-                        Console.WriteLine();
-                        Console.WriteLine("bbb");
-                        Console.ForegroundColor = helpTextColor;
-                        Console.WriteLine();
-                        Console.ForegroundColor = consoleColor;
-                        Console.WriteLine("Usage:");
-                        Console.WriteLine($"    aaa bbb [options]");
-                        Console.WriteLine();
-                        Console.WriteLine("Options:");
-                        Console.Write("    -? | -h | --help  ");
-                        Console.ForegroundColor = helpTextColor;
-                        Console.WriteLine("Show help and usage information");
-                        Console.ForegroundColor = consoleColor;
-                        Console.WriteLine();
-                        return;
-                    }
                     if (!isHelp)
                     {
                         var unclaimedArgs = new SortedSet<int>(Enumerable.Range(1, args.Length - 1));
                         var processingError = false;
+
+                        var arg = (Consolo.Samples.TestEnum)1;
+                        if (MatchNextOption(args, new [] { "--arg" }, ref arg, s => (Consolo.Samples.TestEnum)Enum.Parse(typeof(Consolo.Samples.TestEnum), s, ignoreCase: true), unclaimedArgs) == 2)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.Error.WriteLine($"Missing value for option '--arg'");
+                            Console.ForegroundColor = consoleColor;
+                            processingError = true;
+                        }
 
                         if (unclaimedArgs.Any())
                         {
@@ -85,31 +54,32 @@ namespace Consolo.TestSource.g
 
                         if (!processingError)
                         {
-                            TestSamples.TestClass.TestMethodA();
+                            Consolo.Samples.SampleProgram.DefaultValueTest(arg);
                             return;
                         }
                     }
 
                     Console.WriteLine("Consolo.TestSource");
                     Console.WriteLine();
-                    Console.WriteLine("aaa");
+                    Console.WriteLine("default-value-test");
                     Console.ForegroundColor = helpTextColor;
                     Console.WriteLine();
                     Console.ForegroundColor = consoleColor;
                     Console.WriteLine("Usage:");
-                    Console.WriteLine($"    aaa [options]");
+                    Console.WriteLine($"    default-value-test [options]");
                     Console.WriteLine();
                     Console.WriteLine("Options:");
+                    Console.Write("    --arg A|B         ");
+                    Console.ForegroundColor = helpTextColor;
+                    Console.WriteLine("TestEnum");
+                    Console.WriteLine("                      - A");
+                    Console.WriteLine("                      - B");
+                    Console.ForegroundColor = consoleColor;
                     Console.Write("    -? | -h | --help  ");
                     Console.ForegroundColor = helpTextColor;
                     Console.WriteLine("Show help and usage information");
                     Console.ForegroundColor = consoleColor;
                     Console.WriteLine();
-                    Console.WriteLine("Commands:");
-                    Console.Write("    bbb ");
-                    Console.ForegroundColor = helpTextColor;
-                    Console.WriteLine("  ");
-                    Console.ForegroundColor = consoleColor;
                     return;
                 }
                 if (args.Length >= 1 && args[0] == "--version")
@@ -170,11 +140,7 @@ namespace Consolo.TestSource.g
 
                 Console.WriteLine("Consolo.TestSource");
                 Console.WriteLine("Commands:");
-                Console.Write("    aaa       ");
-                Console.ForegroundColor = helpTextColor;
-                Console.WriteLine("  ");
-                Console.ForegroundColor = consoleColor;
-                Console.Write("    aaa ..    ");
+                Console.Write("    default-value-test [options]");
                 Console.ForegroundColor = helpTextColor;
                 Console.WriteLine("  ");
                 Console.ForegroundColor = consoleColor;

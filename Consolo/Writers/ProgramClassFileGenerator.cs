@@ -10,6 +10,7 @@ namespace Consolo;
 
 internal class ProgramClassFileGenerator(
     string assemblyName,
+    string generatedNamespace,
     Root rootCommand) : CodeFileGenerator
 {
     private readonly CodeBuilder _codeBuilder = new CodeBuilder();
@@ -31,12 +32,14 @@ internal class ProgramClassFileGenerator(
     {
         {
             _codeBuilder.AppendLines(
-            "using System;",
-            "using System.Linq;",
-            "using System.Collections.Generic;",
-            "using System.Collections.Immutable;");
+                "using System;",
+                "using System.Linq;",
+                "using System.Collections.Generic;",
+                "using System.Collections.Immutable;");
+            
+            _codeBuilder.AppendLine();
 
-            _codeBuilder.AppendLine("namespace " + assemblyName);
+            _codeBuilder.AppendLine("namespace " + generatedNamespace);
             using var _ = _codeBuilder.IndentBraces();
 
             _codeBuilder.AppendLine("/// <summary>");
@@ -51,8 +54,6 @@ internal class ProgramClassFileGenerator(
             _codeBuilder.AppendLine("public static void Main(string[] args)");
             {
                 using var _3 = _codeBuilder.IndentBraces();
-
-                _codeBuilder.AppendLine();
 
                 _codeBuilder.AppendLine("var consoleColor = Console.ForegroundColor;");
                 _codeBuilder.AppendLine("var helpTextColor = ConsoleColor.Green;");
@@ -124,7 +125,7 @@ internal class ProgramClassFileGenerator(
             }
 
             _codeBuilder.AppendLine("");
-            WriteHelp(assemblyName, path, command);
+            WriteHelp(path, command);
             _codeBuilder.AppendLine("return;");
         }
     }
@@ -178,8 +179,7 @@ internal class ProgramClassFileGenerator(
                 }
                 ))
         {
-            _codeBuilder.AppendLine($"var {p.SourceName} = default({p.FullyQualifiedTypeName});");
-
+            _codeBuilder.AppendLine($"var {p.SourceName} = {p.DefaultValue};");
 
             switch (p)
             {
@@ -421,7 +421,6 @@ internal class ProgramClassFileGenerator(
     }
 
     private void WriteHelp(
-        string assemblyName,
         ImmutableArray<string> path,
         CommandTree command)
     {
@@ -474,7 +473,7 @@ internal class ProgramClassFileGenerator(
 
             _codeBuilder.AppendLines(
                 $"Console.WriteLine(\"Usage:\");",
-                $"Console.WriteLine($\"    {assemblyName} {String.Join(" ", allHelpText)} [options]\");"
+                $"Console.WriteLine($\"    {String.Join(" ", allHelpText)} [options]\");"
             );
 
             if (method.MandatoryParameters.Any())

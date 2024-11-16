@@ -12,6 +12,7 @@ abstract class CommandParameter
     public abstract Option<string> Description { get; }
     public abstract ParameterType Type { get; }
     public string FullyQualifiedTypeName => Type.FullyQualifiedTypeName;
+    public abstract string DefaultValue { get; }
 
     public sealed class Positional(
             string name,
@@ -23,6 +24,7 @@ abstract class CommandParameter
         public override ParameterType Type { get; } = type;
         public override Option<string> Description { get; } = description;
         public override string SourceName { get; } = sourceName;
+        public override string DefaultValue { get; } = $"default({type.FullyQualifiedTypeName})";
     }
 
     public sealed class Option(
@@ -38,7 +40,7 @@ abstract class CommandParameter
         public override ParameterType Type { get; } = type;
         public override Option<string> Description { get; } = description;
         public override string SourceName { get; } = sourceName;
-        public string DefaultValue { get; } = defaultValue;
+        public override string DefaultValue { get; } = defaultValue;
         public Option<string> Alias { get; } = alias;
         public bool IsFlag { get; } = isFlag;
     }

@@ -2,19 +2,19 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-namespace compilation
+
+namespace Consolo.TestSource.g
 {
     /// <summary>
-    /// Entrypoint class for compilation
+    /// Entrypoint class for Consolo.TestSource
     /// </summary>
     public static class Program
     {
         /// <summary>
-        /// Entrypoint for compilation
+        /// Entrypoint for Consolo.TestSource
         /// </summary>
         public static void Main(string[] args)
         {
-
             var consoleColor = Console.ForegroundColor;
             var helpTextColor = ConsoleColor.Green;
 
@@ -62,14 +62,14 @@ namespace compilation
                                 }
                             }
 
-                            Console.WriteLine("compilation");
+                            Console.WriteLine("Consolo.TestSource");
                             Console.WriteLine();
                             Console.WriteLine("test-method1");
                             Console.ForegroundColor = helpTextColor;
                             Console.WriteLine();
                             Console.ForegroundColor = consoleColor;
                             Console.WriteLine("Usage:");
-                            Console.WriteLine($"    compilation outer-test inner-test1 test-method1 [options]");
+                            Console.WriteLine($"    outer-test inner-test1 test-method1 [options]");
                             Console.WriteLine();
                             Console.WriteLine("Options:");
                             Console.Write("    -? | -h | --help  ");
@@ -95,7 +95,7 @@ namespace compilation
                             }
                         }
 
-                        Console.WriteLine("compilation");
+                        Console.WriteLine("Consolo.TestSource");
                         Console.WriteLine();
                         Console.WriteLine("inner-test1");
                         Console.WriteLine("Commands:");
@@ -121,7 +121,7 @@ namespace compilation
                         }
                     }
 
-                    Console.WriteLine("compilation");
+                    Console.WriteLine("Consolo.TestSource");
                     Console.WriteLine();
                     Console.WriteLine("outer-test");
                     Console.WriteLine("Commands:");
@@ -175,14 +175,14 @@ namespace compilation
                                 }
                             }
 
-                            Console.WriteLine("compilation");
+                            Console.WriteLine("Consolo.TestSource");
                             Console.WriteLine();
                             Console.WriteLine("test-method2");
                             Console.ForegroundColor = helpTextColor;
                             Console.WriteLine();
                             Console.ForegroundColor = consoleColor;
                             Console.WriteLine("Usage:");
-                            Console.WriteLine($"    compilation outer-test inner-test1 test-method2 <arg1> <arg2> [options]");
+                            Console.WriteLine($"    outer-test inner-test1 test-method2 <arg1> <arg2> [options]");
                             Console.WriteLine();
                             Console.WriteLine("Parameters:");
                             Console.Write("    arg1  ");
@@ -218,7 +218,7 @@ namespace compilation
                             }
                         }
 
-                        Console.WriteLine("compilation");
+                        Console.WriteLine("Consolo.TestSource");
                         Console.WriteLine();
                         Console.WriteLine("inner-test1");
                         Console.WriteLine("Commands:");
@@ -244,7 +244,7 @@ namespace compilation
                         }
                     }
 
-                    Console.WriteLine("compilation");
+                    Console.WriteLine("Consolo.TestSource");
                     Console.WriteLine();
                     Console.WriteLine("outer-test");
                     Console.WriteLine("Commands:");
@@ -280,14 +280,14 @@ namespace compilation
                                 }
                             }
 
-                            Console.WriteLine("compilation");
+                            Console.WriteLine("Consolo.TestSource");
                             Console.WriteLine();
                             Console.WriteLine("test-method3");
                             Console.ForegroundColor = helpTextColor;
                             Console.WriteLine();
                             Console.ForegroundColor = consoleColor;
                             Console.WriteLine("Usage:");
-                            Console.WriteLine($"    compilation outer-test inner-test2 test-method3 [options]");
+                            Console.WriteLine($"    outer-test inner-test2 test-method3 [options]");
                             Console.WriteLine();
                             Console.WriteLine("Options:");
                             Console.Write("    -? | -h | --help  ");
@@ -313,7 +313,7 @@ namespace compilation
                             }
                         }
 
-                        Console.WriteLine("compilation");
+                        Console.WriteLine("Consolo.TestSource");
                         Console.WriteLine();
                         Console.WriteLine("inner-test2");
                         Console.WriteLine("Commands:");
@@ -339,7 +339,7 @@ namespace compilation
                         }
                     }
 
-                    Console.WriteLine("compilation");
+                    Console.WriteLine("Consolo.TestSource");
                     Console.WriteLine();
                     Console.WriteLine("outer-test");
                     Console.WriteLine("Commands:");
@@ -371,7 +371,7 @@ namespace compilation
                         }
                     }
 
-                    Console.WriteLine("compilation");
+                    Console.WriteLine("Consolo.TestSource");
                     Console.WriteLine();
                     Console.WriteLine("--version");
                     Console.ForegroundColor = helpTextColor;
@@ -379,7 +379,7 @@ namespace compilation
                     Console.WriteLine();
                     Console.ForegroundColor = consoleColor;
                     Console.WriteLine("Usage:");
-                    Console.WriteLine($"    compilation --version [options]");
+                    Console.WriteLine($"    --version [options]");
                     Console.WriteLine();
                     Console.WriteLine("Options:");
                     Console.Write("    -? | -h | --help  ");
@@ -405,7 +405,7 @@ namespace compilation
                     }
                 }
 
-                Console.WriteLine("compilation");
+                Console.WriteLine("Consolo.TestSource");
                 Console.WriteLine("Commands:");
                 Console.Write("    outer-test ..");
                 Console.ForegroundColor = helpTextColor;

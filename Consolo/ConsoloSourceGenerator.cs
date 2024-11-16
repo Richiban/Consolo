@@ -66,8 +66,10 @@ public class ConsoloSourceGenerator : ISourceGenerator
         CommandTree.Root rootCommandModel)
     {
         var assemblyName = context.Compilation.AssemblyName;
+        var generatedNamespace = $"{assemblyName ?? "Consolo"}.g";
 
         context.AddCodeFile(
-            new ProgramClassFileGenerator(assemblyName ?? "Unknown assembly", rootCommandModel));
+            new ProgramClassFileGenerator(
+                assemblyName ?? "Unknown assembly", generatedNamespace, rootCommandModel));
     }
 }

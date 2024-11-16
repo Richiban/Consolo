@@ -20,14 +20,15 @@ internal abstract class GeneratorTests
     }
 
     protected static (Compilation, ImmutableArray<Diagnostic>) RunGenerator(
-        string source)
+        string source, string assemblyName = "Consolo.TestSource")
     {
         var inputCompilation = CSharpCompilation.Create(
-            "compilation",
+            assemblyName,
             [CSharpSyntaxTree.ParseText(source)],
             [
                 MetadataReference.CreateFromFile(
-                        typeof(Binder).GetTypeInfo().Assembly.Location)
+                        typeof(Binder).GetTypeInfo().Assembly.Location),
+                ..(GetAssemblies())
             ],
             new CSharpCompilationOptions(OutputKind.ConsoleApplication));
 
@@ -38,8 +39,17 @@ internal abstract class GeneratorTests
                 inputCompilation,
                 out var outputCompilation,
                 out var diagnostics);
-
+        
         return (outputCompilation, diagnostics);
+    }
+
+    private static IEnumerable<PortableExecutableReference> GetAssemblies()
+    {
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            if (!String.IsNullOrEmpty(assembly.Location))
+                yield return MetadataReference.CreateFromFile(assembly.Location);
+        }
     }
 }
 

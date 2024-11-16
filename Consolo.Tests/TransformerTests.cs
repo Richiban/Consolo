@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Xml.Schema;
 using Microsoft.CodeAnalysis;
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 using Shouldly;
 
 namespace Consolo.Tests;
@@ -145,5 +146,54 @@ class TransformerTests
         subCommandMethod.FullyQualifiedName.ShouldBe("GitNamespace.RemoteActions.CreateRemote");
         subCommandMethod.Parameters.ShouldHaveSingleItem();
         subCommand.SubCommands.ShouldBeEmpty();
+    }
+
+    [Test]
+    public void ParameterWithDefaultValueResultsInOptionWithSameDefault()
+    {
+        var models = new[]
+        {
+            new MethodModel(
+                MethodName: "M",
+                Description: "",
+                ProvidedName: "",
+                ParentCommandPath: [],
+                Parameters:
+                [
+                    new ParameterModel(
+                        Name: "arg1",
+                        SourceName: "arg1",
+                        IsFlag: false,
+                        IsRequired: false,
+                        DefaultValue: "1",
+                        Description: new Option<string>(),
+                        Alias: new Option<string>(),
+                        Type: new TypeModel(
+                            "int",
+                            "int",
+                            SpecialType.System_Int32,
+                            TypeKind.Struct,
+                            HasParseMethod: true,
+                            HasCastFromString: false,
+                            HasConstructorWithSingleStringParameter: false,
+                            AllowedValues: []),
+                        Location: new Option<Location>(),
+                        NameLocation: new Option<Location>(),
+                        AliasLocation: new Option<Location>()),
+                ],
+                FullyQualifiedClassName: "N.C",
+                Location: null),
+        };
+
+        var (root, diagnostics) = CommandTreeBuilder.Transform(models);
+
+        var method = root.Method.ShouldBeSome();
+
+        method
+            .Parameters.ShouldHaveSingleItem()
+            .ShouldBeOfType<CommandParameter.Option>()
+            .ShouldSatisfyAllConditions(
+                p => p.Name.ShouldBe("arg1"),
+                p => p.DefaultValue.ShouldBe("1"));
     }
 }

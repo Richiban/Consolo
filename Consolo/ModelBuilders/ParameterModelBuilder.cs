@@ -25,7 +25,7 @@ static class ParameterModelBuilder
         var isRequired = !parameterSymbol.HasExplicitDefaultValue;
         var defaultValue =
             parameterSymbol.HasExplicitDefaultValue
-            ? SourceValueUtils.SourceValue(parameterSymbol.ExplicitDefaultValue)
+            ? SourceValueUtils.SourceValue(parameterSymbol.ExplicitDefaultValue, parameterSymbol.Type)
             : null;
         var xmlComment = methodXmlComments.FlatMap(x => x[parameterSymbol.Name]);
         var syntax = parameterSymbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax();
@@ -36,16 +36,17 @@ static class ParameterModelBuilder
         {
             if (attr.Name.IsSome(out var givenName))
             {
-                if (!parameterNameSpec.IsMatch(givenName))
-                {
-                    diagnostics.Add(
-                        DiagnosticModel.IllegalParameterName(attr.NameLocation | attr.AttributeLocation)
-                    );
-                }
-                else
+                if (parameterNameSpec.IsMatch(givenName))
                 {
                     name = givenName;
                     nameLocation = attr.NameLocation;
+                }
+                else
+                {
+                    diagnostics.Add(
+                        DiagnosticModel.IllegalParameterName(
+                            attr.NameLocation | attr.AttributeLocation)
+                    );
                 }
             }
 

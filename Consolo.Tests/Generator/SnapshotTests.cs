@@ -268,5 +268,38 @@ internal class SnapshotTests : GeneratorTests
 
         programText.ShouldMatchSnapshot();
     }
+
+    [Test]
+    public void ParamDefaultValueIsRespected()
+    {
+        var source = """
+                     using System;
+                     using Consolo;
+
+                     namespace Consolo.Samples;
+
+                     public class SampleProgram
+                     {
+                         [Consolo]
+                         public static void DefaultValueTest(TestEnum arg = TestEnum.B)
+                         {
+                             Console.WriteLine($""arg = {arg}"");
+                         }
+                     }
+                     
+                     public enum TestEnum
+                     {
+                         A, B
+                     }
+                     """;
+
+        var (compilation, diagnostics) = RunGenerator(source);
+
+        diagnostics.WarningsAndErrors().ShouldBeEmpty();
+
+        var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
+
+        programText.ShouldMatchSnapshot();
+    }
 }
 

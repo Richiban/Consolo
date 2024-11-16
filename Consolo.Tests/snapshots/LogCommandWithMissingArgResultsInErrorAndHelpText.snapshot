@@ -4,7 +4,7 @@ log
     A test command that takes a file as a parameter
 
 Usage:
-    Consolo.Samples log <lines> [options]
+    log <lines> [options]
 
 Parameters:
     lines  The number of lines to display

@@ -2,19 +2,19 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-namespace compilation
+
+namespace Consolo.TestSource.g
 {
     /// <summary>
-    /// Entrypoint class for compilation
+    /// Entrypoint class for Consolo.TestSource
     /// </summary>
     public static class Program
     {
         /// <summary>
-        /// Entrypoint for compilation
+        /// Entrypoint for Consolo.TestSource
         /// </summary>
         public static void Main(string[] args)
         {
-
             var consoleColor = Console.ForegroundColor;
             var helpTextColor = ConsoleColor.Green;
 
@@ -64,14 +64,14 @@ namespace compilation
                             }
                         }
 
-                        Console.WriteLine("compilation");
+                        Console.WriteLine("Consolo.TestSource");
                         Console.WriteLine();
                         Console.WriteLine("remove");
                         Console.ForegroundColor = helpTextColor;
                         Console.WriteLine();
                         Console.ForegroundColor = consoleColor;
                         Console.WriteLine("Usage:");
-                        Console.WriteLine($"    compilation remote remove <remoteName> [options]");
+                        Console.WriteLine($"    remote remove <remoteName> [options]");
                         Console.WriteLine();
                         Console.WriteLine("Parameters:");
                         Console.Write("    remoteName  ");
@@ -127,14 +127,14 @@ namespace compilation
                             }
                         }
 
-                        Console.WriteLine("compilation");
+                        Console.WriteLine("Consolo.TestSource");
                         Console.WriteLine();
                         Console.WriteLine("add");
                         Console.ForegroundColor = helpTextColor;
                         Console.WriteLine();
                         Console.ForegroundColor = consoleColor;
                         Console.WriteLine("Usage:");
-                        Console.WriteLine($"    compilation remote add <remoteName> <url> [options]");
+                        Console.WriteLine($"    remote add <remoteName> <url> [options]");
                         Console.WriteLine();
                         Console.WriteLine("Parameters:");
                         Console.Write("    remoteName  ");
@@ -174,14 +174,14 @@ namespace compilation
                         }
                     }
 
-                    Console.WriteLine("compilation");
+                    Console.WriteLine("Consolo.TestSource");
                     Console.WriteLine();
                     Console.WriteLine("remote");
                     Console.ForegroundColor = helpTextColor;
                     Console.WriteLine();
                     Console.ForegroundColor = consoleColor;
                     Console.WriteLine("Usage:");
-                    Console.WriteLine($"    compilation remote [options]");
+                    Console.WriteLine($"    remote [options]");
                     Console.WriteLine();
                     Console.WriteLine("Options:");
                     Console.Write("    -? | -h | --help  ");
@@ -222,14 +222,14 @@ namespace compilation
                         }
                     }
 
-                    Console.WriteLine("compilation");
+                    Console.WriteLine("Consolo.TestSource");
                     Console.WriteLine();
                     Console.WriteLine("branch");
                     Console.ForegroundColor = helpTextColor;
                     Console.WriteLine();
                     Console.ForegroundColor = consoleColor;
                     Console.WriteLine("Usage:");
-                    Console.WriteLine($"    compilation branch [options]");
+                    Console.WriteLine($"    branch [options]");
                     Console.WriteLine();
                     Console.WriteLine("Options:");
                     Console.Write("    -? | -h | --help  ");
@@ -261,7 +261,7 @@ namespace compilation
                         }
                     }
 
-                    Console.WriteLine("compilation");
+                    Console.WriteLine("Consolo.TestSource");
                     Console.WriteLine();
                     Console.WriteLine("--version");
                     Console.ForegroundColor = helpTextColor;
@@ -269,7 +269,7 @@ namespace compilation
                     Console.WriteLine();
                     Console.ForegroundColor = consoleColor;
                     Console.WriteLine("Usage:");
-                    Console.WriteLine($"    compilation --version [options]");
+                    Console.WriteLine($"    --version [options]");
                     Console.WriteLine();
                     Console.WriteLine("Options:");
                     Console.Write("    -? | -h | --help  ");
@@ -299,12 +299,12 @@ namespace compilation
                     }
                 }
 
-                Console.WriteLine("compilation");
+                Console.WriteLine("Consolo.TestSource");
                 Console.ForegroundColor = helpTextColor;
                 Console.WriteLine();
                 Console.ForegroundColor = consoleColor;
                 Console.WriteLine("Usage:");
-                Console.WriteLine($"    compilation  [options]");
+                Console.WriteLine($"     [options]");
                 Console.WriteLine();
                 Console.WriteLine("Options:");
                 Console.Write("    -? | -h | --help  ");

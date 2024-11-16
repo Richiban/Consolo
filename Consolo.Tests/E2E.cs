@@ -1,6 +1,6 @@
 using System.Text;
 using System.IO;
-using Consolo.Samples;
+using Consolo.Samples.g;
 
 namespace Consolo.Tests.E2E;
 

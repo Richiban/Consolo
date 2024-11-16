@@ -73,6 +73,30 @@ internal class ErrorsAndDiagnosticsTests : GeneratorTests
     }
 
     [Test]
+    public void ClassNamedProgram()
+    {
+        var source = """
+                     using Consolo;
+
+                     namespace Consolo.TestSource;
+
+                     public class Program
+                     {
+                         [Consolo]
+                         public static void TestMethod()
+                         {
+                         }
+                     }
+                     """;
+
+        var (outputCompilation, _) = RunGenerator(source);
+        var errors = outputCompilation.GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+
+        errors.ShouldBeEmpty();
+    }
+
+    [Test]
     public void InstanceMethodGivesDiagnosticError()
     {
         var source = """

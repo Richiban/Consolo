@@ -45,11 +45,20 @@ namespace Consolo.Samples
         [Consolo("test")]
         public static void TestMethod(
             [Consolo("a")] bool argA = false,
-            [Consolo("b")] bool argB = false,
-            TestEnum testEnum = TestEnum.A
+            [Consolo("b")] int argB = 1,
+            [Consolo("c")] char argC = 'c',
+            [Consolo("d")] Point argD = default(Point),
+            TestEnum testEnum = TestEnum.B
         )
         {
-            Console.WriteLine(new { argA, argB, testEnum });
+            Console.WriteLine(new { argA, argB, argC, testEnum });
+        }
+        
+        public struct Point
+        {
+            public int X; public int Y;
+
+            public static Point Parse(string s) => new Point();
         }
 
         public enum TestEnum
