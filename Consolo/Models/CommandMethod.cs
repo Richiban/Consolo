@@ -8,7 +8,8 @@ internal record CommandMethod(
         string FullyQualifiedClassName,
         string MethodName,
         IReadOnlyCollection<CommandParameter> Parameters,
-        Option<string> Description)
+        Option<string> Description,
+        bool IsTaskReturn)
 {
     public string FullyQualifiedName { get; } =
         FullyQualifiedClassName is not "" 

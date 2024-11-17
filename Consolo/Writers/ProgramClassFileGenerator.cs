@@ -13,7 +13,7 @@ internal class ProgramClassFileGenerator(
     string generatedNamespace,
     Root rootCommand) : CodeFileGenerator
 {
-    private readonly CodeBuilder _codeBuilder = new CodeBuilder();
+    private readonly CodeBuilder _codeBuilder = new();
     public override string FileName => "Program.g.cs";
 
     private void WriteCommandDebug(CommandTree command)
@@ -161,7 +161,16 @@ internal class ProgramClassFileGenerator(
             {
                 var argString = String.Join(", ", method.Parameters.Select(x => x.SourceName));
 
-                _codeBuilder.AppendLine($"{method.FullyQualifiedName}({argString});");
+                var line = $"{method.FullyQualifiedName}({argString})";
+
+                if (method.IsTaskReturn)
+                {
+                    line += ".Wait()";
+                }
+
+                line += ';';
+                
+                _codeBuilder.AppendLine(line);
                 _codeBuilder.AppendLine("return;");
             }
         }

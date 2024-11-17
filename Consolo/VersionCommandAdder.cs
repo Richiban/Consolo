@@ -7,8 +7,12 @@ internal static class VersionCommandAdder
 {
     private static CommandTree.SubCommand _versionCommand = new("--version", showInHelp: false)
     {
-        Method = new CommandMethod(MethodName: "PrintVersion", FullyQualifiedClassName: "", Parameters: [],
-            Description: "Prints the version of the application"),
+        Method = new CommandMethod(
+            MethodName: "PrintVersion", 
+            FullyQualifiedClassName: "", 
+            Parameters: [],
+            Description: "Prints the version of the application",
+            IsTaskReturn: false),
         Description = "Prints the version of the application"
     };
 

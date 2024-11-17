@@ -72,6 +72,34 @@ internal class SnapshotTests : GeneratorTests
     }
 
     [Test]
+    public void AsyncMainMethod()
+    {
+        var source =
+            """
+            using Consolo;
+            using System.Threading.Tasks;
+
+            namespace TestSamples;
+
+            public class TestClass
+            {
+                [Consolo]
+                public static async Task TestMethod()
+                {
+                }
+            }
+            """;
+
+        var (compilation, diagnostics) = RunGenerator(source);
+
+        diagnostics.WarningsAndErrors().ShouldBeEmpty();
+
+        var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
+
+        programText.ShouldMatchSnapshot();
+    }
+
+    [Test]
     public void ExplicitNameChangesCommandName()
     {
         var source =

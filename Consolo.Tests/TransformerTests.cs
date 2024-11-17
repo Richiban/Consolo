@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Schema;
 using Microsoft.CodeAnalysis;
+using Moq;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 using Shouldly;
@@ -18,8 +19,24 @@ namespace Consolo.Tests;
 [TestFixture]
 class TransformerTests
 {
+    private readonly Mock<ITypeSymbol> VoidMock = new(MockBehavior.Strict);
+    private readonly Mock<ITypeSymbol> TaskMock = new(MockBehavior.Strict);
+
+    public TransformerTests()
+    {
+        VoidMock.Setup(t => t.SpecialType).Returns(SpecialType.System_Void);
+        
+        VoidMock
+            .Setup(t => t.ToDisplayString(It.IsAny<SymbolDisplayFormat?>()))
+            .Returns("void");
+        
+        TaskMock
+            .Setup(t => t.ToDisplayString(It.IsAny<SymbolDisplayFormat>()))
+            .Returns("System.Threading.Tasks.Task");
+    }
+    
     [Test]
-    public void BaseCase()
+    public void RootCommandWithFunction()
     {
         var models = new[]
         {
@@ -30,7 +47,8 @@ class TransformerTests
                 FullyQualifiedClassName: "SomeNamespace.SomeClass",
                 Parameters: [],
                 Description: null,
-                Location: null)
+                Location: null,
+                ReturnType: VoidMock.Object)
         };
 
         var (root, diagnostics) = CommandTreeBuilder.Transform(models);
@@ -50,6 +68,39 @@ class TransformerTests
     }
 
     [Test]
+    public void RootCommandWithAsyncFunction()
+    {
+        var models = new[]
+        {
+            new MethodModel(
+                MethodName: "SomeFunction",
+                ProvidedName: "",
+                ParentCommandPath: [],
+                FullyQualifiedClassName: "SomeNamespace.SomeClass",
+                Parameters: [],
+                Description: null,
+                Location: null,
+                ReturnType: TaskMock.Object)
+        };
+
+        var (root, diagnostics) = CommandTreeBuilder.Transform(models);
+
+        diagnostics.ShouldBeEmpty();
+
+        root.SubCommands.ShouldBeEmpty();
+
+        root
+            .Method.ShouldBeSome()
+            .ShouldSatisfyAllConditions(
+                method => method.Parameters.ShouldBeEmpty(),
+                method => method.FullyQualifiedName.ShouldBe(
+                    "SomeNamespace.SomeClass.SomeFunction"),
+                method => method.Options.ShouldBeEmpty(),
+                method => method.MandatoryParameterCount.ShouldBe(0),
+                method => method.IsTaskReturn.ShouldBe(true));
+    }
+
+    [Test]
     public void TestLeafCommandWithProvidedNameInCommandGroup()
     {
         var models = new[]
@@ -61,7 +112,8 @@ class TransformerTests
                 FullyQualifiedClassName: "SomeNamespace.SomeClass",
                 Parameters: [],
                 Description: null,
-                Location: null)
+                Location: null,
+                ReturnType: VoidMock.Object)
         };
 
         var (root, diagnostics) = CommandTreeBuilder.Transform(models);
@@ -93,7 +145,8 @@ class TransformerTests
                 FullyQualifiedClassName: "GitNamespace.RemoteActions",
                 Parameters: [],
                 Description: null,
-                Location: null),
+                Location: null,
+                ReturnType: VoidMock.Object),
             new MethodModel(
                 MethodName: "CreateRemote",
                 ProvidedName: "add",
@@ -123,7 +176,8 @@ class TransformerTests
                         AliasLocation: null),
                 ],
                 Description: null,
-                Location: null)
+                Location: null,
+                ReturnType: VoidMock.Object)
         };
 
         var (root, diagnostics) = CommandTreeBuilder.Transform(models);
@@ -182,7 +236,8 @@ class TransformerTests
                         AliasLocation: new Option<Location>()),
                 ],
                 FullyQualifiedClassName: "N.C",
-                Location: null),
+                Location: null,
+                ReturnType: VoidMock.Object),
         };
 
         var (root, diagnostics) = CommandTreeBuilder.Transform(models);

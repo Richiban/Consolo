@@ -51,7 +51,8 @@ internal static class MethodModelBuilder
                 ParentCommandPath: parentNames,
                 Parameters: parameterResults.Result,
                 Description: xmlComments.Result.FlatMap(x => x.Summary),
-                Location: methodSymbol.Locations.FirstOrDefault()
+                Location: methodSymbol.Locations.FirstOrDefault(),
+                ReturnType: methodSymbol.ReturnType
             ),
             diagnostics);
     }

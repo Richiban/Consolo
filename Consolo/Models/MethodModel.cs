@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Consolo;
 
@@ -10,5 +11,6 @@ record MethodModel(
     Option<string> ProvidedName,
     IReadOnlyList<CommandPathItem> ParentCommandPath,
     IReadOnlyCollection<ParameterModel> Parameters,
-    Option<Location> Location
+    Option<Location> Location,
+    ITypeSymbol ReturnType
 );

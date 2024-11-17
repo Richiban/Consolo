@@ -163,7 +163,11 @@ static class CommandTreeBuilder
             FullyQualifiedClassName: methodModel.FullyQualifiedClassName,
             MethodName: methodModel.MethodName,
             Parameters: MapParameters(methodModel, diagnostics),
-            Description: methodModel.Description);
+            Description: methodModel.Description,
+            IsTaskReturn: IsTaskReturn(methodModel));
+
+    private static bool IsTaskReturn(MethodModel methodModel) => 
+        methodModel.ReturnType.GetFullyQualifiedName() == "System.Threading.Tasks.Task";
 
     private static IReadOnlyCollection<CommandParameter> MapParameters(MethodModel methodModel,
         List<DiagnosticModel> diagnostics)
