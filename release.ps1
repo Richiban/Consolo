@@ -4,7 +4,7 @@ dotnet build
 
 dotnet test
 
-dotnet pack -o .
+dotnet pack Consolo -o .
 
 $projectXml = [xml](Get-Content .\Consolo\Consolo.csproj)
 

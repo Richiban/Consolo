@@ -34,9 +34,9 @@ public static class StringUtils
         return sb.ToString();
     }
 
-    public static string? ToCamelCase(string? s)
+    public static string ToCamelCase(string s)
     {
-        if (s is null or "")
+        if (String.IsNullOrEmpty(s))
         {
             return s;
         }

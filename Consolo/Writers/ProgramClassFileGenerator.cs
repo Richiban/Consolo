@@ -245,9 +245,9 @@ internal class ProgramClassFileGenerator(
     {
         return parameter switch
         {
-            CommandParameter.Option p when IsFlag(p) && p.Alias.IsSome(out var alias) => $"[-{alias} | --{p.Name}]",
+            CommandParameter.Option p when IsFlag(p) && p.Alias.IsSome(out var alias) => $"[-{alias}, --{p.Name}]",
             CommandParameter.Option p when IsFlag(p) => $"[<{p.Name}>]",
-            CommandParameter.Option p when p.Alias.IsSome(out var alias) => $"[-{alias} | --{p.Name} <{p.SourceName}>]",
+            CommandParameter.Option p when p.Alias.IsSome(out var alias) => $"[-{alias}, --{p.Name} <{p.SourceName}>]",
             CommandParameter.Option p => $"[--{p.Name}]",
             var p => $"<{p.Name}>",
         };
@@ -264,19 +264,19 @@ internal class ProgramClassFileGenerator(
         return parameter switch
         {
             { Type: ParameterType.Enum e } =>
-                $"<{e.EnumValues.Select(v => v.SourceName).Truncate(3, "..").StringJoin("|")}>",
+                $"<{e.EnumValues.Select(v => v.HelpName).Truncate(3, "..").StringJoin("|")}>",
             var p => $"{p.Name}",
         };
     }
 
     private string GetSoloHelpFirstColumn(CommandParameter.Option parameter)
     {
-        var parameterName = GetNamesForOption(parameter).StringJoin(" | ");
+        var parameterName = GetNamesForOption(parameter).StringJoin(", ");
 
         return parameter switch
         {
             { Type: ParameterType.Enum e } =>
-                $"{parameterName} {e.EnumValues.Select(v => v.SourceName).Truncate(3, "..").StringJoin("|")}",
+                $"{parameterName} {e.EnumValues.Select(v => v.HelpName).Truncate(3, "..").StringJoin("|")}",
             { Type: ParameterType.Bool } =>
                 $"{parameterName}",
             _ =>
@@ -433,8 +433,6 @@ internal class ProgramClassFileGenerator(
         ImmutableArray<string> path,
         CommandTree command)
     {
-        var pathStrings = path.Select(x => $"\"{x}\"");
-
         _codeBuilder.AppendLines(
             $"Console.WriteLine(\"{assemblyName}\");"
         );
@@ -517,7 +515,7 @@ internal class ProgramClassFileGenerator(
 
                 var helpNames = method.Options
                     .Select(p => (GetSoloHelpFirstColumn(p), p.Description, p.GetAllowedValues()))
-                    .Append(("-? | -h | --help", "Show help and usage information", None));
+                    .Append(("-?, -h, --help", "Show help and usage information", None));
 
                 var longestParameter = helpNames.MaxOrDefault(x => x.Item1.Length);
 
@@ -529,8 +527,11 @@ internal class ProgramClassFileGenerator(
                         $"Console.WriteLine(\"{description}\");"
                     );
 
-                    foreach (var (valueName, valueDescription) in allowedValues)
+                    foreach (var allowedValue in allowedValues)
                     {
+                        var valueName = allowedValue.HelpName;
+                        var valueDescription = allowedValue.Description;
+                        
                         if (valueDescription.HasValue)
                         {
                             _codeBuilder.AppendLine(

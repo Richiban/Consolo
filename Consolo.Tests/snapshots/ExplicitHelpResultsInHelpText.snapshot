@@ -8,10 +8,10 @@ Parameters:
     lines  The number of lines to display
 
 Options:
-    --pretty Normal|OneLine  The display mode
-                             - Normal: Show log messages in their entirety
-                             - OneLine: Show the first line of each log message
-    -? | -h | --help         Show help and usage information
+    --pretty normal|oneLine  The display mode
+                             - normal: Show log messages in their entirety
+                             - oneLine: Show the first line of each log message
+    -?, -h, --help           Show help and usage information
 
 Commands:
     log <lines> [options]   A test command that takes a file as a parameter

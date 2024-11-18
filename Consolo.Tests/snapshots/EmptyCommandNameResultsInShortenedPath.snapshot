@@ -63,7 +63,7 @@ namespace Consolo.TestSource.g
                         Console.WriteLine($"    aaa bbb [options]");
                         Console.WriteLine();
                         Console.WriteLine("Options:");
-                        Console.Write("    -? | -h | --help  ");
+                        Console.Write("    -?, -h, --help  ");
                         Console.ForegroundColor = helpTextColor;
                         Console.WriteLine("Show help and usage information");
                         Console.ForegroundColor = consoleColor;
@@ -100,7 +100,7 @@ namespace Consolo.TestSource.g
                     Console.WriteLine($"    aaa [options]");
                     Console.WriteLine();
                     Console.WriteLine("Options:");
-                    Console.Write("    -? | -h | --help  ");
+                    Console.Write("    -?, -h, --help  ");
                     Console.ForegroundColor = helpTextColor;
                     Console.WriteLine("Show help and usage information");
                     Console.ForegroundColor = consoleColor;
@@ -145,7 +145,7 @@ namespace Consolo.TestSource.g
                     Console.WriteLine($"    --version [options]");
                     Console.WriteLine();
                     Console.WriteLine("Options:");
-                    Console.Write("    -? | -h | --help  ");
+                    Console.Write("    -?, -h, --help  ");
                     Console.ForegroundColor = helpTextColor;
                     Console.WriteLine("Show help and usage information");
                     Console.ForegroundColor = consoleColor;
