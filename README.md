@@ -17,14 +17,6 @@ To get started, simply install the `Consolo` package in your console application
 dotnet add package Consolo
 ```
 
-Or, alternatively, add the following to your `csproj` file:
-
-```xml
-<ItemGroup>
-    <PackageReference Include="Consolo" Version="0.9.1" />
-</ItemGroup>
-```
-
 > Note that to make use of Consolo your console app must **not** have a `Main` method or any top-level statements; Consolo will generate these for you.
 
 [Optional, but highly-recommended] If you want your XML comments to flow through to the generated code, you will need to add the following to your `csproj` file:
