@@ -8,9 +8,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{87D73C94-A981-4A55-94B9-1BE73BD94C89}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
-		GitVersion.yml = GitVersion.yml
 		LICENSE = LICENSE
 		README.md = README.md
+		release.ps1 = release.ps1
+		.github\workflows\release.yml = .github\workflows\release.yml
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Consolo.Tests", "Consolo.Tests\Consolo.Tests.csproj", "{35E4E333-074E-4DD2-99E5-C2F31F049CF5}"
