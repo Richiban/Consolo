@@ -518,6 +518,7 @@ internal class ProgramClassFileGenerator(
                     .Append(("-?, -h, --help", "Show help and usage information", None));
 
                 var longestParameter = helpNames.MaxOrDefault(x => x.Item1.Length);
+                var leadingWhitespace = new string(' ', longestParameter);
 
                 foreach (var (helpName, description, allowedValues) in helpNames)
                 {
@@ -531,17 +532,14 @@ internal class ProgramClassFileGenerator(
                     {
                         var valueName = allowedValue.HelpName;
                         var valueDescription = allowedValue.Description;
-                        
-                        if (valueDescription.HasValue)
-                        {
-                            _codeBuilder.AppendLine(
-                                $"Console.WriteLine(\"      {new string(' ', longestParameter)}- {valueName}: {valueDescription}\");");
-                        }
-                        else
-                        {
-                            _codeBuilder.AppendLine(
-                            $"Console.WriteLine(\"      {new string(' ', longestParameter)}- {valueName}\");");
-                        }
+
+                        var valueHelpText =
+                            valueDescription.HasValue
+                                ? $"{valueName}: {valueDescription}"
+                                : $"{valueName}";
+
+                        _codeBuilder.AppendLine(
+                            $"Console.WriteLine(\"{leadingWhitespace}      - {valueHelpText}\");");
                     }
 
                     _codeBuilder.AppendLine("Console.ForegroundColor = consoleColor;");

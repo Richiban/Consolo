@@ -4,8 +4,6 @@ dotnet build
 
 dotnet test
 
-dotnet pack Consolo -o .
-
 $projectXml = [xml](Get-Content .\Consolo\Consolo.csproj)
 
 $version = $projectXml.Project.PropertyGroup[1].version
@@ -19,6 +17,10 @@ Write-Host "Version: $version"
 
 $tagName = "release/$version"
 
+write-host "Debug: git tags"
+
+git tag -l
+
 $versionAlreadyTagged = git tag -l $tagName
 
 if ($versionAlreadyTagged) {
@@ -26,11 +28,7 @@ if ($versionAlreadyTagged) {
     exit 0
 }
 
-Write-Host "Creating tag $tagName"
-
-git tag $tagName
-
-git push origin tag $tagName
+dotnet pack Consolo -o .
 
 $nupkg = get-item Consolo.$version.nupkg
 
@@ -45,3 +43,9 @@ dotnet nuget push `
     $nupkg `
     --api-key $env:NUGET_API_KEY_CONSOLO_CI `
     --source https://api.nuget.org/v3/index.json
+
+Write-Host "Creating tag $tagName"
+
+git tag $tagName
+
+git push origin tag $tagName
