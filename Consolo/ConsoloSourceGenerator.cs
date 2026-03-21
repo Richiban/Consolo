@@ -66,10 +66,42 @@ public class ConsoloSourceGenerator : ISourceGenerator
         CommandTree.Root rootCommandModel)
     {
         var assemblyName = context.Compilation.AssemblyName;
+        var assemblyTitle = GetAssemblyAttributeString(
+            context.Compilation,
+            "System.Reflection.AssemblyTitleAttribute");
+        var assemblyDescription = GetAssemblyAttributeString(
+            context.Compilation,
+            "System.Reflection.AssemblyDescriptionAttribute");
         var generatedNamespace = $"{assemblyName ?? "Consolo"}.g";
+
+        if (rootCommandModel.Description.IsNone && !String.IsNullOrWhiteSpace(assemblyDescription))
+        {
+            rootCommandModel.Description = assemblyDescription.Trim();
+        }
+
+        var applicationName =
+            !String.IsNullOrWhiteSpace(assemblyTitle)
+                ? assemblyTitle!.Trim()
+                : assemblyName ?? "Unknown assembly";
 
         context.AddCodeFile(
             new ProgramClassFileGenerator(
-                assemblyName ?? "Unknown assembly", generatedNamespace, rootCommandModel));
+                applicationName, generatedNamespace, rootCommandModel));
+    }
+
+    private static string? GetAssemblyAttributeString(
+        Compilation compilation,
+        string attributeMetadataName)
+    {
+        var attribute = compilation.Assembly
+            .GetAttributes()
+            .FirstOrDefault(a => a.AttributeClass?.ToDisplayString() == attributeMetadataName);
+
+        if (attribute is null || attribute.ConstructorArguments.Length == 0)
+        {
+            return null;
+        }
+
+        return attribute.ConstructorArguments[0].Value as string;
     }
 }

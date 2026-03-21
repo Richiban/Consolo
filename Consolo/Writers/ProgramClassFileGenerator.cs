@@ -9,7 +9,7 @@ using System.Linq;
 namespace Consolo;
 
 internal class ProgramClassFileGenerator(
-    string assemblyName,
+    string applicationName,
     string generatedNamespace,
     Root rootCommand) : CodeFileGenerator
 {
@@ -43,13 +43,13 @@ internal class ProgramClassFileGenerator(
             using var _ = _codeBuilder.IndentBraces();
 
             _codeBuilder.AppendLine("/// <summary>");
-            _codeBuilder.AppendLine("/// Entrypoint class for " + assemblyName);
+            _codeBuilder.AppendLine("/// Entrypoint class for " + applicationName);
             _codeBuilder.AppendLine("/// </summary>");
             _codeBuilder.AppendLine("public static class Program");
             using var _2 = _codeBuilder.IndentBraces();
 
             _codeBuilder.AppendLine("/// <summary>");
-            _codeBuilder.AppendLine("/// Entrypoint for " + assemblyName);
+            _codeBuilder.AppendLine("/// Entrypoint for " + applicationName);
             _codeBuilder.AppendLine("/// </summary>");
             _codeBuilder.AppendLine("public static void Main(string[] args)");
             {
@@ -57,6 +57,7 @@ internal class ProgramClassFileGenerator(
 
                 _codeBuilder.AppendLine("var consoleColor = Console.ForegroundColor;");
                 _codeBuilder.AppendLine("var helpTextColor = ConsoleColor.Green;");
+                _codeBuilder.AppendLine("var commandNameColor = ConsoleColor.Yellow;");
 
                 _codeBuilder.AppendLine();
                 _codeBuilder.AppendLine("// Commands marked * have an associated method");
@@ -434,14 +435,16 @@ internal class ProgramClassFileGenerator(
         CommandTree command)
     {
         _codeBuilder.AppendLines(
-            $"Console.WriteLine(\"{assemblyName}\");"
+            $"Console.WriteLine(\"{applicationName}\");"
         );
 
         if (command is SubCommand s)
         {
             _codeBuilder.AppendLines(
                 $"Console.WriteLine();",
-                $"Console.WriteLine(\"{s.CommandName}\");"
+                "Console.ForegroundColor = commandNameColor;",
+                $"Console.WriteLine(\"{s.CommandName}\");",
+                "Console.ForegroundColor = consoleColor;"
             );
         }
 

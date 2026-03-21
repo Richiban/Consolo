@@ -47,7 +47,7 @@ static class CommandTreeBuilder
                         root.Description = pathEntry.XmlComment;
                     }
 
-                    if (root.Method.IsNone)
+                    if (root.Method.IsNone && i == currentPath.Count - 1)
                     {
                         root.Method = MapMethod(methodModel, diagnostics);
                     }
