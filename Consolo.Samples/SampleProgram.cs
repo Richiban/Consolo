@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Reflection;
 
-[assembly: AssemblyTitle("Consolo sample app")]
-[assembly: AssemblyDescription("A sample app demonstrating how to use Consolo")]
-
 
 namespace Consolo.Samples
 {

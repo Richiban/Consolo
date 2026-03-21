@@ -76,7 +76,7 @@ public class ConsoloSourceGenerator : ISourceGenerator
 
         if (rootCommandModel.Description.IsNone && !String.IsNullOrWhiteSpace(assemblyDescription))
         {
-            rootCommandModel.Description = assemblyDescription.Trim();
+            rootCommandModel.Description = assemblyDescription?.Trim();
         }
 
         var applicationName =
