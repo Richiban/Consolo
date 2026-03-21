@@ -69,13 +69,32 @@ if (-not $csproj) {
 Write-Host "Found project file at '$csproj'"
 
 $csprojContent = [xml](Get-Content $csproj)
-$versionPrefix = $csprojContent.Project.PropertyGroup.VersionPrefix
 
-$packageName = $csprojContent.Project.PropertyGroup.PackageId
+function Get-FirstPropertyValue {
+    param(
+        [Parameter(Mandatory = $true)] $PropertyGroups,
+        [Parameter(Mandatory = $true)][string] $PropertyName
+    )
+
+    foreach ($group in $PropertyGroups) {
+        $value = $group.$PropertyName
+        if ($null -ne $value -and -not [string]::IsNullOrWhiteSpace("$value")) {
+            return "$value".Trim()
+        }
+    }
+
+    return $null
+}
+
+$propertyGroups = $csprojContent.Project.PropertyGroup
+
+$versionPrefix = Get-FirstPropertyValue -PropertyGroups $propertyGroups -PropertyName "VersionPrefix"
+
+$packageName = Get-FirstPropertyValue -PropertyGroups $propertyGroups -PropertyName "PackageId"
 
 if (-not $packageName) {
     Write-Host "No PackageId found in csproj. Falling back to Assembly Name."
-    $packageName = $csprojContent.Project.PropertyGroup.AssemblyName
+    $packageName = Get-FirstPropertyValue -PropertyGroups $propertyGroups -PropertyName "AssemblyName"
 }
 
 if (-not $packageName) {
@@ -83,10 +102,17 @@ if (-not $packageName) {
     $packageName = [System.IO.Path]::GetFileNameWithoutExtension($projectFileName)
 }
 
+$packageName = "$packageName".Trim()
+$versionPrefix = if ($versionPrefix) { "$versionPrefix".Trim() } else { $null }
+
 Write-Host "Package name: $packageName"
 
-Write-Host "Listing tags:"
-git tag
+if ($versionPrefix) {
+    Write-Host "Version prefix found in csproj: $versionPrefix"
+}
+
+# Write-Host "Listing tags:"
+# git tag
 
 $lastTaggedCommit = git describe --tags --abbrev=0 --match "$packageName/*" 2>$null
 
@@ -103,7 +129,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $prevVersion = $lastTags `
-| foreach { [System.Management.Automation.SemanticVersion]::Parse(($_ -replace "^$packageName/", "")) } `
+| ForEach-Object { [System.Management.Automation.SemanticVersion]::Parse(($_ -replace "^$packageName/", "")) } `
 | Sort-Object -Descending `
 | Select-Object -First 1
 
@@ -124,12 +150,11 @@ if (-not $prevVersion) {
 Write-Host "Previous version:"
 Write-Host $prevVersion
 
-if ($versionPrefix -ne $null) {
-    Write-Host "Version prefix found in csproj"
+if ($null -ne $versionPrefix) {
     $currentMajorVersion = [int]($versionPrefix)
 }
 else {
-    Write-Warning "No version prefix found in csproj. Defaulting to last used"
+    Write-Warning "No version prefix set. Defaulting to last used"
     $currentMajorVersion = $prevVersion.Major
 }
 
@@ -137,6 +162,11 @@ if (($branchName -eq 'master') -or ($branchName -eq 'main')) {
     $prereleaseTag = $null
 }
 else {
+    if (-not $buildNumber) {
+        Write-Error "No build number provided."
+        exit 1
+    }
+
     $prereleaseTag = "CI-$buildNumber"
 }
 

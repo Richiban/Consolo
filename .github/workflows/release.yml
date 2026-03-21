@@ -21,8 +21,10 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+
       - name: Build
         run: dotnet build -c Release
+
       - name: Test
         run: dotnet test -c Release
 
@@ -30,22 +32,27 @@ jobs:
     name: Nuget pack 
     runs-on: ubuntu-latest
     needs: build-test
+
     outputs:
       package_version: ${{ steps.version.outputs.Consolo_CurrentVersion }}
       tag_name: ${{ steps.version.outputs.Consolo_tagName }}
+
     steps:
       - uses: actions/checkout@v4
         with:    
           fetch-depth: 0
           filter: tree:0
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+
       - name: Version
         id: version
         shell: pwsh
         run: ./version.ps1 -projectFileName Consolo.csproj
+
       - name: Pack
         shell: pwsh
         run: |
@@ -57,6 +64,7 @@ jobs:
 
           $packagePath = Join-Path (Resolve-Path .\artifacts) ("{0}.{1}.nupkg" -f $packageName, $version)
           if (-not (Test-Path $packagePath)) { throw "Package not found at $packagePath" }
+          
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
