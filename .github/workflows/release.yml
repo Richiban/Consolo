@@ -1,6 +1,3 @@
-# This workflow will build a .NET project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
-
 name: .NET
 
 on:
@@ -11,7 +8,7 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  build-test:
     runs-on: ubuntu-latest
     
     steps:
@@ -23,32 +20,66 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - name: Version
-        shell: pwsh
-        run: ./version.ps1 -projectFileName Consolo.csproj
       - name: Build
         run: dotnet build -c Release
       - name: Test
         run: dotnet test -c Release
+
+  pack:
+    runs-on: ubuntu-latest
+    needs: build-test
+    outputs:
+      package_version: ${{ steps.version.outputs.Consolo_CurrentVersion }}
+      tag_name: ${{ steps.version.outputs.Consolo_tagName }}
+    steps:
+      - uses: actions/checkout@v4
+        with:    
+          fetch-depth: 0
+          filter: tree:0
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Version
+        id: version
+        shell: pwsh
+        run: ./version.ps1 -projectFileName Consolo.csproj
       - name: Pack
         shell: pwsh
         run: |
           $packageName = 'Consolo'
-          $version = $env:Consolo_CurrentVersion
-          if (-not $version) { $version = $env:CurrentVersion }
+          $version = '${{ steps.version.outputs.Consolo_CurrentVersion }}'
           if (-not $version) { throw 'CurrentVersion not set by version.ps1' }
 
           dotnet pack .\Consolo\Consolo.csproj -c Release -o .\artifacts /p:PackageVersion=$version
 
           $packagePath = Join-Path (Resolve-Path .\artifacts) ("{0}.{1}.nupkg" -f $packageName, $version)
           if (-not (Test-Path $packagePath)) { throw "Package not found at $packagePath" }
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package
+          path: ./artifacts/*.nupkg
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: pack
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          filter: tree:0
+      - name: Download package
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-package
+          path: ./artifacts
       - name: Publish
         run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY_CONSOLO_CI }} --source https://api.nuget.org/v3/index.json
       - name: Tag
         shell: pwsh
         run: |
-          $tagName = $env:Consolo_tagName
-          if (-not $tagName) { $tagName = $env:tagName }
+          $tagName = '${{ needs.pack.outputs.tag_name }}'
           if (-not $tagName) { throw 'tagName not set by version.ps1' }
 
           git tag $tagName
