@@ -9,6 +9,11 @@ It offers all the features you'd expect from a command-line library (such as rou
 * **Compile-time errors**: Misconfiguration of your commands will result in compiler errors, rather than exceptions at runtime
 * **Fast**: Since most of the work is being done during the build, there's no runtime overhead like reflection. Consolo ensures that the resulting application is as fast as it's possible to be
 
+# Requirements
+
+- .NET SDK 6.0 or later
+- C# 10 or later
+
 # Installation
 
 To get started, simply install the `Consolo` package in your console application:
@@ -36,6 +41,36 @@ dotnet add package Consolo
 ```
 
 You'll then find the generated code in the `obj` folder of your project, e.g. `/obj/Debug/net8.0/generated/Consolo/Consolo.ConsoloSourceGenerator/Program.g.cs`
+
+# Quick Start
+
+Create a class with a command method and build your project:
+
+```cs
+using System;
+using Consolo;
+
+namespace Samples;
+
+class Commands
+{
+    [Consolo]
+    public static void Greet(string name)
+    {
+        Console.WriteLine($"Hello, {name}");
+    }
+}
+```
+
+Then run it:
+
+```bash
+dotnet run -- greet Alex
+```
+
+# Samples
+
+See the sample project in [Consolo.Samples](Consolo.Samples) for a working app that uses Consolo end-to-end.
 
 # A Hello World example
 
@@ -322,3 +357,17 @@ Options:
     -h | --help  Show help and usage information    
 
 ```
+
+# Troubleshooting
+
+**Build error about a `Main` method or top-level statements**
+
+Consolo generates `Main` for you. Remove your `Main` method or top-level statements and rebuild.
+
+**Help text is missing XML comments**
+
+Ensure `<GenerateDocumentationFile>true</GenerateDocumentationFile>` is set in your project file.
+
+**I can't find the generated code**
+
+Enable `<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>` and look under `obj/Debug/<tfm>/generated/Consolo/`.
