@@ -9,6 +9,8 @@ namespace Consolo.Tests;
 
 internal static class Extensions
 {
+    private static readonly string SnapshotRoot = GetSnapshotRoot();
+
     public static void ShouldMatchSnapshot(this string target,
         [CallerMemberName] string? snapshotName = null)
     {
@@ -17,7 +19,7 @@ internal static class Extensions
             throw new ArgumentNullException(nameof(snapshotName));
         }
 
-        var snapshotPath = $"snapshots/{snapshotName}.snapshot";
+        var snapshotPath = Path.Combine(SnapshotRoot, $"{snapshotName}.snapshot");
 
         if (Boolean.TryParse(Environment.GetEnvironmentVariable("WriteSnapshots"), out var b) && b)
         {
@@ -72,6 +74,15 @@ internal static class Extensions
 
             Assert.Fail(messageBuilder.ToString());
         }
+    }
+
+    private static string GetSnapshotRoot()
+    {
+        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
+        var snapshotRoot = Path.Combine(root, "snapshots");
+        Directory.CreateDirectory(snapshotRoot);
+
+        return snapshotRoot;
     }
 
     public static IReadOnlyCollection<Diagnostic>

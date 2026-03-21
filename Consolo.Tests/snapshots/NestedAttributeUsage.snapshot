@@ -17,6 +17,7 @@ namespace Consolo.TestSource.g
         {
             var consoleColor = Console.ForegroundColor;
             var helpTextColor = ConsoleColor.Green;
+            var commandNameColor = ConsoleColor.Yellow;
 
             // Commands marked * have an associated method
             // {root} command
@@ -64,7 +65,9 @@ namespace Consolo.TestSource.g
 
                             Console.WriteLine("Consolo.TestSource");
                             Console.WriteLine();
+                            Console.ForegroundColor = commandNameColor;
                             Console.WriteLine("test-method1");
+                            Console.ForegroundColor = consoleColor;
                             Console.ForegroundColor = helpTextColor;
                             Console.WriteLine();
                             Console.ForegroundColor = consoleColor;
@@ -97,7 +100,9 @@ namespace Consolo.TestSource.g
 
                         Console.WriteLine("Consolo.TestSource");
                         Console.WriteLine();
+                        Console.ForegroundColor = commandNameColor;
                         Console.WriteLine("inner-test1");
+                        Console.ForegroundColor = consoleColor;
                         Console.WriteLine("Commands:");
                         Console.Write("    test-method1 ");
                         Console.ForegroundColor = helpTextColor;
@@ -123,7 +128,9 @@ namespace Consolo.TestSource.g
 
                     Console.WriteLine("Consolo.TestSource");
                     Console.WriteLine();
+                    Console.ForegroundColor = commandNameColor;
                     Console.WriteLine("outer-test");
+                    Console.ForegroundColor = consoleColor;
                     Console.WriteLine("Commands:");
                     Console.Write("    inner-test1 ..");
                     Console.ForegroundColor = helpTextColor;
@@ -177,7 +184,9 @@ namespace Consolo.TestSource.g
 
                             Console.WriteLine("Consolo.TestSource");
                             Console.WriteLine();
+                            Console.ForegroundColor = commandNameColor;
                             Console.WriteLine("test-method2");
+                            Console.ForegroundColor = consoleColor;
                             Console.ForegroundColor = helpTextColor;
                             Console.WriteLine();
                             Console.ForegroundColor = consoleColor;
@@ -220,7 +229,9 @@ namespace Consolo.TestSource.g
 
                         Console.WriteLine("Consolo.TestSource");
                         Console.WriteLine();
+                        Console.ForegroundColor = commandNameColor;
                         Console.WriteLine("inner-test1");
+                        Console.ForegroundColor = consoleColor;
                         Console.WriteLine("Commands:");
                         Console.Write("    test-method2 <arg1> <arg2> ");
                         Console.ForegroundColor = helpTextColor;
@@ -246,7 +257,9 @@ namespace Consolo.TestSource.g
 
                     Console.WriteLine("Consolo.TestSource");
                     Console.WriteLine();
+                    Console.ForegroundColor = commandNameColor;
                     Console.WriteLine("outer-test");
+                    Console.ForegroundColor = consoleColor;
                     Console.WriteLine("Commands:");
                     Console.Write("    inner-test1 ..");
                     Console.ForegroundColor = helpTextColor;
@@ -282,7 +295,9 @@ namespace Consolo.TestSource.g
 
                             Console.WriteLine("Consolo.TestSource");
                             Console.WriteLine();
+                            Console.ForegroundColor = commandNameColor;
                             Console.WriteLine("test-method3");
+                            Console.ForegroundColor = consoleColor;
                             Console.ForegroundColor = helpTextColor;
                             Console.WriteLine();
                             Console.ForegroundColor = consoleColor;
@@ -315,7 +330,9 @@ namespace Consolo.TestSource.g
 
                         Console.WriteLine("Consolo.TestSource");
                         Console.WriteLine();
+                        Console.ForegroundColor = commandNameColor;
                         Console.WriteLine("inner-test2");
+                        Console.ForegroundColor = consoleColor;
                         Console.WriteLine("Commands:");
                         Console.Write("    test-method3 ");
                         Console.ForegroundColor = helpTextColor;
@@ -341,7 +358,9 @@ namespace Consolo.TestSource.g
 
                     Console.WriteLine("Consolo.TestSource");
                     Console.WriteLine();
+                    Console.ForegroundColor = commandNameColor;
                     Console.WriteLine("outer-test");
+                    Console.ForegroundColor = consoleColor;
                     Console.WriteLine("Commands:");
                     Console.Write("    inner-test2 ..");
                     Console.ForegroundColor = helpTextColor;
@@ -373,7 +392,9 @@ namespace Consolo.TestSource.g
 
                     Console.WriteLine("Consolo.TestSource");
                     Console.WriteLine();
+                    Console.ForegroundColor = commandNameColor;
                     Console.WriteLine("--version");
+                    Console.ForegroundColor = consoleColor;
                     Console.ForegroundColor = helpTextColor;
                     Console.WriteLine("    Prints the version of the application");
                     Console.WriteLine();

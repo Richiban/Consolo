@@ -17,6 +17,7 @@ namespace Consolo.TestSource.g
         {
             var consoleColor = Console.ForegroundColor;
             var helpTextColor = ConsoleColor.Green;
+            var commandNameColor = ConsoleColor.Yellow;
 
             // Commands marked * have an associated method
             // {root} command*
@@ -66,7 +67,9 @@ namespace Consolo.TestSource.g
 
                         Console.WriteLine("Consolo.TestSource");
                         Console.WriteLine();
+                        Console.ForegroundColor = commandNameColor;
                         Console.WriteLine("remove");
+                        Console.ForegroundColor = consoleColor;
                         Console.ForegroundColor = helpTextColor;
                         Console.WriteLine();
                         Console.ForegroundColor = consoleColor;
@@ -129,7 +132,9 @@ namespace Consolo.TestSource.g
 
                         Console.WriteLine("Consolo.TestSource");
                         Console.WriteLine();
+                        Console.ForegroundColor = commandNameColor;
                         Console.WriteLine("add");
+                        Console.ForegroundColor = consoleColor;
                         Console.ForegroundColor = helpTextColor;
                         Console.WriteLine();
                         Console.ForegroundColor = consoleColor;
@@ -176,7 +181,9 @@ namespace Consolo.TestSource.g
 
                     Console.WriteLine("Consolo.TestSource");
                     Console.WriteLine();
+                    Console.ForegroundColor = commandNameColor;
                     Console.WriteLine("remote");
+                    Console.ForegroundColor = consoleColor;
                     Console.ForegroundColor = helpTextColor;
                     Console.WriteLine();
                     Console.ForegroundColor = consoleColor;
@@ -224,7 +231,9 @@ namespace Consolo.TestSource.g
 
                     Console.WriteLine("Consolo.TestSource");
                     Console.WriteLine();
+                    Console.ForegroundColor = commandNameColor;
                     Console.WriteLine("branch");
+                    Console.ForegroundColor = consoleColor;
                     Console.ForegroundColor = helpTextColor;
                     Console.WriteLine();
                     Console.ForegroundColor = consoleColor;
@@ -263,7 +272,9 @@ namespace Consolo.TestSource.g
 
                     Console.WriteLine("Consolo.TestSource");
                     Console.WriteLine();
+                    Console.ForegroundColor = commandNameColor;
                     Console.WriteLine("--version");
+                    Console.ForegroundColor = consoleColor;
                     Console.ForegroundColor = helpTextColor;
                     Console.WriteLine("    Prints the version of the application");
                     Console.WriteLine();
