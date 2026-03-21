@@ -119,19 +119,30 @@ else {
     $feedIndexUrl = "https://api.nuget.org/v3/index.json"
 }
 
-$baseUrl = $feedIndexUrl
-$lowerBase = $baseUrl.ToLowerInvariant()
-$suffixToTrim = '/index.json'
-if ($lowerBase.EndsWith($suffixToTrim)) {
-    $baseUrl = $baseUrl.Substring(0, $baseUrl.Length - $suffixToTrim.Length)
+function Get-PackageBaseAddress {
+    param(
+        [Parameter(Mandatory = $true)][string] $IndexUrl
+    )
+
+    $index = Invoke-RestMethod -Uri $IndexUrl -Method Get
+    $resource = $index.resources | Where-Object { $_.'@type' -like 'PackageBaseAddress*' } | Select-Object -First 1
+
+    if (-not $resource.'@id') {
+        throw "PackageBaseAddress not found in feed index: $IndexUrl"
+    }
+
+    $baseUrl = $resource.'@id'
+    if (-not $baseUrl.EndsWith('/')) { $baseUrl += '/' }
+
+    return $baseUrl
 }
-if (-not $baseUrl.EndsWith('/')) { $baseUrl += '/' }
-$flatBase = $baseUrl + 'flat2/'
+
+$packageBaseUrl = Get-PackageBaseAddress -IndexUrl $feedIndexUrl
 
 $idLower = $packageName.ToLowerInvariant()
 $previousVersionText = $previousVersion.ToString()
 $versionLower = $previousVersionText.ToLowerInvariant()
-$packageUrl = "$flatBase$idLower/$versionLower/$idLower.$versionLower.nupkg"
+$packageUrl = "$packageBaseUrl$idLower/$versionLower/$idLower.$versionLower.nupkg"
 
 Write-Host "Baseline package URL: $packageUrl"
 
