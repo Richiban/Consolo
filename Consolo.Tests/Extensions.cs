@@ -19,7 +19,7 @@ internal static class Extensions
 
         var snapshotPath = $"snapshots/{snapshotName}.snapshot";
 
-        if (Environment.GetEnvironmentVariable("WriteSnapshots") == "true")
+        if (Boolean.TryParse(Environment.GetEnvironmentVariable("WriteSnapshots"), out var b) && b)
         {
             File.WriteAllText(snapshotPath, target);
             Console.WriteLine($"Wrote {target.Length} chars to '{snapshotPath}'");
