@@ -101,19 +101,22 @@ $nugetConfigPath = Join-Path $PSScriptRoot 'nuget.config'
 if (-not (Test-Path $nugetConfigPath)) {
     $nugetConfigPath = 'nuget.config'
 }
-if (-not (Test-Path $nugetConfigPath)) {
-    throw "nuget.config not found. Cannot determine feed URL to download baseline package."
-}
 
-[xml]$nugetConfig = Get-Content -LiteralPath $nugetConfigPath
-$devyceSource = $nugetConfig.configuration.packageSources.add | Where-Object { $_.GetAttribute('key') -eq 'devyce' }
-if (-not $devyceSource) {
-    throw "Could not find a package source with key 'devyce' in nuget.config"
-}
+if (Test-Path $nugetConfigPath) {
+    [xml]$nugetConfig = Get-Content -LiteralPath $nugetConfigPath
+    $devyceSource = $nugetConfig.configuration.packageSources.add | Where-Object { $_.GetAttribute('key') -eq 'devyce' }
+    if (-not $devyceSource) {
+        throw "Could not find a package source with key 'devyce' in nuget.config"
+    }
 
-$feedIndexUrl = $devyceSource.GetAttribute('value')
-if (-not $feedIndexUrl) {
-    throw "Package source 'devyce' does not have a 'value' attribute in nuget.config"
+    $feedIndexUrl = $devyceSource.GetAttribute('value')
+    if (-not $feedIndexUrl) {
+        throw "Package source 'devyce' does not have a 'value' attribute in nuget.config"
+    }
+}
+else {
+    Write-Host "nuget.config not found. Falling back to NuGet.org feed."
+    $feedIndexUrl = "https://api.nuget.org/v3/index.json"
 }
 
 $baseUrl = $feedIndexUrl
