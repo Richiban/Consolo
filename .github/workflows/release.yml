@@ -97,7 +97,9 @@ jobs:
           if ($changeValidation) {
             $changeValidation = $changeValidation.Trim()
           }
-          $packageVersionArg = "/p:PackageVersion=$version$changeValidation"
+          # Disabled change validation as it's not yet clear what this means for a source generator
+          # $packageVersionArg = "/p:PackageVersion=$version$changeValidation"
+          $packageVersionArg = "/p:PackageVersion=$version"
 
           dotnet pack .\Consolo\Consolo.csproj -c Release -o .\artifacts $packageVersionArg
 
