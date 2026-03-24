@@ -40,7 +40,7 @@ static class CommandTreeBuilder
 
             foreach (var (pathEntry, i) in currentPath.Indexed())
             {
-                if (i == 0 && pathEntry.Name == "")
+                if (i == 0 && GetCommandName(pathEntry) == "")
                 {
                     if (root.Description.IsNone)
                     {
@@ -55,7 +55,7 @@ static class CommandTreeBuilder
                     continue;
                 }
 
-                if (pathEntry.Name == "")
+                if (GetCommandName(pathEntry) == "")
                 {
                     if (currentLevel.Method.HasValue)
                     {
@@ -81,12 +81,12 @@ static class CommandTreeBuilder
                 }
 
                 switch (currentLevel.SubCommands.FirstOrDefault(
-                            it => it.CommandName == pathEntry.Name))
+                            it => it.CommandName == GetCommandName(pathEntry)))
                 {
                     case null when i == currentPath.Count - 1:
                     {
                         var newLevel =
-                            new CommandTree.SubCommand(StringUtils.ToKebabCase(pathEntry.Name))
+                            new CommandTree.SubCommand(GetCommandName(pathEntry))
                             {
                                 Method = MapMethod(methodModel, diagnostics),
                                 Description = pathEntry.XmlComment,
@@ -101,7 +101,7 @@ static class CommandTreeBuilder
                     case null:
                     {
                         var newLevel =
-                            new CommandTree.SubCommand(StringUtils.ToKebabCase(pathEntry.Name))
+                            new CommandTree.SubCommand(GetCommandName(pathEntry))
                             {
                                 Description = pathEntry.XmlComment,
                             };
@@ -148,7 +148,8 @@ static class CommandTreeBuilder
             var pathItems = methodModel.ParentCommandPath.ToList();
 
             var newItem = new CommandPathItem(
-                Name: methodModel.ProvidedName | methodModel.MethodName,
+                SymbolName: methodModel.MethodName,
+                AttributeName: methodModel.ProvidedName,
                 XmlComment: methodModel.Description);
 
             pathItems.Add(newItem);
@@ -156,6 +157,11 @@ static class CommandTreeBuilder
             return pathItems;
         }
     }
+
+    private static string GetCommandName(CommandPathItem pathEntry) =>
+        pathEntry.AttributeName.IsSome(out var explicitName)
+            ? explicitName
+            : StringUtils.ToKebabCase(pathEntry.SymbolName);
 
     private static CommandMethod
         MapMethod(MethodModel methodModel, List<DiagnosticModel> diagnostics) =>
