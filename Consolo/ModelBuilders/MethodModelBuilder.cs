@@ -46,7 +46,7 @@ internal static class MethodModelBuilder
         return new ResultWithDiagnostics<Option<MethodModel>>(
             new MethodModel(
                 MethodName: methodSymbol.Name,
-                ProvidedName: lastPathItem.Name,
+                ProvidedName: lastPathItem.AttributeName,
                 FullyQualifiedClassName: fullyQualifiedName,
                 ParentCommandPath: parentNames,
                 Parameters: parameterResults.Result,
@@ -65,11 +65,10 @@ internal static class MethodModelBuilder
         {
             if (AttributeUsageUtils.GetUsage(symbol).IsSome(out var attr))
             {
-                var commandName = attr.Name | symbol.Name;
                 var xmlComment = XmlCommentModelBuilder.GetXmlComments(symbol)
                     .Result.FlatMap(r => r.Summary);
 
-                path.Add(new(commandName, xmlComment));
+                path.Add(new(SymbolName: symbol.Name, AttributeName: attr.Name, XmlComment: xmlComment));
             }
 
             symbol = symbol.ContainingType;

@@ -108,7 +108,7 @@ class TransformerTests
             new MethodModel(
                 MethodName: "SomeFunction",
                 ProvidedName: "shortcut",
-                ParentCommandPath: [new("SomeParent", null)],
+                ParentCommandPath: [new(SymbolName: "SomeParent", AttributeName: null, XmlComment: null)],
                 FullyQualifiedClassName: "SomeNamespace.SomeClass",
                 Parameters: [],
                 Description: null,
@@ -141,7 +141,7 @@ class TransformerTests
             new MethodModel(
                 MethodName: "ListRemotes",
                 ProvidedName: "",
-                ParentCommandPath: [new("remote", null)],
+                ParentCommandPath: [new(SymbolName: "RemoteActions", AttributeName: "remote", XmlComment: null)],
                 FullyQualifiedClassName: "GitNamespace.RemoteActions",
                 Parameters: [],
                 Description: null,
@@ -150,7 +150,7 @@ class TransformerTests
             new MethodModel(
                 MethodName: "CreateRemote",
                 ProvidedName: "add",
-                ParentCommandPath: [new("remote", null)],
+                ParentCommandPath: [new(SymbolName: "RemoteActions", AttributeName: "remote", XmlComment: null)],
                 FullyQualifiedClassName: "GitNamespace.RemoteActions",
                 Parameters:
                 [
@@ -213,7 +213,7 @@ class TransformerTests
             new MethodModel(
                 MethodName: "Table",
                 ProvidedName: "table",
-                ParentCommandPath: [new("Fancy", null)],
+                ParentCommandPath: [new(SymbolName: "Fancy", AttributeName: null, XmlComment: null)],
                 FullyQualifiedClassName: "ConsoloTest.Fancy",
                 Parameters: [],
                 Description: null,
@@ -222,7 +222,7 @@ class TransformerTests
             new MethodModel(
                 MethodName: "Choice",
                 ProvidedName: null,
-                ParentCommandPath: [new("Fancy", null)],
+                ParentCommandPath: [new(SymbolName: "Fancy", AttributeName: null, XmlComment: null)],
                 FullyQualifiedClassName: "ConsoloTest.Fancy",
                 Parameters: [],
                 Description: null,
@@ -231,7 +231,7 @@ class TransformerTests
             new MethodModel(
                 MethodName: "Throw",
                 ProvidedName: null,
-                ParentCommandPath: [new("Fancy", null)],
+                ParentCommandPath: [new(SymbolName: "Fancy", AttributeName: null, XmlComment: null)],
                 FullyQualifiedClassName: "ConsoloTest.Fancy",
                 Parameters: [],
                 Description: null,
@@ -263,7 +263,7 @@ class TransformerTests
             new MethodModel(
                 MethodName: "TestMethod1",
                 ProvidedName: null,
-                ParentCommandPath: [new("OuterTest", null), new("InnerTest1", null)],
+                ParentCommandPath: [new(SymbolName: "OuterTest", AttributeName: null, XmlComment: null), new(SymbolName: "InnerTest1", AttributeName: null, XmlComment: null)],
                 FullyQualifiedClassName: "TestSamples.OuterTest.InnerTest1",
                 Parameters: [],
                 Description: null,
@@ -272,7 +272,7 @@ class TransformerTests
             new MethodModel(
                 MethodName: "TestMethod2",
                 ProvidedName: null,
-                ParentCommandPath: [new("OuterTest", null), new("InnerTest1", null)],
+                ParentCommandPath: [new(SymbolName: "OuterTest", AttributeName: null, XmlComment: null), new(SymbolName: "InnerTest1", AttributeName: null, XmlComment: null)],
                 FullyQualifiedClassName: "TestSamples.OuterTest.InnerTest1",
                 Parameters: [],
                 Description: null,
@@ -281,7 +281,7 @@ class TransformerTests
             new MethodModel(
                 MethodName: "TestMethod3",
                 ProvidedName: null,
-                ParentCommandPath: [new("OuterTest", null), new("InnerTest2", null)],
+                ParentCommandPath: [new(SymbolName: "OuterTest", AttributeName: null, XmlComment: null), new(SymbolName: "InnerTest2", AttributeName: null, XmlComment: null)],
                 FullyQualifiedClassName: "TestSamples.OuterTest.InnerTest2",
                 Parameters: [],
                 Description: null,

@@ -1,3 +1,3 @@
 namespace Consolo;
 
-record CommandPathItem(string Name, Option<string> XmlComment);
+record CommandPathItem(string SymbolName, Option<string> AttributeName, Option<string> XmlComment);
