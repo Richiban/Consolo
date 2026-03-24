@@ -81,7 +81,7 @@ static class CommandTreeBuilder
                 }
 
                 switch (currentLevel.SubCommands.FirstOrDefault(
-                            it => it.CommandName == pathEntry.Name))
+                            it => it.CommandName == StringUtils.ToKebabCase(pathEntry.Name)))
                 {
                     case null when i == currentPath.Count - 1:
                     {

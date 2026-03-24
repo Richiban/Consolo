@@ -203,6 +203,115 @@ class TransformerTests
     }
 
     [Test]
+    public void InferredParentNameGroupsMultipleSubcommands()
+    {
+        // Verify that when a parent command path uses a PascalCase inferred name (e.g. "Fancy"),
+        // all child commands are grouped under the same "fancy" parent rather than each getting
+        // their own duplicate parent node.
+        var models = new[]
+        {
+            new MethodModel(
+                MethodName: "Table",
+                ProvidedName: "table",
+                ParentCommandPath: [new("Fancy", null)],
+                FullyQualifiedClassName: "ConsoloTest.Fancy",
+                Parameters: [],
+                Description: null,
+                Location: null,
+                ReturnType: VoidMock.Object),
+            new MethodModel(
+                MethodName: "Choice",
+                ProvidedName: null,
+                ParentCommandPath: [new("Fancy", null)],
+                FullyQualifiedClassName: "ConsoloTest.Fancy",
+                Parameters: [],
+                Description: null,
+                Location: null,
+                ReturnType: VoidMock.Object),
+            new MethodModel(
+                MethodName: "Throw",
+                ProvidedName: null,
+                ParentCommandPath: [new("Fancy", null)],
+                FullyQualifiedClassName: "ConsoloTest.Fancy",
+                Parameters: [],
+                Description: null,
+                Location: null,
+                ReturnType: VoidMock.Object),
+        };
+
+        var (root, diagnostics) = CommandTreeBuilder.Transform(models);
+
+        diagnostics.ShouldBeEmpty();
+
+        // There should be exactly ONE "fancy" group at root level
+        var fancyGroup = root.SubCommands.ShouldHaveSingleItem();
+        fancyGroup.CommandName.ShouldBe("fancy");
+
+        // All three subcommands should be under the single "fancy" group
+        fancyGroup.SubCommands.Count.ShouldBe(3);
+        fancyGroup.SubCommands.Select(s => s.CommandName)
+            .ShouldBe(["table", "choice", "throw"], ignoreOrder: true);
+    }
+
+    [Test]
+    public void InferredNamesAtMultipleLevelsGroupCorrectly()
+    {
+        // Verify multi-level nesting with inferred PascalCase names groups correctly.
+        // This is similar to the NestedAttributeUsage snapshot test case.
+        var models = new[]
+        {
+            new MethodModel(
+                MethodName: "TestMethod1",
+                ProvidedName: null,
+                ParentCommandPath: [new("OuterTest", null), new("InnerTest1", null)],
+                FullyQualifiedClassName: "TestSamples.OuterTest.InnerTest1",
+                Parameters: [],
+                Description: null,
+                Location: null,
+                ReturnType: VoidMock.Object),
+            new MethodModel(
+                MethodName: "TestMethod2",
+                ProvidedName: null,
+                ParentCommandPath: [new("OuterTest", null), new("InnerTest1", null)],
+                FullyQualifiedClassName: "TestSamples.OuterTest.InnerTest1",
+                Parameters: [],
+                Description: null,
+                Location: null,
+                ReturnType: VoidMock.Object),
+            new MethodModel(
+                MethodName: "TestMethod3",
+                ProvidedName: null,
+                ParentCommandPath: [new("OuterTest", null), new("InnerTest2", null)],
+                FullyQualifiedClassName: "TestSamples.OuterTest.InnerTest2",
+                Parameters: [],
+                Description: null,
+                Location: null,
+                ReturnType: VoidMock.Object),
+        };
+
+        var (root, diagnostics) = CommandTreeBuilder.Transform(models);
+
+        diagnostics.ShouldBeEmpty();
+
+        // There should be exactly ONE "outer-test" group at root level (not three)
+        var outerGroup = root.SubCommands.ShouldHaveSingleItem();
+        outerGroup.CommandName.ShouldBe("outer-test");
+
+        // "outer-test" should contain exactly two inner groups
+        outerGroup.SubCommands.Count.ShouldBe(2);
+        outerGroup.SubCommands.Select(s => s.CommandName)
+            .ShouldBe(["inner-test1", "inner-test2"], ignoreOrder: false);
+
+        var innerTest1 = outerGroup.SubCommands[0];
+        innerTest1.CommandName.ShouldBe("inner-test1");
+        innerTest1.SubCommands.Count.ShouldBe(2);
+
+        var innerTest2 = outerGroup.SubCommands[1];
+        innerTest2.CommandName.ShouldBe("inner-test2");
+        innerTest2.SubCommands.ShouldHaveSingleItem();
+    }
+
+    [Test]
     public void ParameterWithDefaultValueResultsInOptionWithSameDefault()
     {
         var models = new[]

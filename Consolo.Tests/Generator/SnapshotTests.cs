@@ -175,6 +175,44 @@ internal class SnapshotTests : GeneratorTests
     }
 
     [Test]
+    public void InferredClassNameGroupsSubcommands()
+    {
+        var source =
+            """
+            using Consolo;
+            namespace TestSamples;
+        
+            [Consolo]
+            public class Fancy
+            {
+                [Consolo("table")]
+                public static void Table()
+                {
+                }
+
+                [Consolo]
+                public static void Choice()
+                {
+                }
+
+                [Consolo]
+                public static void Throw()
+                {
+                }
+            }
+            """;
+
+        var (outputCompilation, diagnostics) = RunGenerator(source);
+
+        diagnostics.WarningsAndErrors().ShouldBeEmpty();
+
+        var programSource =
+            GetProgramSyntaxTree(outputCompilation).GetText().ToString();
+
+        programSource.ShouldMatchSnapshot();
+    }
+
+    [Test]
     public void EmptyCommandNameResultsInShortenedPath()
     {
         var source =
