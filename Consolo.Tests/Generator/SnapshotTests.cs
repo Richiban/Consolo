@@ -396,5 +396,44 @@ internal class SnapshotTests : GeneratorTests
 
         programText.ShouldMatchSnapshot();
     }
+
+    [Test]
+    public void MixedSpaceBasedAndNestingBasedDefinitionsMergeUnderSameParent()
+    {
+        var source =
+            """
+            using System;
+            using Consolo;
+
+            namespace TestSamples;
+
+            public static class Actions1
+            {
+                [Consolo("a b")]
+                public static void MyMethod()
+                {
+                    Console.WriteLine("Hello, World, from B!");
+                }
+            }
+
+            [Consolo("a")]
+            public static class Actions2
+            {
+                [Consolo("c")]
+                public static void MyMethod()
+                {
+                    Console.WriteLine("Hello, World, from C!");
+                }
+            }
+            """;
+
+        var (compilation, diagnostics) = RunGenerator(source);
+
+        diagnostics.WarningsAndErrors().ShouldBeEmpty();
+
+        var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
+
+        programText.ShouldMatchSnapshot();
+    }
 }
 

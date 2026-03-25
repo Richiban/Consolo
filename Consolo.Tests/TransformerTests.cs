@@ -382,6 +382,55 @@ class TransformerTests
     }
 
     [Test]
+    public void SpaceBasedAndNestingBasedDefinitionsMergeUnderSameParent()
+    {
+        // A space-separated method [Consolo("a b")] and a nested class [Consolo("a")]
+        // with a child [Consolo("c")] should both end up under the same "a" parent.
+        var models = new[]
+        {
+            new MethodModel(
+                MethodName: "MyMethod",
+                ProvidedName: "a b",
+                ParentCommandPath: [],
+                FullyQualifiedClassName: "SomeNamespace.Actions1",
+                Parameters: [],
+                Description: null,
+                Location: null,
+                ReturnType: VoidMock.Object),
+            new MethodModel(
+                MethodName: "MyMethod",
+                ProvidedName: "c",
+                ParentCommandPath: [new(SymbolName: "Actions2", AttributeName: "a", XmlComment: null)],
+                FullyQualifiedClassName: "SomeNamespace.Actions2",
+                Parameters: [],
+                Description: null,
+                Location: null,
+                ReturnType: VoidMock.Object),
+        };
+
+        var (root, diagnostics) = CommandTreeBuilder.Transform(models);
+
+        diagnostics.ShouldBeEmpty();
+
+        // There should be exactly one "a" node at the root level
+        var a = root.SubCommands.ShouldHaveSingleItem();
+        a.CommandName.ShouldBe("a");
+        a.Method.HasValue.ShouldBeFalse();
+
+        // "a" should have exactly two children: "b" and "c"
+        a.SubCommands.Count.ShouldBe(2);
+        a.SubCommands.Select(s => s.CommandName).ShouldBe(["b", "c"], ignoreOrder: true);
+
+        var b = a.SubCommands.First(s => s.CommandName == "b");
+        (b.Method | null!).ShouldNotBeNull()
+            .FullyQualifiedName.ShouldBe("SomeNamespace.Actions1.MyMethod");
+
+        var c = a.SubCommands.First(s => s.CommandName == "c");
+        (c.Method | null!).ShouldNotBeNull()
+            .FullyQualifiedName.ShouldBe("SomeNamespace.Actions2.MyMethod");
+    }
+
+    [Test]
     public void MultipleMethodsWithSpaceSeparatedNamesShareIntermediateNodes()
     {
         var models = new[]
