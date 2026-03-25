@@ -145,16 +145,45 @@ static class CommandTreeBuilder
 
         IReadOnlyList<CommandPathItem> GetPath(MethodModel methodModel)
         {
-            var pathItems = methodModel.ParentCommandPath.ToList();
+            var pathItems = new List<CommandPathItem>();
+
+            foreach (var item in methodModel.ParentCommandPath)
+            {
+                pathItems.AddRange(ExpandPathItem(item));
+            }
 
             var newItem = new CommandPathItem(
                 SymbolName: methodModel.MethodName,
                 AttributeName: methodModel.ProvidedName,
                 XmlComment: methodModel.Description);
 
-            pathItems.Add(newItem);
+            pathItems.AddRange(ExpandPathItem(newItem));
 
             return pathItems;
+        }
+
+        static IEnumerable<CommandPathItem> ExpandPathItem(CommandPathItem item)
+        {
+            if (item.AttributeName.IsSome(out var name))
+            {
+                var parts = name.Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
+
+                if (parts.Length > 1)
+                {
+                    for (var i = 0; i < parts.Length - 1; i++)
+                    {
+                        yield return new CommandPathItem(
+                            SymbolName: "",
+                            AttributeName: parts[i],
+                            XmlComment: None);
+                    }
+
+                    yield return item with { AttributeName = parts[parts.Length - 1] };
+                    yield break;
+                }
+            }
+
+            yield return item;
         }
     }
 

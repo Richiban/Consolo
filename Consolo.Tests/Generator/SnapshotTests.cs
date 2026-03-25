@@ -367,5 +367,34 @@ internal class SnapshotTests : GeneratorTests
 
         programText.ShouldMatchSnapshot();
     }
+
+    [Test]
+    public void SpaceSeparatedCommandNameCreatesNestedStructure()
+    {
+        var source =
+            """
+            using System;
+            using Consolo;
+
+            namespace TestSamples;
+
+            public static class Actions
+            {
+                [Consolo("a b act")]
+                public static void Action()
+                {
+                    Console.WriteLine("Action executed");
+                }
+            }
+            """;
+
+        var (compilation, diagnostics) = RunGenerator(source);
+
+        diagnostics.WarningsAndErrors().ShouldBeEmpty();
+
+        var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
+
+        programText.ShouldMatchSnapshot();
+    }
 }
 
