@@ -312,6 +312,164 @@ class TransformerTests
     }
 
     [Test]
+    public void SpaceSeparatedCommandNameOnMethodCreatesNestedPath()
+    {
+        var models = new[]
+        {
+            new MethodModel(
+                MethodName: "Action",
+                ProvidedName: "a b act",
+                ParentCommandPath: [],
+                FullyQualifiedClassName: "SomeNamespace.SomeClass",
+                Parameters: [],
+                Description: null,
+                Location: null,
+                ReturnType: VoidMock.Object)
+        };
+
+        var (root, diagnostics) = CommandTreeBuilder.Transform(models);
+
+        diagnostics.ShouldBeEmpty();
+
+        var a = root.SubCommands.ShouldHaveSingleItem();
+        a.CommandName.ShouldBe("a");
+        a.Method.HasValue.ShouldBeFalse();
+
+        var b = a.SubCommands.ShouldHaveSingleItem();
+        b.CommandName.ShouldBe("b");
+        b.Method.HasValue.ShouldBeFalse();
+
+        var act = b.SubCommands.ShouldHaveSingleItem();
+        act.CommandName.ShouldBe("act");
+
+        var method = (act.Method | null!).ShouldNotBeNull();
+        method.FullyQualifiedName.ShouldBe("SomeNamespace.SomeClass.Action");
+    }
+
+    [Test]
+    public void SpaceSeparatedCommandNameOnParentClassCreatesNestedPath()
+    {
+        var models = new[]
+        {
+            new MethodModel(
+                MethodName: "Action",
+                ProvidedName: "act",
+                ParentCommandPath: [new(SymbolName: "Actions", AttributeName: "a b", XmlComment: null)],
+                FullyQualifiedClassName: "SomeNamespace.SomeClass",
+                Parameters: [],
+                Description: null,
+                Location: null,
+                ReturnType: VoidMock.Object)
+        };
+
+        var (root, diagnostics) = CommandTreeBuilder.Transform(models);
+
+        diagnostics.ShouldBeEmpty();
+
+        var a = root.SubCommands.ShouldHaveSingleItem();
+        a.CommandName.ShouldBe("a");
+        a.Method.HasValue.ShouldBeFalse();
+
+        var b = a.SubCommands.ShouldHaveSingleItem();
+        b.CommandName.ShouldBe("b");
+        b.Method.HasValue.ShouldBeFalse();
+
+        var act = b.SubCommands.ShouldHaveSingleItem();
+        act.CommandName.ShouldBe("act");
+
+        var method = (act.Method | null!).ShouldNotBeNull();
+        method.FullyQualifiedName.ShouldBe("SomeNamespace.SomeClass.Action");
+    }
+
+    [Test]
+    public void SpaceBasedAndNestingBasedDefinitionsMergeUnderSameParent()
+    {
+        // A space-separated method [Consolo("a b")] and a nested class [Consolo("a")]
+        // with a child [Consolo("c")] should both end up under the same "a" parent.
+        var models = new[]
+        {
+            new MethodModel(
+                MethodName: "MyMethod",
+                ProvidedName: "a b",
+                ParentCommandPath: [],
+                FullyQualifiedClassName: "SomeNamespace.Actions1",
+                Parameters: [],
+                Description: null,
+                Location: null,
+                ReturnType: VoidMock.Object),
+            new MethodModel(
+                MethodName: "MyMethod",
+                ProvidedName: "c",
+                ParentCommandPath: [new(SymbolName: "Actions2", AttributeName: "a", XmlComment: null)],
+                FullyQualifiedClassName: "SomeNamespace.Actions2",
+                Parameters: [],
+                Description: null,
+                Location: null,
+                ReturnType: VoidMock.Object),
+        };
+
+        var (root, diagnostics) = CommandTreeBuilder.Transform(models);
+
+        diagnostics.ShouldBeEmpty();
+
+        // There should be exactly one "a" node at the root level
+        var a = root.SubCommands.ShouldHaveSingleItem();
+        a.CommandName.ShouldBe("a");
+        a.Method.HasValue.ShouldBeFalse();
+
+        // "a" should have exactly two children: "b" and "c"
+        a.SubCommands.Count.ShouldBe(2);
+        a.SubCommands.Select(s => s.CommandName).ShouldBe(["b", "c"], ignoreOrder: true);
+
+        var b = a.SubCommands.First(s => s.CommandName == "b");
+        (b.Method | null!).ShouldNotBeNull()
+            .FullyQualifiedName.ShouldBe("SomeNamespace.Actions1.MyMethod");
+
+        var c = a.SubCommands.First(s => s.CommandName == "c");
+        (c.Method | null!).ShouldNotBeNull()
+            .FullyQualifiedName.ShouldBe("SomeNamespace.Actions2.MyMethod");
+    }
+
+    [Test]
+    public void MultipleMethodsWithSpaceSeparatedNamesShareIntermediateNodes()
+    {
+        var models = new[]
+        {
+            new MethodModel(
+                MethodName: "Action1",
+                ProvidedName: "a b act1",
+                ParentCommandPath: [],
+                FullyQualifiedClassName: "SomeNamespace.SomeClass",
+                Parameters: [],
+                Description: null,
+                Location: null,
+                ReturnType: VoidMock.Object),
+            new MethodModel(
+                MethodName: "Action2",
+                ProvidedName: "a b act2",
+                ParentCommandPath: [],
+                FullyQualifiedClassName: "SomeNamespace.SomeClass",
+                Parameters: [],
+                Description: null,
+                Location: null,
+                ReturnType: VoidMock.Object),
+        };
+
+        var (root, diagnostics) = CommandTreeBuilder.Transform(models);
+
+        diagnostics.ShouldBeEmpty();
+
+        var a = root.SubCommands.ShouldHaveSingleItem();
+        a.CommandName.ShouldBe("a");
+
+        var b = a.SubCommands.ShouldHaveSingleItem();
+        b.CommandName.ShouldBe("b");
+
+        b.SubCommands.Count.ShouldBe(2);
+        b.SubCommands.Select(s => s.CommandName).ShouldBe(["act1", "act2"], ignoreOrder: true);
+    }
+
+    [Test]
     public void ParameterWithDefaultValueResultsInOptionWithSameDefault()
     {
         var models = new[]
