@@ -276,6 +276,7 @@ static class CommandTreeBuilder
                 alias: alias,
                 type: parameterType,
                 defaultValue: param.DefaultValue | $"default({parameterType.FullyQualifiedTypeName})",
+                helpDefaultValue: param.HelpDefaultValue,
                 description: description | param.Type.Name,
                 sourceName: param.SourceName,
                 isFlag: param.IsFlag);

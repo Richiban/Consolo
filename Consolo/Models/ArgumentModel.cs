@@ -8,6 +8,7 @@ internal record ParameterModel(
     bool IsFlag,
     bool IsRequired,
     Option<string> DefaultValue,
+    Option<string> HelpDefaultValue,
     Option<string> Description,
     Option<string> Alias,
     TypeModel Type,

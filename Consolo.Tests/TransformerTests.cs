@@ -169,6 +169,7 @@ class TransformerTests
                         IsFlag: false,
                         IsRequired: true,
                         DefaultValue: null,
+                        HelpDefaultValue: null,
                         Alias: null,
                         Description: null,
                         Location: null,
@@ -487,6 +488,7 @@ class TransformerTests
                         IsFlag: false,
                         IsRequired: false,
                         DefaultValue: "1",
+                        HelpDefaultValue: "1",
                         Description: new Option<string>(),
                         Alias: new Option<string>(),
                         Type: new TypeModel(
@@ -516,6 +518,7 @@ class TransformerTests
             .ShouldBeOfType<CommandParameter.Option>()
             .ShouldSatisfyAllConditions(
                 p => p.Name.ShouldBe("arg1"),
-                p => p.DefaultValue.ShouldBe("1"));
+                p => p.DefaultValue.ShouldBe("1"),
+                p => p.HelpDefaultValue.ShouldBe("1"));
     }
 }

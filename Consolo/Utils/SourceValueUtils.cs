@@ -11,7 +11,7 @@ public static class SourceValueUtils
         value switch
         {
             null => $"default({typeSymbol.GetFullyQualifiedName()})",
-            string s => $"\"{s}\"",
+            string s => $"\"{EscapeCSharpString(s)}\"",
             bool b => b ? "true" : "false",
             char c => $"'{c}'",
             int i when typeSymbol.TypeKind == TypeKind.Enum => $"({typeSymbol.GetFullyQualifiedName()}){value}",
