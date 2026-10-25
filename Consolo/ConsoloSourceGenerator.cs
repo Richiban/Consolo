@@ -54,6 +54,11 @@ public class ConsoloSourceGenerator : ISourceGenerator
                 return;
             }
 
+            if (diagnosticsManager.HasErrors)
+            {
+                return;
+            }
+
             AddCodeFile(context, rootCommandModel);
         }
         catch (Exception ex)
