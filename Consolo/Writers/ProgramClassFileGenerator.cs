@@ -64,7 +64,9 @@ internal class ProgramClassFileGenerator(
                 WriteCommandDebug(rootCommand);
                 _codeBuilder.AppendLine();
 
-                _codeBuilder.AppendLine("args = args.SelectMany(arg => arg.StartsWith(' ') && ! arg.StartsWith(\"--\") ? arg.Skip(1).Select(c => $\"-{c}\") : new [] { arg }).ToArray();");
+                _codeBuilder.AppendLine("if (args.Any(arg => arg.StartsWith(' ') && ! arg.StartsWith(\"--\")))");
+                using (_codeBuilder.IndentBraces())
+                    _codeBuilder.AppendLine("args = args.SelectMany(arg => arg.StartsWith(' ') && ! arg.StartsWith(\"--\") ? arg.Skip(1).Select(c => $\"-{c}\") : new [] { arg }).ToArray();");
                 _codeBuilder.AppendLine();
 
                 _codeBuilder.AppendLine("var isHelp = args.Any(arg => arg == \"--help\" || arg == \"-h\" || arg == \"-?\");");
