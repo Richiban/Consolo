@@ -1,5 +1,4 @@
 using BenchmarkDotNet.Attributes;
-using Consolo.TestBench;
 
 namespace Consolo.TestBench.Runner;
 

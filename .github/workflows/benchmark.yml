@@ -1,0 +1,97 @@
+name: Generated-code benchmarks
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: generated-code-benchmarks
+  cancel-in-progress: false
+
+jobs:
+  benchmark:
+    name: Benchmark generated commands
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.425
+
+      - name: Checkout benchmark history
+        if: github.ref == 'refs/heads/main'
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: benchmark-history
+          fetch-depth: 0
+
+      - name: Prepare benchmark history
+        if: github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          if git -C benchmark-history fetch origin benchmark-results; then
+            git -C benchmark-history checkout -B benchmark-results FETCH_HEAD
+          else
+            git -C benchmark-history checkout --orphan benchmark-results
+            git -C benchmark-history rm -rf -- . || true
+          fi
+
+      - name: Test benchmark result reporting
+        run: python3 -m unittest discover -s scripts -p 'test_*.py'
+
+      - name: Run BenchmarkDotNet suite
+        run: dotnet run --configuration Release --project Consolo.TestBench.Runner -- --filter '*CommandBenchmarks*'
+
+      - name: Compare generated-code history
+        shell: bash
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          previous_args=()
+          if [[ -f benchmark-history/latest.json ]]; then
+            previous_args+=(--previous benchmark-history/latest.json)
+          fi
+
+          python3 scripts/benchmark_results.py \
+            --reports-dir BenchmarkDotNet.Artifacts/results \
+            --commit-sha "$COMMIT_SHA" \
+            --output BenchmarkDotNet.Artifacts/benchmark-results.json \
+            --summary "$GITHUB_STEP_SUMMARY" \
+            "${previous_args[@]}"
+
+      - name: Persist main benchmark history
+        if: github.ref == 'refs/heads/main'
+        shell: bash
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          mkdir -p benchmark-history/results
+          cp BenchmarkDotNet.Artifacts/benchmark-results.json \
+            "benchmark-history/results/${COMMIT_SHA}.json"
+          cp BenchmarkDotNet.Artifacts/benchmark-results.json benchmark-history/latest.json
+
+          git -C benchmark-history config user.name "github-actions[bot]"
+          git -C benchmark-history config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C benchmark-history add latest.json "results/${COMMIT_SHA}.json"
+          git -C benchmark-history commit -m "Record benchmarks for ${COMMIT_SHA}"
+          git -C benchmark-history push origin HEAD:benchmark-results
+
+      - name: Upload full BenchmarkDotNet artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-artifacts-${{ github.sha }}
+          path: BenchmarkDotNet.Artifacts/
+          if-no-files-found: error
+          retention-days: 90
