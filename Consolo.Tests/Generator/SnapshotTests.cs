@@ -72,6 +72,36 @@ internal class SnapshotTests : GeneratorTests
     }
 
     [Test]
+    public void InvalidAssemblyNameProducesValidGeneratedNamespace()
+    {
+        var source =
+            """
+            using Consolo;
+
+            namespace TestSamples;
+
+            public static class TestClass
+            {
+                [Consolo]
+                public static void TestMethod()
+                {
+                }
+            }
+            """;
+
+        var (compilation, diagnostics) =
+            RunGenerator(source, assemblyName: "Invalid Project-Name");
+
+        diagnostics.WarningsAndErrors().ShouldBeEmpty();
+        compilation.GetDiagnostics()
+            .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            .ShouldBeEmpty();
+
+        GetProgramSyntaxTree(compilation).GetText().ToString()
+            .ShouldContain("namespace Invalid_Project_Name.g");
+    }
+
+    [Test]
     public void AsyncMainMethod()
     {
         var source =
