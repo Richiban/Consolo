@@ -120,6 +120,15 @@ internal class E2ETests
         _testOutput.ToString().ShouldMatchSnapshot();
     }
 
+    [Test]
+    public void SpacePrefixedCompactOptionIsExpanded()
+    {
+        Program.Main(["greet", "name", " l"]);
+
+        _testError.ToString().ShouldBeEmpty();
+        _testOutput.ToString().ShouldBe("HELLO, NAME!" + Environment.NewLine);
+    }
+
     [TestCase("-?")]
     [TestCase("-h")]
     [TestCase("--help")]

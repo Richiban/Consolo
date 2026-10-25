@@ -24,7 +24,10 @@ namespace Consolo.TestSource.g
                 // test-method command*
                 // --version command*
 
-            args = args.SelectMany(arg => arg.StartsWith(' ') && ! arg.StartsWith("--") ? arg.Skip(1).Select(c => $"-{c}") : new [] { arg }).ToArray();
+            if (args.Any(arg => arg.StartsWith(' ') && ! arg.StartsWith("--")))
+            {
+                args = args.SelectMany(arg => arg.StartsWith(' ') && ! arg.StartsWith("--") ? arg.Skip(1).Select(c => $"-{c}") : new [] { arg }).ToArray();
+            }
 
             var isHelp = args.Any(arg => arg == "--help" || arg == "-h" || arg == "-?");
 

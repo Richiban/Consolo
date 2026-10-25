@@ -72,6 +72,34 @@ internal class SnapshotTests : GeneratorTests
     }
 
     [Test]
+    public void ArgsAreNormalizedOnlyWhenNeeded()
+    {
+        var source =
+            """
+            using Consolo;
+
+            public static class TestClass
+            {
+                [Consolo]
+                public static void TestMethod()
+                {
+                }
+            }
+            """;
+
+        var (compilation, diagnostics) = RunGenerator(source);
+
+        diagnostics.WarningsAndErrors().ShouldBeEmpty();
+
+        var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
+
+        programText.ShouldContain(
+            "if (args.Any(arg => arg.StartsWith(' ') && ! arg.StartsWith(\"--\")))");
+        programText.ShouldContain(
+            "args = args.SelectMany(arg => arg.StartsWith(' ') && ! arg.StartsWith(\"--\") ? arg.Skip(1).Select(c => $\"-{c}\") : new [] { arg }).ToArray();");
+    }
+
+    [Test]
     public void InvalidAssemblyNameProducesValidGeneratedNamespace()
     {
         var source =
