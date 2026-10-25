@@ -74,6 +74,46 @@ internal class E2ETests
         _testOutput.ToString().ShouldMatchSnapshot();
     }
 
+    [TestCase("--pretty=a:b", "a:b")]
+    [TestCase("--pretty:a=b", "a=b")]
+    [TestCase("--pretty=a=b", "a=b")]
+    [TestCase("--pretty::b", ":b")]
+    public void InlineOptionValueIsEverythingAfterTheFirstMatchingSeparator(string arg, string expectedValue)
+    {
+        var ex = Assert.Throws<ArgumentException>(() => Program.Main(["log", "1", arg]));
+
+        ex.Message.ShouldBe($"Requested value '{expectedValue}' was not found.");
+    }
+
+    [TestCase("--pretty2=oneline")]
+    [TestCase("--prett=oneline")]
+    [TestCase("--pretty2:oneline")]
+    [TestCase("--prett:oneline")]
+    [TestCase("--=oneline")]
+    [TestCase("=oneline")]
+    [TestCase(":oneline")]
+    public void InlineOptionWithNonMatchingNameIsNotClaimed(string arg)
+    {
+        Program.Main(["log", "1", arg]);
+
+        _testError.ToString().ShouldBe($"Unrecognised args: {arg}{Environment.NewLine}");
+    }
+
+    [Test]
+    public void InlineOptionWithEmptyValueIsPassedToConverter()
+    {
+        Assert.Throws<ArgumentException>(() => Program.Main(["log", "1", "--pretty="]));
+    }
+
+    [Test]
+    public void UnrelatedArgumentsContainingSeparatorsDoNotInterfereWithInlineOptions()
+    {
+        Program.Main(["log", "--pretty=oneline", "1"]);
+
+        _testError.ToString().ShouldBeEmpty();
+        _testOutput.ToString().ShouldBe($"Displaying 1 lines (pretty = OneLine){Environment.NewLine}");
+    }
+
     [Test]
     public void LogCommandWithUnknownOptionResultsInErrorMessage()
     {
