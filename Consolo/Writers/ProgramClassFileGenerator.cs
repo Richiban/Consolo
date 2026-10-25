@@ -234,6 +234,7 @@ internal class ProgramClassFileGenerator(
         return type switch
         {
             ParameterType.AsIs => expression,
+            ParameterType.Bool => $"bool.Parse({expression})",
             ParameterType.Parse p => $"{p.FullyQualifiedTypeName}.{p.ParseMethodName}({expression})",
             ParameterType.Constructor c => $"new {c.FullyQualifiedTypeName}({expression})",
             ParameterType.ExplicitCast c => $"({c.FullyQualifiedTypeName})({expression})",

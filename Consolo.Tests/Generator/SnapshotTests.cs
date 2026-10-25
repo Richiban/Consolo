@@ -401,6 +401,34 @@ internal class SnapshotTests : GeneratorTests
     }
 
     [Test]
+    public void RequiredBooleanParameterIsParsed()
+    {
+        var source =
+            """
+            using Consolo;
+
+            namespace TestSamples;
+
+            public static class TestClass
+            {
+                [Consolo]
+                public static void TestMethod(bool enabled)
+                {
+                }
+            }
+            """;
+
+        var (compilation, diagnostics) = RunGenerator(source);
+
+        diagnostics.WarningsAndErrors().ShouldBeEmpty();
+        compilation.GetDiagnostics()
+            .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            .ShouldBeEmpty();
+        GetProgramSyntaxTree(compilation).GetText().ToString()
+            .ShouldContain("bool.Parse(s)");
+    }
+
+    [Test]
     public void SpaceSeparatedCommandNameCreatesNestedStructure()
     {
         var source =
