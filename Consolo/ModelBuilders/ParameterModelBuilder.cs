@@ -18,10 +18,12 @@ static class ParameterModelBuilder
     {
         var diagnostics = new List<DiagnosticModel>();
 
-        var name = parameterSymbol.Name;
-        var alias = (Option<string>)None;
         var type = parameterSymbol.Type.GetFullyQualifiedName();
         var isFlag = type == "System.Boolean";
+        var name = isFlag
+            ? StringUtils.ToKebabCase(parameterSymbol.Name)
+            : parameterSymbol.Name;
+        var alias = (Option<string>)None;
         var isRequired = !parameterSymbol.HasExplicitDefaultValue;
         var defaultValue =
             parameterSymbol.HasExplicitDefaultValue
