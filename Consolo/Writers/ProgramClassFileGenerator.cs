@@ -142,7 +142,9 @@ internal class ProgramClassFileGenerator(
         using (_codeBuilder.IndentBraces())
         {
             _codeBuilder.AppendLine(
-                $"var unclaimedArgs = new SortedSet<int>(Enumerable.Range({path.Length}, args.Length - {path.Length}));");
+                $"var unclaimedArgs = new bool[args.Length];");
+            _codeBuilder.AppendLine(
+                $"for (var i = {path.Length}; i < args.Length; i++) unclaimedArgs[i] = true;");
 
             _codeBuilder.AppendLine("var processingError = false;");
 
@@ -150,11 +152,11 @@ internal class ProgramClassFileGenerator(
 
             WriteParameterAssignments(method);
 
-            _codeBuilder.AppendLines($"if (unclaimedArgs.Any())");
+            _codeBuilder.AppendLines($"if (unclaimedArgs.Contains(true))");
 
             using (_codeBuilder.IndentBraces())
             {
-                WriteError("Unrecognised args: \" + string.Join(\", \", unclaimedArgs.Select(i => args[i])) + \"");
+                WriteError("Unrecognised args: \" + string.Join(\", \", args.Where((_, i) => unclaimedArgs[i])) + \"");
                 _codeBuilder.AppendLine("processingError = true;");
             }
 
@@ -326,15 +328,16 @@ internal class ProgramClassFileGenerator(
         _codeBuilder.AppendLine(
             """
                     #pragma warning disable CS8321
-                    static bool MatchNextPositional<T>(string[] args, ref T value, Func<string, T> mapper, ISet<int> unclaimedArgs)
+                    static bool MatchNextPositional<T>(string[] args, ref T value, Func<string, T> mapper, bool[] unclaimedArgs)
                     {
-                        foreach (var index in unclaimedArgs)
+                        for (var index = 0; index < unclaimedArgs.Length; index++)
                         {
+                            if (!unclaimedArgs[index]) continue;
                             var arg = args[index];
                             if (!arg.StartsWith("-"))
                             {
                                 value = mapper(arg);
-                                unclaimedArgs.Remove(index);
+                                unclaimedArgs[index] = false;
                                 return true;
                             }
                         }
@@ -342,10 +345,11 @@ internal class ProgramClassFileGenerator(
                         return false;
                     }
 
-                    static bool MatchNextFlag(string[] args, string[] optionNames, ref bool value, ISet<int> unclaimedArgs)
+                    static bool MatchNextFlag(string[] args, string[] optionNames, ref bool value, bool[] unclaimedArgs)
                     {
-                        foreach (var index in unclaimedArgs)
+                        for (var index = 0; index < unclaimedArgs.Length; index++)
                         {
+                            if (!unclaimedArgs[index]) continue;
                             var arg = args[index];
                         
                             if (arg.EndsWith(":true", StringComparison.InvariantCultureIgnoreCase) || arg.EndsWith("=true", StringComparison.InvariantCultureIgnoreCase))
@@ -355,7 +359,7 @@ internal class ProgramClassFileGenerator(
                                 if (optionNames.Contains(optionName))
                                 {
                                     value = true;
-                                    unclaimedArgs.Remove(index);
+                                    unclaimedArgs[index] = false;
                                     return true;
                                 }
                             }
@@ -367,7 +371,7 @@ internal class ProgramClassFileGenerator(
                                 if (optionNames.Contains(optionName))
                                 {
                                     value = false;
-                                    unclaimedArgs.Remove(index);
+                                    unclaimedArgs[index] = false;
                                     return true;
                                 }
                             }
@@ -375,7 +379,7 @@ internal class ProgramClassFileGenerator(
                             if (optionNames.Contains(arg))
                             {
                                 value = true;
-                                unclaimedArgs.Remove(index);
+                                unclaimedArgs[index] = false;
                                 return true;
                             }
                         }
@@ -386,19 +390,20 @@ internal class ProgramClassFileGenerator(
                     // Returns 0 if the option is not found
                     // Returns 1 if the option is found and the value is found
                     // Returns 2 if the option is found but the value is missing
-                    static int MatchNextOption<T>(string[] args, string[] optionNames, ref T value, Func<string, T> mapper, ISet<int> unclaimedArgs)
+                    static int MatchNextOption<T>(string[] args, string[] optionNames, ref T value, Func<string, T> mapper, bool[] unclaimedArgs)
                     {
-                        foreach (var i in unclaimedArgs)
+                        for (var i = 0; i < unclaimedArgs.Length; i++)
                         {
+                            if (!unclaimedArgs[i]) continue;
                             var arg = args[i];
 
                             if (optionNames.Contains(arg))
                             {
-                                if (i + 1 < args.Length && unclaimedArgs.Contains(i + 1) && !args[i + 1].StartsWith("-"))
+                                if (i + 1 < args.Length && unclaimedArgs[i + 1] && !args[i + 1].StartsWith("-"))
                                 {
                                     value = mapper(args[i + 1]);
-                                    unclaimedArgs.Remove(i);
-                                    unclaimedArgs.Remove(i + 1);
+                                    unclaimedArgs[i] = false;
+                                    unclaimedArgs[i + 1] = false;
                                     return 1;
                                 }
                                 
@@ -412,7 +417,7 @@ internal class ProgramClassFileGenerator(
                                 if (optionNames.Contains(parts[0]))
                                 {
                                     value = mapper(parts[1]);
-                                    unclaimedArgs.Remove(i);
+                                    unclaimedArgs[i] = false;
                                     return 1;
                                 }
                             }
@@ -424,7 +429,7 @@ internal class ProgramClassFileGenerator(
                                 if (optionNames.Contains(parts[0]))
                                 {
                                     value = mapper(parts[1]);
-                                    unclaimedArgs.Remove(i);
+                                    unclaimedArgs[i] = false;
                                     return 1;
                                 }
                             }
