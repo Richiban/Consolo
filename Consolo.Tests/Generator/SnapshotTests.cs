@@ -369,6 +369,38 @@ internal class SnapshotTests : GeneratorTests
     }
 
     [Test]
+    public void BooleanParameterNamesAreKebabCased()
+    {
+        var source =
+            """
+            using Consolo;
+
+            namespace TestSamples;
+
+            public static class TestClass
+            {
+                [Consolo]
+                public static void TestMethod(
+                    bool someOption = false,
+                    [Consolo("other-name")] bool anotherOption = false)
+                {
+                }
+            }
+            """;
+
+        var (compilation, diagnostics) = RunGenerator(source);
+
+        diagnostics.WarningsAndErrors().ShouldBeEmpty();
+
+        var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
+
+        programText.ShouldContain("--some-option");
+        programText.ShouldContain("--other-name");
+        programText.ShouldNotContain("--someOption");
+        programText.ShouldNotContain("--another-option");
+    }
+
+    [Test]
     public void SpaceSeparatedCommandNameCreatesNestedStructure()
     {
         var source =
@@ -436,4 +468,3 @@ internal class SnapshotTests : GeneratorTests
         programText.ShouldMatchSnapshot();
     }
 }
-
