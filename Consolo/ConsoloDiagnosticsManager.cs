@@ -9,8 +9,15 @@ internal class ConsoloDiagnosticsManager(GeneratorExecutionContext context)
 {
     private readonly GeneratorExecutionContext _context = context;
 
+    public bool HasErrors { get; private set; }
+
     public void ReportDiagnostic(DiagnosticModel diagnostic)
     {
+        if (diagnostic.Severity == DiagnosticSeverity.Error)
+        {
+            HasErrors = true;
+        }
+
         _context.ReportDiagnostic(
             Diagnostic.Create(
                 new DiagnosticDescriptor(
