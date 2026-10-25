@@ -31,6 +31,7 @@ abstract class CommandParameter
             Option<string> name,
             ParameterType type,
             string defaultValue,
+            Option<string> helpDefaultValue,
             Option<string> alias,
             string description,
             string sourceName,
@@ -41,6 +42,7 @@ abstract class CommandParameter
         public override Option<string> Description { get; } = description;
         public override string SourceName { get; } = sourceName;
         public override string DefaultValue { get; } = defaultValue;
+        public Option<string> HelpDefaultValue { get; } = helpDefaultValue;
         public Option<string> Alias { get; } = alias;
         public bool IsFlag { get; } = isFlag;
     }

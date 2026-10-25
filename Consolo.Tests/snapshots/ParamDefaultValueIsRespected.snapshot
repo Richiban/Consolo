@@ -74,7 +74,7 @@ namespace Consolo.TestSource.g
                     Console.WriteLine("Options:");
                     Console.Write("    --arg a|b       ");
                     Console.ForegroundColor = helpTextColor;
-                    Console.WriteLine("TestEnum");
+                    Console.WriteLine("TestEnum (default: b)");
                     Console.WriteLine("                    - a");
                     Console.WriteLine("                    - b");
                     Console.ForegroundColor = consoleColor;

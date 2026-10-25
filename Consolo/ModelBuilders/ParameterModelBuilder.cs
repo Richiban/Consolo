@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -29,6 +31,10 @@ static class ParameterModelBuilder
             parameterSymbol.HasExplicitDefaultValue
             ? SourceValueUtils.SourceValue(parameterSymbol.ExplicitDefaultValue, parameterSymbol.Type)
             : null;
+        var helpDefaultValue =
+            parameterSymbol.HasExplicitDefaultValue
+                ? GetHelpDefaultValue(parameterSymbol)
+                : null;
         var xmlComment = methodXmlComments.FlatMap(x => x[parameterSymbol.Name]);
         var syntax = parameterSymbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax();
         var nameLocation = (Option<Location>)None;
@@ -86,6 +92,7 @@ static class ParameterModelBuilder
                         IsFlag: isFlag,
                         IsRequired: isRequired,
                         DefaultValue: defaultValue,
+                        HelpDefaultValue: helpDefaultValue,
                         Description: xmlComment,
                         Alias: alias,
                         Type: parameterType,
@@ -96,5 +103,31 @@ static class ParameterModelBuilder
                     diagnostics
                 )
             );
+    }
+
+    private static string GetHelpDefaultValue(IParameterSymbol parameterSymbol)
+    {
+        var value = parameterSymbol.ExplicitDefaultValue;
+
+        if (value is null)
+        {
+            return "null";
+        }
+
+        if (parameterSymbol.Type.TypeKind == TypeKind.Enum)
+        {
+            var enumMember = parameterSymbol.Type
+                .GetMembers()
+                .OfType<IFieldSymbol>()
+                .FirstOrDefault(member =>
+                    member.HasConstantValue && Equals(member.ConstantValue, value));
+
+            if (enumMember is not null)
+            {
+                return StringUtils.ToCamelCase(enumMember.Name);
+            }
+        }
+
+        return Convert.ToString(value, CultureInfo.InvariantCulture) ?? "";
     }
 }

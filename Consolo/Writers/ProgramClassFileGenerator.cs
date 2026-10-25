@@ -286,6 +286,11 @@ internal class ProgramClassFileGenerator(
         };
     }
 
+    private string GetOptionDescription(CommandParameter.Option parameter) =>
+        parameter.HelpDefaultValue.IsSome(out var defaultValue)
+            ? $"{parameter.Description | ""} (default: {defaultValue})"
+            : parameter.Description | "";
+
     private string[] GetNamesForOption(CommandParameter.Option option) =>
         (option.Name, option.Alias) switch
         {
@@ -518,7 +523,10 @@ internal class ProgramClassFileGenerator(
                 );
 
                 var helpNames = method.Options
-                    .Select(p => (GetSoloHelpFirstColumn(p), p.Description, p.GetAllowedValues()))
+                    .Select(p => (
+                        GetSoloHelpFirstColumn(p),
+                        GetOptionDescription(p),
+                        p.GetAllowedValues()))
                     .Append(("-?, -h, --help", "Show help and usage information", None));
 
                 var longestParameter = helpNames.MaxOrDefault(x => x.Item1.Length);
@@ -529,7 +537,7 @@ internal class ProgramClassFileGenerator(
                     _codeBuilder.AppendLines(
                         $"Console.Write(\"    {helpName.PadRight(longestParameter)}  \");",
                         "Console.ForegroundColor = helpTextColor;",
-                        $"Console.WriteLine(\"{description}\");"
+                        $"Console.WriteLine(\"{SourceValueUtils.EscapeCSharpString(description)}\");"
                     );
 
                     foreach (var allowedValue in allowedValues)

@@ -399,6 +399,40 @@ internal class SnapshotTests : GeneratorTests
     }
 
     [Test]
+    public void OptionDefaultValuesAreShownInHelp()
+    {
+        var source = """
+                     using Consolo;
+
+                     namespace Consolo.Samples;
+
+                     public class SampleProgram
+                     {
+                         [Consolo]
+                         public static void DefaultValueTest(
+                             string text = "a \"quote\"",
+                             int count = 42,
+                             bool enabled = false)
+                         {
+                         }
+                     }
+                     """;
+
+        var (compilation, diagnostics) = RunGenerator(source);
+
+        diagnostics.WarningsAndErrors().ShouldBeEmpty();
+        compilation.GetDiagnostics()
+            .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            .ShouldBeEmpty();
+
+        var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
+
+        programText.ShouldContain("""Console.WriteLine("String (default: a \"quote\")");""");
+        programText.ShouldContain("""Console.WriteLine("Int32 (default: 42)");""");
+        programText.ShouldContain("""Console.WriteLine("Boolean (default: false)");""");
+    }
+
+    [Test]
     public void BooleanParameterNamesAreKebabCased()
     {
         var source =
