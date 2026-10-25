@@ -142,7 +142,7 @@ internal class ProgramClassFileGenerator(
         using (_codeBuilder.IndentBraces())
         {
             _codeBuilder.AppendLine(
-                $"var unclaimedArgs = new SortedSet<int>(Enumerable.Range({path.Length}, args.Length - {path.Length}));");
+                $"var unclaimedArgs = new UnclaimedArgs(args.Length, {path.Length});");
 
             _codeBuilder.AppendLine("var processingError = false;");
 
@@ -150,11 +150,11 @@ internal class ProgramClassFileGenerator(
 
             WriteParameterAssignments(method);
 
-            _codeBuilder.AppendLines($"if (unclaimedArgs.Any())");
+            _codeBuilder.AppendLines($"if (unclaimedArgs.Any)");
 
             using (_codeBuilder.IndentBraces())
             {
-                WriteError("Unrecognised args: \" + string.Join(\", \", unclaimedArgs.Select(i => args[i])) + \"");
+                WriteError("Unrecognised args: \" + unclaimedArgs.Describe(args) + \"");
                 _codeBuilder.AppendLine("processingError = true;");
             }
 
@@ -200,13 +200,13 @@ internal class ProgramClassFileGenerator(
                         var toSeek = GetNamesForOption(flag);
 
                         _codeBuilder.AppendLine(
-                            $"MatchNextFlag(args, new [] {{ {GetNamesForOption(flag).Select(v => $"\"{v}\"").StringJoin(", ")} }}, ref {flag.SourceName}, unclaimedArgs);");
+                            $"MatchNextFlag(args, new [] {{ {GetNamesForOption(flag).Select(v => $"\"{v}\"").StringJoin(", ")} }}, ref {flag.SourceName}, ref unclaimedArgs);");
                         break;
                     }
                 case CommandParameter.Option option:
                     {
                         _codeBuilder.AppendLine(
-                            $"if (MatchNextOption(args, new [] {{ {GetNamesForOption(option).Select(v => $"\"{v}\"").StringJoin(", ")} }}, ref {option.SourceName}, s => {ConvertParameter(option.Type, "s")}, unclaimedArgs) == 2)");
+                            $"if (MatchNextOption(args, new [] {{ {GetNamesForOption(option).Select(v => $"\"{v}\"").StringJoin(", ")} }}, ref {option.SourceName}, s => {ConvertParameter(option.Type, "s")}, ref unclaimedArgs) == 2)");
                         using (_codeBuilder.IndentBraces())
                         {
                             WriteError($"Missing value for option '--{option.Name}'");
@@ -217,7 +217,7 @@ internal class ProgramClassFileGenerator(
                 case var positional:
                     {
                         _codeBuilder.AppendLine(
-                    $"if (!MatchNextPositional(args, ref {positional.SourceName}, s => {ConvertParameter(positional.Type, "s")}, unclaimedArgs))");
+                    $"if (!MatchNextPositional(args, ref {positional.SourceName}, s => {ConvertParameter(positional.Type, "s")}, ref unclaimedArgs))");
                         using (_codeBuilder.IndentBraces())
                         {
                             WriteError($"Missing value for argument '{positional.SourceName}'");
@@ -326,15 +326,85 @@ internal class ProgramClassFileGenerator(
         _codeBuilder.AppendLine(
             """
                     #pragma warning disable CS8321
-                    static bool MatchNextPositional<T>(string[] args, ref T value, Func<string, T> mapper, ISet<int> unclaimedArgs)
+                    // Tracks unclaimed argument indexes. Up to 64 arguments are held in a ulong bit mask
+                    // (a set bit means unclaimed); longer invocations fall back to a bool[].
+                    private struct UnclaimedArgs
                     {
-                        foreach (var index in unclaimedArgs)
+                        private ulong _mask;
+                        private readonly bool[] _flags;
+
+                        public UnclaimedArgs(int length, int start)
                         {
+                            Length = length;
+                            _mask = 0;
+                            _flags = Array.Empty<bool>();
+
+                            if (length <= 64)
+                            {
+                                if (start < length)
+                                {
+                                    var count = length - start;
+                                    var bits = count == 64 ? ulong.MaxValue : (1UL << count) - 1;
+                                    _mask = bits << start;
+                                }
+                            }
+                            else
+                            {
+                                _flags = new bool[length];
+
+                                for (var i = start; i < length; i++)
+                                {
+                                    _flags[i] = true;
+                                }
+                            }
+                        }
+
+                        public int Length { get; }
+
+                        public bool this[int index] =>
+                            index >= 0 && index < Length
+                            && (Length <= 64 ? (_mask & (1UL << index)) != 0 : _flags[index]);
+
+                        public bool Any => Length <= 64 ? _mask != 0 : Array.IndexOf(_flags, true) >= 0;
+
+                        public void Clear(int index)
+                        {
+                            if (Length <= 64)
+                            {
+                                _mask &= ~(1UL << index);
+                            }
+                            else
+                            {
+                                _flags[index] = false;
+                            }
+                        }
+
+                        public string Describe(string[] args)
+                        {
+                            var unclaimed = new List<string>();
+
+                            for (var i = 0; i < Length; i++)
+                            {
+                                if (this[i])
+                                {
+                                    unclaimed.Add(args[i]);
+                                }
+                            }
+
+                            return string.Join(", ", unclaimed);
+                        }
+                    }
+
+                    static bool MatchNextPositional<T>(string[] args, ref T value, Func<string, T> mapper, ref UnclaimedArgs unclaimedArgs)
+                    {
+                        for (var index = 0; index < unclaimedArgs.Length; index++)
+                        {
+                            if (!unclaimedArgs[index]) continue;
                             var arg = args[index];
                             if (!arg.StartsWith("-"))
                             {
                                 value = mapper(arg);
-                                unclaimedArgs.Remove(index);
+                                unclaimedArgs.Clear(index);
                                 return true;
                             }
                         }
@@ -342,10 +412,11 @@ internal class ProgramClassFileGenerator(
                         return false;
                     }
 
-                    static bool MatchNextFlag(string[] args, string[] optionNames, ref bool value, ISet<int> unclaimedArgs)
+                    static bool MatchNextFlag(string[] args, string[] optionNames, ref bool value, ref UnclaimedArgs unclaimedArgs)
                     {
-                        foreach (var index in unclaimedArgs)
+                        for (var index = 0; index < unclaimedArgs.Length; index++)
                         {
+                            if (!unclaimedArgs[index]) continue;
                             var arg = args[index];
                         
                             if (arg.EndsWith(":true", StringComparison.InvariantCultureIgnoreCase) || arg.EndsWith("=true", StringComparison.InvariantCultureIgnoreCase))
@@ -355,7 +426,7 @@ internal class ProgramClassFileGenerator(
                                 if (optionNames.Contains(optionName))
                                 {
                                     value = true;
-                                    unclaimedArgs.Remove(index);
+                                    unclaimedArgs.Clear(index);
                                     return true;
                                 }
                             }
@@ -367,7 +438,7 @@ internal class ProgramClassFileGenerator(
                                 if (optionNames.Contains(optionName))
                                 {
                                     value = false;
-                                    unclaimedArgs.Remove(index);
+                                    unclaimedArgs.Clear(index);
                                     return true;
                                 }
                             }
@@ -375,7 +446,7 @@ internal class ProgramClassFileGenerator(
                             if (optionNames.Contains(arg))
                             {
                                 value = true;
-                                unclaimedArgs.Remove(index);
+                                unclaimedArgs.Clear(index);
                                 return true;
                             }
                         }
@@ -386,19 +457,20 @@ internal class ProgramClassFileGenerator(
                     // Returns 0 if the option is not found
                     // Returns 1 if the option is found and the value is found
                     // Returns 2 if the option is found but the value is missing
-                    static int MatchNextOption<T>(string[] args, string[] optionNames, ref T value, Func<string, T> mapper, ISet<int> unclaimedArgs)
+                    static int MatchNextOption<T>(string[] args, string[] optionNames, ref T value, Func<string, T> mapper, ref UnclaimedArgs unclaimedArgs)
                     {
-                        foreach (var i in unclaimedArgs)
+                        for (var i = 0; i < unclaimedArgs.Length; i++)
                         {
+                            if (!unclaimedArgs[i]) continue;
                             var arg = args[i];
 
                             if (optionNames.Contains(arg))
                             {
-                                if (i + 1 < args.Length && unclaimedArgs.Contains(i + 1) && !args[i + 1].StartsWith("-"))
+                                if (i + 1 < args.Length && unclaimedArgs[i + 1] && !args[i + 1].StartsWith("-"))
                                 {
                                     value = mapper(args[i + 1]);
-                                    unclaimedArgs.Remove(i);
-                                    unclaimedArgs.Remove(i + 1);
+                                    unclaimedArgs.Clear(i);
+                                    unclaimedArgs.Clear(i + 1);
                                     return 1;
                                 }
                                 
@@ -412,7 +484,7 @@ internal class ProgramClassFileGenerator(
                                 if (optionNames.Contains(parts[0]))
                                 {
                                     value = mapper(parts[1]);
-                                    unclaimedArgs.Remove(i);
+                                    unclaimedArgs.Clear(i);
                                     return 1;
                                 }
                             }
@@ -424,7 +496,7 @@ internal class ProgramClassFileGenerator(
                                 if (optionNames.Contains(parts[0]))
                                 {
                                     value = mapper(parts[1]);
-                                    unclaimedArgs.Remove(i);
+                                    unclaimedArgs.Clear(i);
                                     return 1;
                                 }
                             }
