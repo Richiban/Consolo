@@ -72,6 +72,16 @@ dotnet run -- greet Alex
 
 See the sample project in [Consolo.Samples](Consolo.Samples) for a working app that uses Consolo end-to-end.
 
+# Benchmarks
+
+Run the generated command benchmarks in Release mode with:
+
+```bash
+dotnet run --configuration Release --project Consolo.TestBench.Runner -- --filter '*CommandBenchmarks*'
+```
+
+The benchmarks compare a direct command call with Consolo's generated command dispatch. BenchmarkDotNet reports execution time and, with its memory diagnoser, allocations.
+
 # A Hello World example
 
 What you write:

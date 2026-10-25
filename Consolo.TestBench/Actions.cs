@@ -1,25 +1,11 @@
-using System;
-using System.IO;
+using Consolo;
 
-namespace Consolo.Samples;
+namespace Consolo.TestBench;
 
-/// <summary>
-/// A collection of actions for checking out branches and files
-/// </summary>
-class CheckoutActions
+public static class Commands
 {
-    /// <summary>
-    /// Check out a branch
-    /// </summary>
-    /// <param name="branchName">The name of the branch to check out</param>
-    /// <param name="force">Allow the checkout to overwrite local changes</param>
-    public static void CheckoutBranch(
-        string branchName,
-        bool force = false)
-    {
-        Console.WriteLine(new {
-            branchName,
-            force
-        });
-    }
+    public static string LastMessage { get; private set; } = string.Empty;
+
+    [Consolo("echo")]
+    public static void Echo(string message) => LastMessage = message;
 }
