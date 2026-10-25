@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Schema;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using CSharpExtensions = Microsoft.CodeAnalysis.CSharp.CSharpExtensions;
 
@@ -72,7 +73,7 @@ public class ConsoloSourceGenerator : ISourceGenerator
         var assemblyDescription = GetAssemblyAttributeString(
             context.Compilation,
             "System.Reflection.AssemblyDescriptionAttribute");
-        var generatedNamespace = $"{assemblyName ?? "Consolo"}.g";
+        var generatedNamespace = $"{GetValidNamespace(assemblyName ?? "Consolo")}.g";
 
         if (rootCommandModel.Description.IsNone && !String.IsNullOrWhiteSpace(assemblyDescription))
         {
@@ -87,6 +88,34 @@ public class ConsoloSourceGenerator : ISourceGenerator
         context.AddCodeFile(
             new ProgramClassFileGenerator(
                 applicationName, generatedNamespace, rootCommandModel));
+    }
+
+    private static string GetValidNamespace(string namespaceName) =>
+        string.Join(
+            ".",
+            namespaceName.Split('.').Select(GetValidIdentifier));
+
+    private static string GetValidIdentifier(string identifier)
+    {
+        var characters = identifier
+            .Select((character, index) =>
+                (index == 0
+                    ? SyntaxFacts.IsIdentifierStartCharacter(character)
+                    : SyntaxFacts.IsIdentifierPartCharacter(character))
+                    ? character
+                    : '_')
+            .ToArray();
+
+        var validIdentifier = new string(characters);
+
+        if (validIdentifier.Length == 0)
+        {
+            return "_";
+        }
+
+        return SyntaxFacts.IsValidIdentifier(validIdentifier)
+            ? validIdentifier
+            : "@" + validIdentifier;
     }
 
     private static string? GetAssemblyAttributeString(
