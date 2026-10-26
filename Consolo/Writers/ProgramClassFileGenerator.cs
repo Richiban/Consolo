@@ -33,7 +33,6 @@ internal class ProgramClassFileGenerator(
         {
             _codeBuilder.AppendLines(
                 "using System;",
-                "using System.Linq;",
                 "using System.Collections.Generic;",
                 "using System.Collections.Immutable;");
             
@@ -64,12 +63,50 @@ internal class ProgramClassFileGenerator(
                 WriteCommandDebug(rootCommand);
                 _codeBuilder.AppendLine();
 
-                _codeBuilder.AppendLine("if (args.Any(arg => arg.StartsWith(' ') && ! arg.StartsWith(\"--\")))");
+                _codeBuilder.AppendLines("var normalizeArgs = false;", "for (var i = 0; i < args.Length; i++)");
                 using (_codeBuilder.IndentBraces())
-                    _codeBuilder.AppendLine("args = args.SelectMany(arg => arg.StartsWith(' ') && ! arg.StartsWith(\"--\") ? arg.Skip(1).Select(c => $\"-{c}\") : new [] { arg }).ToArray();");
+                {
+                    _codeBuilder.AppendLine("if (args[i].StartsWith(' ') && !args[i].StartsWith(\"--\"))");
+                    using (_codeBuilder.IndentBraces())
+                    {
+                        _codeBuilder.AppendLines("normalizeArgs = true;", "break;");
+                    }
+                }
+                _codeBuilder.AppendLine("if (normalizeArgs)");
+                using (_codeBuilder.IndentBraces())
+                {
+                    _codeBuilder.AppendLines("var normalizedArgs = new List<string>();", "for (var i = 0; i < args.Length; i++)");
+                    using (_codeBuilder.IndentBraces())
+                    {
+                        _codeBuilder.AppendLine("var arg = args[i];");
+                        _codeBuilder.AppendLine("if (arg.StartsWith(' ') && !arg.StartsWith(\"--\"))");
+                        using (_codeBuilder.IndentBraces())
+                        {
+                            _codeBuilder.AppendLine("for (var j = 1; j < arg.Length; j++)");
+                            using (_codeBuilder.IndentBraces())
+                            {
+                                _codeBuilder.AppendLine("normalizedArgs.Add($\"-{arg[j]}\");");
+                            }
+                        }
+                        _codeBuilder.AppendLine("else");
+                        using (_codeBuilder.IndentBraces())
+                        {
+                            _codeBuilder.AppendLine("normalizedArgs.Add(arg);");
+                        }
+                    }
+                    _codeBuilder.AppendLine("args = normalizedArgs.ToArray();");
+                }
                 _codeBuilder.AppendLine();
 
-                _codeBuilder.AppendLine("var isHelp = args.Any(arg => arg == \"--help\" || arg == \"-h\" || arg == \"-?\");");
+                _codeBuilder.AppendLines("var isHelp = false;", "for (var i = 0; i < args.Length; i++)");
+                using (_codeBuilder.IndentBraces())
+                {
+                    _codeBuilder.AppendLine("if (args[i] == \"--help\" || args[i] == \"-h\" || args[i] == \"-?\")");
+                    using (_codeBuilder.IndentBraces())
+                    {
+                        _codeBuilder.AppendLines("isHelp = true;", "break;");
+                    }
+                }
                 _codeBuilder.AppendLine();
 
                 WriteCommandGroup(rootCommand, []);
@@ -112,7 +149,7 @@ internal class ProgramClassFileGenerator(
                     {
                         if (path.Length > 0)
                         {
-                            WriteError($"Missing command after: \" + string.Join(\" \", args.Skip({path.Length - 1})) + \"");
+                            WriteError($"Missing command after: \" + string.Join(\" \", args, {path.Length - 1}, args.Length - {path.Length - 1}) + \"");
                         }
                         else
                         {
@@ -122,7 +159,7 @@ internal class ProgramClassFileGenerator(
                     _codeBuilder.AppendLine("else");
                     using (_codeBuilder.IndentBraces())
                     {
-                        WriteError($"Unknown command: \" + string.Join(\" \", args.Skip({path.Length})) + \"");
+                        WriteError($"Unknown command: \" + string.Join(\" \", args, {path.Length}, args.Length - {path.Length}) + \"");
                     }
                 }
             }
@@ -423,7 +460,7 @@ internal class ProgramClassFileGenerator(
                             {
                                 var optionName = arg.Substring(0, arg.Length - 5);
 
-                                if (optionNames.Contains(optionName))
+                                if (Array.IndexOf(optionNames, optionName) >= 0)
                                 {
                                     value = true;
                                     unclaimedArgs.Clear(index);
@@ -435,7 +472,7 @@ internal class ProgramClassFileGenerator(
                             {
                                 var optionName = arg.Substring(0, arg.Length - 6);
 
-                                if (optionNames.Contains(optionName))
+                                if (Array.IndexOf(optionNames, optionName) >= 0)
                                 {
                                     value = false;
                                     unclaimedArgs.Clear(index);
@@ -443,7 +480,7 @@ internal class ProgramClassFileGenerator(
                                 }
                             }
 
-                            if (optionNames.Contains(arg))
+                            if (Array.IndexOf(optionNames, arg) >= 0)
                             {
                                 value = true;
                                 unclaimedArgs.Clear(index);
@@ -464,7 +501,7 @@ internal class ProgramClassFileGenerator(
                             if (!unclaimedArgs[i]) continue;
                             var arg = args[i];
 
-                            if (optionNames.Contains(arg))
+                            if (Array.IndexOf(optionNames, arg) >= 0)
                             {
                                 if (i + 1 < args.Length && unclaimedArgs[i + 1] && !args[i + 1].StartsWith("-"))
                                 {
