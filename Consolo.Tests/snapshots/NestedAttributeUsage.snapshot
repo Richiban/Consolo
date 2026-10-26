@@ -12,8 +12,9 @@ namespace Consolo.TestSource.g
         /// <summary>
         /// Entrypoint for Consolo.TestSource
         /// </summary>
-        public static void Main(string[] args)
+        public static int Main(string[] args)
         {
+            var exitCode = 0;
             var consoleColor = Console.ForegroundColor;
             var helpTextColor = ConsoleColor.Green;
             var commandNameColor = ConsoleColor.Yellow;
@@ -82,6 +83,7 @@ namespace Consolo.TestSource.g
 
                                 if (unclaimedArgs.Any)
                                 {
+                                    exitCode = 1;
                                     Console.ForegroundColor = ConsoleColor.Red;
                                     Console.Error.WriteLine($"Unrecognised args: " + unclaimedArgs.Describe(args) + "");
                                     Console.ForegroundColor = consoleColor;
@@ -91,7 +93,7 @@ namespace Consolo.TestSource.g
                                 if (!processingError)
                                 {
                                     TestSamples.OuterTest.InnerTest1.TestMethod1();
-                                    return;
+                                    return exitCode;
                                 }
                             }
 
@@ -112,7 +114,7 @@ namespace Consolo.TestSource.g
                             Console.WriteLine("Show help and usage information");
                             Console.ForegroundColor = consoleColor;
                             Console.WriteLine();
-                            return;
+                            return exitCode;
                         }
                         if (args.Length >= 3 && args[2] == "test-method2")
                         {
@@ -124,6 +126,7 @@ namespace Consolo.TestSource.g
                                 var arg1 = default(System.String);
                                 if (!MatchNextPositional(args, ref arg1, s => s, ref unclaimedArgs))
                                 {
+                                    exitCode = 1;
                                     Console.ForegroundColor = ConsoleColor.Red;
                                     Console.Error.WriteLine($"Missing value for argument 'arg1'");
                                     Console.ForegroundColor = consoleColor;
@@ -133,6 +136,7 @@ namespace Consolo.TestSource.g
                                 var arg2 = default(System.String);
                                 if (!MatchNextPositional(args, ref arg2, s => s, ref unclaimedArgs))
                                 {
+                                    exitCode = 1;
                                     Console.ForegroundColor = ConsoleColor.Red;
                                     Console.Error.WriteLine($"Missing value for argument 'arg2'");
                                     Console.ForegroundColor = consoleColor;
@@ -141,6 +145,7 @@ namespace Consolo.TestSource.g
 
                                 if (unclaimedArgs.Any)
                                 {
+                                    exitCode = 1;
                                     Console.ForegroundColor = ConsoleColor.Red;
                                     Console.Error.WriteLine($"Unrecognised args: " + unclaimedArgs.Describe(args) + "");
                                     Console.ForegroundColor = consoleColor;
@@ -150,7 +155,7 @@ namespace Consolo.TestSource.g
                                 if (!processingError)
                                 {
                                     TestSamples.OuterTest.InnerTest1.TestMethod2(arg1, arg2);
-                                    return;
+                                    return exitCode;
                                 }
                             }
 
@@ -181,18 +186,20 @@ namespace Consolo.TestSource.g
                             Console.WriteLine("Show help and usage information");
                             Console.ForegroundColor = consoleColor;
                             Console.WriteLine();
-                            return;
+                            return exitCode;
                         }
                         if (!isHelp)
                         {
                             if (args.Length == 2)
                             {
+                                exitCode = 1;
                                 Console.ForegroundColor = ConsoleColor.Red;
                                 Console.Error.WriteLine($"Missing command after: " + string.Join(" ", args, 1, args.Length - 1) + "");
                                 Console.ForegroundColor = consoleColor;
                             }
                             else
                             {
+                                exitCode = 1;
                                 Console.ForegroundColor = ConsoleColor.Red;
                                 Console.Error.WriteLine($"Unknown command: " + string.Join(" ", args, 2, args.Length - 2) + "");
                                 Console.ForegroundColor = consoleColor;
@@ -213,7 +220,7 @@ namespace Consolo.TestSource.g
                         Console.ForegroundColor = helpTextColor;
                         Console.WriteLine("  ");
                         Console.ForegroundColor = consoleColor;
-                        return;
+                        return exitCode;
                     }
                     if (args.Length >= 2 && args[1] == "inner-test2")
                     {
@@ -226,6 +233,7 @@ namespace Consolo.TestSource.g
 
                                 if (unclaimedArgs.Any)
                                 {
+                                    exitCode = 1;
                                     Console.ForegroundColor = ConsoleColor.Red;
                                     Console.Error.WriteLine($"Unrecognised args: " + unclaimedArgs.Describe(args) + "");
                                     Console.ForegroundColor = consoleColor;
@@ -235,7 +243,7 @@ namespace Consolo.TestSource.g
                                 if (!processingError)
                                 {
                                     TestSamples.OuterTest.InnerTest2.TestMethod3();
-                                    return;
+                                    return exitCode;
                                 }
                             }
 
@@ -256,18 +264,20 @@ namespace Consolo.TestSource.g
                             Console.WriteLine("Show help and usage information");
                             Console.ForegroundColor = consoleColor;
                             Console.WriteLine();
-                            return;
+                            return exitCode;
                         }
                         if (!isHelp)
                         {
                             if (args.Length == 2)
                             {
+                                exitCode = 1;
                                 Console.ForegroundColor = ConsoleColor.Red;
                                 Console.Error.WriteLine($"Missing command after: " + string.Join(" ", args, 1, args.Length - 1) + "");
                                 Console.ForegroundColor = consoleColor;
                             }
                             else
                             {
+                                exitCode = 1;
                                 Console.ForegroundColor = ConsoleColor.Red;
                                 Console.Error.WriteLine($"Unknown command: " + string.Join(" ", args, 2, args.Length - 2) + "");
                                 Console.ForegroundColor = consoleColor;
@@ -284,18 +294,20 @@ namespace Consolo.TestSource.g
                         Console.ForegroundColor = helpTextColor;
                         Console.WriteLine("  ");
                         Console.ForegroundColor = consoleColor;
-                        return;
+                        return exitCode;
                     }
                     if (!isHelp)
                     {
                         if (args.Length == 1)
                         {
+                            exitCode = 1;
                             Console.ForegroundColor = ConsoleColor.Red;
                             Console.Error.WriteLine($"Missing command after: " + string.Join(" ", args, 0, args.Length - 0) + "");
                             Console.ForegroundColor = consoleColor;
                         }
                         else
                         {
+                            exitCode = 1;
                             Console.ForegroundColor = ConsoleColor.Red;
                             Console.Error.WriteLine($"Unknown command: " + string.Join(" ", args, 1, args.Length - 1) + "");
                             Console.ForegroundColor = consoleColor;
@@ -316,7 +328,7 @@ namespace Consolo.TestSource.g
                     Console.ForegroundColor = helpTextColor;
                     Console.WriteLine("  ");
                     Console.ForegroundColor = consoleColor;
-                    return;
+                    return exitCode;
                 }
                 if (args.Length >= 1 && args[0] == "--version")
                 {
@@ -327,6 +339,7 @@ namespace Consolo.TestSource.g
 
                         if (unclaimedArgs.Any)
                         {
+                            exitCode = 1;
                             Console.ForegroundColor = ConsoleColor.Red;
                             Console.Error.WriteLine($"Unrecognised args: " + unclaimedArgs.Describe(args) + "");
                             Console.ForegroundColor = consoleColor;
@@ -336,7 +349,7 @@ namespace Consolo.TestSource.g
                         if (!processingError)
                         {
                             PrintVersion();
-                            return;
+                            return exitCode;
                         }
                     }
 
@@ -358,18 +371,20 @@ namespace Consolo.TestSource.g
                     Console.WriteLine("Show help and usage information");
                     Console.ForegroundColor = consoleColor;
                     Console.WriteLine();
-                    return;
+                    return exitCode;
                 }
                 if (!isHelp)
                 {
                     if (args.Length == 0)
                     {
+                        exitCode = 1;
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.Error.WriteLine($"Missing command");
                         Console.ForegroundColor = consoleColor;
                     }
                     else
                     {
+                        exitCode = 1;
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.Error.WriteLine($"Unknown command: " + string.Join(" ", args, 0, args.Length - 0) + "");
                         Console.ForegroundColor = consoleColor;
@@ -382,7 +397,7 @@ namespace Consolo.TestSource.g
                 Console.ForegroundColor = helpTextColor;
                 Console.WriteLine("  ");
                 Console.ForegroundColor = consoleColor;
-                return;
+                return exitCode;
             }
         }
 
