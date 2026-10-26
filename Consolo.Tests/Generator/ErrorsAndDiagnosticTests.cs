@@ -78,8 +78,6 @@ internal class ErrorsAndDiagnosticsTests : GeneratorTests
         var source = """
                      using Consolo;
 
-                     namespace Consolo.TestSource;
-
                      public class Program
                      {
                          [Consolo]
