@@ -477,33 +477,39 @@ internal class ProgramClassFileGenerator(
                                 return 2;
                             }
             
-                            if (arg.Contains(':'))
+                            var colonIndex = arg.IndexOf(':');
+
+                            if (colonIndex >= 0 && IsOptionName(optionNames, arg, colonIndex))
                             {
-                                var parts = arg.Split(':', 2);
-            
-                                if (optionNames.Contains(parts[0]))
-                                {
-                                    value = mapper(parts[1]);
-                                    unclaimedArgs.Clear(i);
-                                    return 1;
-                                }
+                                value = mapper(arg.Substring(colonIndex + 1));
+                                unclaimedArgs.Clear(i);
+                                return 1;
                             }
-            
-                            if (arg.Contains('='))
+
+                            var equalsIndex = arg.IndexOf('=');
+
+                            if (equalsIndex >= 0 && IsOptionName(optionNames, arg, equalsIndex))
                             {
-                                var parts = arg.Split('=', 2);
-            
-                                if (optionNames.Contains(parts[0]))
-                                {
-                                    value = mapper(parts[1]);
-                                    unclaimedArgs.Clear(i);
-                                    return 1;
-                                }
+                                value = mapper(arg.Substring(equalsIndex + 1));
+                                unclaimedArgs.Clear(i);
+                                return 1;
                             }
-            
                         }
 
                         return 0;
+                    }
+
+                    static bool IsOptionName(string[] optionNames, string arg, int nameLength)
+                    {
+                        foreach (var name in optionNames)
+                        {
+                            if (name.Length == nameLength && string.CompareOrdinal(arg, 0, name, 0, nameLength) == 0)
+                            {
+                                return true;
+                            }
+                        }
+
+                        return false;
                     }
                     
                     #pragma warning restore CS8321
