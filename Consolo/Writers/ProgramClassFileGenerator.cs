@@ -234,16 +234,14 @@ internal class ProgramClassFileGenerator(
             {
                 case CommandParameter.Option { IsFlag: true } flag:
                     {
-                        var toSeek = GetNamesForOption(flag);
-
                         _codeBuilder.AppendLine(
-                            $"MatchNextFlag(args, new [] {{ {GetNamesForOption(flag).Select(v => $"\"{v}\"").StringJoin(", ")} }}, ref {flag.SourceName}, ref unclaimedArgs);");
+                            $"MatchNextFlag(args, {GetMatcherNameArguments(flag)}, ref {flag.SourceName}, ref unclaimedArgs);");
                         break;
                     }
                 case CommandParameter.Option option:
                     {
                         _codeBuilder.AppendLine(
-                            $"if (MatchNextOption(args, new [] {{ {GetNamesForOption(option).Select(v => $"\"{v}\"").StringJoin(", ")} }}, ref {option.SourceName}, s => {ConvertParameter(option.Type, "s")}, ref unclaimedArgs) == 2)");
+                            $"if (MatchNextOption(args, {GetMatcherNameArguments(option)}, ref {option.SourceName}, s => {ConvertParameter(option.Type, "s")}, ref unclaimedArgs) == 2)");
                         using (_codeBuilder.IndentBraces())
                         {
                             WriteError($"Missing value for option '--{option.Name}'");
@@ -338,6 +336,15 @@ internal class ProgramClassFileGenerator(
             (_, (true, var a)) => [$"-{a}"],
             _ => throw new InvalidOperationException("Option must have a name")
         };
+
+    private string GetMatcherNameArguments(CommandParameter.Option option)
+    {
+        var names = GetNamesForOption(option);
+        var optionName = names.Length == 2 ? names[1] : names[0];
+        var optionAlias = names.Length == 2 ? $"\"{names[0]}\"" : "\"\"";
+
+        return $"\"{optionName}\", {optionAlias}";
+    }
 
     private void WriteError(string errorMessage)
     {
@@ -449,7 +456,7 @@ internal class ProgramClassFileGenerator(
                         return false;
                     }
 
-                    static bool MatchNextFlag(string[] args, string[] optionNames, ref bool value, ref UnclaimedArgs unclaimedArgs)
+                    static bool MatchNextFlag(string[] args, string optionName, string optionAlias, ref bool value, ref UnclaimedArgs unclaimedArgs)
                     {
                         for (var index = 0; index < unclaimedArgs.Length; index++)
                         {
@@ -458,9 +465,9 @@ internal class ProgramClassFileGenerator(
                         
                             if (arg.EndsWith(":true", StringComparison.InvariantCultureIgnoreCase) || arg.EndsWith("=true", StringComparison.InvariantCultureIgnoreCase))
                             {
-                                var optionName = arg.Substring(0, arg.Length - 5);
+                                var argOptionName = arg.Substring(0, arg.Length - 5);
 
-                                if (Array.IndexOf(optionNames, optionName) >= 0)
+                                if (optionName == argOptionName || optionAlias.Length > 0 && optionAlias == argOptionName)
                                 {
                                     value = true;
                                     unclaimedArgs.Clear(index);
@@ -470,9 +477,9 @@ internal class ProgramClassFileGenerator(
                         
                             if (arg.EndsWith(":false", StringComparison.InvariantCultureIgnoreCase) || arg.EndsWith("=false", StringComparison.InvariantCultureIgnoreCase))
                             {
-                                var optionName = arg.Substring(0, arg.Length - 6);
+                                var argOptionName = arg.Substring(0, arg.Length - 6);
 
-                                if (Array.IndexOf(optionNames, optionName) >= 0)
+                                if (optionName == argOptionName || optionAlias.Length > 0 && optionAlias == argOptionName)
                                 {
                                     value = false;
                                     unclaimedArgs.Clear(index);
@@ -480,7 +487,7 @@ internal class ProgramClassFileGenerator(
                                 }
                             }
 
-                            if (Array.IndexOf(optionNames, arg) >= 0)
+                            if (optionName == arg || optionAlias.Length > 0 && optionAlias == arg)
                             {
                                 value = true;
                                 unclaimedArgs.Clear(index);
@@ -494,14 +501,14 @@ internal class ProgramClassFileGenerator(
                     // Returns 0 if the option is not found
                     // Returns 1 if the option is found and the value is found
                     // Returns 2 if the option is found but the value is missing
-                    static int MatchNextOption<T>(string[] args, string[] optionNames, ref T value, Func<string, T> mapper, ref UnclaimedArgs unclaimedArgs)
+                    static int MatchNextOption<T>(string[] args, string optionName, string optionAlias, ref T value, Func<string, T> mapper, ref UnclaimedArgs unclaimedArgs)
                     {
                         for (var i = 0; i < unclaimedArgs.Length; i++)
                         {
                             if (!unclaimedArgs[i]) continue;
                             var arg = args[i];
 
-                            if (Array.IndexOf(optionNames, arg) >= 0)
+                            if (optionName == arg || optionAlias.Length > 0 && optionAlias == arg)
                             {
                                 if (i + 1 < args.Length && unclaimedArgs[i + 1] && !args[i + 1].StartsWith("-"))
                                 {
@@ -516,7 +523,7 @@ internal class ProgramClassFileGenerator(
             
                             var colonIndex = arg.IndexOf(':');
 
-                            if (colonIndex >= 0 && IsOptionName(optionNames, arg, colonIndex))
+                            if (colonIndex >= 0 && IsOptionName(optionName, optionAlias, arg, colonIndex))
                             {
                                 value = mapper(arg.Substring(colonIndex + 1));
                                 unclaimedArgs.Clear(i);
@@ -525,7 +532,7 @@ internal class ProgramClassFileGenerator(
 
                             var equalsIndex = arg.IndexOf('=');
 
-                            if (equalsIndex >= 0 && IsOptionName(optionNames, arg, equalsIndex))
+                            if (equalsIndex >= 0 && IsOptionName(optionName, optionAlias, arg, equalsIndex))
                             {
                                 value = mapper(arg.Substring(equalsIndex + 1));
                                 unclaimedArgs.Clear(i);
@@ -536,17 +543,10 @@ internal class ProgramClassFileGenerator(
                         return 0;
                     }
 
-                    static bool IsOptionName(string[] optionNames, string arg, int nameLength)
+                    static bool IsOptionName(string optionName, string optionAlias, string arg, int nameLength)
                     {
-                        foreach (var name in optionNames)
-                        {
-                            if (name.Length == nameLength && string.CompareOrdinal(arg, 0, name, 0, nameLength) == 0)
-                            {
-                                return true;
-                            }
-                        }
-
-                        return false;
+                        return (optionName.Length == nameLength && string.CompareOrdinal(arg, 0, optionName, 0, nameLength) == 0)
+                            || (optionAlias.Length > 0 && optionAlias.Length == nameLength && string.CompareOrdinal(arg, 0, optionAlias, 0, nameLength) == 0);
                     }
                     
                     #pragma warning restore CS8321
