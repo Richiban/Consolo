@@ -1,50 +1,50 @@
 {
   "benchmarks": {
     "Generated64ArgumentMaskBoundary": {
-      "allocated_bytes": 2144.0,
-      "mean_ns": 5850.36
+      "allocated_bytes": 2080.0,
+      "mean_ns": 4024.08
     },
     "Generated65ArgumentMaskFallback": {
-      "allocated_bytes": 2240.0,
-      "mean_ns": 6071.08
+      "allocated_bytes": 2176.0,
+      "mean_ns": 4300.48
     },
     "GeneratedFlags": {
-      "allocated_bytes": 136.0,
-      "mean_ns": 263.05
+      "allocated_bytes": 72.0,
+      "mean_ns": 152.05
     },
     "GeneratedInvalidInput": {
-      "allocated_bytes": 232.0,
-      "mean_ns": 312.32
+      "allocated_bytes": 168.0,
+      "mean_ns": 200.63
     },
     "GeneratedMultipleParameters": {
-      "allocated_bytes": 64.0,
-      "mean_ns": 133.79
+      "allocated_bytes": 0.0,
+      "mean_ns": 70.96
     },
     "GeneratedOptionAlias": {
-      "allocated_bytes": 104.0,
-      "mean_ns": 161.57
+      "allocated_bytes": 40.0,
+      "mean_ns": 77.58
     },
     "GeneratedOptionColonValue": {
-      "allocated_bytes": 136.0,
-      "mean_ns": 169.79
+      "allocated_bytes": 72.0,
+      "mean_ns": 75.67
     },
     "GeneratedOptionEqualsValue": {
-      "allocated_bytes": 136.0,
-      "mean_ns": 171.92
+      "allocated_bytes": 72.0,
+      "mean_ns": 77.46
     },
     "GeneratedOptionsAbsent": {
-      "allocated_bytes": 104.0,
-      "mean_ns": 100.43
+      "allocated_bytes": 40.0,
+      "mean_ns": 50.02
     },
     "GeneratedOptionsPresent": {
-      "allocated_bytes": 104.0,
-      "mean_ns": 162.86
+      "allocated_bytes": 40.0,
+      "mean_ns": 76.55
     },
     "GeneratedSimplePositional": {
-      "allocated_bytes": 64.0,
-      "mean_ns": 67.45
+      "allocated_bytes": 0.0,
+      "mean_ns": 24.45
     }
   },
-  "captured_utc": "2026-10-26T11:45:43.055545+00:00",
-  "commit": "60449e368c3ee7612b3dabbb02cea9a577ce43c5"
+  "captured_utc": "2026-10-26T12:07:29.209929+00:00",
+  "commit": "6852f534759067b89ef0aaacfae6dd30ac59c772"
 }
