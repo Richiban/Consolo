@@ -105,6 +105,37 @@ internal class SnapshotTests : GeneratorTests
     }
 
     [Test]
+    public void OptionNamesArePassedToMatchersWithoutAllocatingArrays()
+    {
+        var source =
+            """
+            using Consolo;
+
+            public static class TestClass
+            {
+                [Consolo]
+                public static void TestMethod(
+                    [Consolo("verbose")] bool verbose = false,
+                    [Consolo("output", Alias = "o")] string output = "",
+                    [Consolo] bool x = false)
+                {
+                }
+            }
+            """;
+
+        var (compilation, diagnostics) = RunGenerator(source);
+
+        diagnostics.WarningsAndErrors().ShouldBeEmpty();
+
+        var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
+
+        programText.ShouldContain("MatchNextFlag(args, \"--verbose\", \"\",");
+        programText.ShouldContain("MatchNextOption(args, \"--output\", \"-o\",");
+        programText.ShouldContain("MatchNextFlag(args, \"-x\", \"\",");
+        programText.ShouldNotContain("args, new []");
+    }
+
+    [Test]
     public void InvalidAssemblyNameProducesValidGeneratedNamespace()
     {
         var source =

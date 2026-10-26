@@ -311,7 +311,7 @@ namespace Consolo.TestSource.g
             return false;
         }
 
-        static bool MatchNextFlag(string[] args, string[] optionNames, ref bool value, ref UnclaimedArgs unclaimedArgs)
+        static bool MatchNextFlag(string[] args, string optionName, string optionAlias, ref bool value, ref UnclaimedArgs unclaimedArgs)
         {
             for (var index = 0; index < unclaimedArgs.Length; index++)
             {
@@ -320,9 +320,9 @@ namespace Consolo.TestSource.g
             
                 if (arg.EndsWith(":true", StringComparison.InvariantCultureIgnoreCase) || arg.EndsWith("=true", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    var optionName = arg.Substring(0, arg.Length - 5);
+                    var argOptionName = arg.Substring(0, arg.Length - 5);
 
-                    if (Array.IndexOf(optionNames, optionName) >= 0)
+                    if (optionName == argOptionName || optionAlias.Length > 0 && optionAlias == argOptionName)
                     {
                         value = true;
                         unclaimedArgs.Clear(index);
@@ -332,9 +332,9 @@ namespace Consolo.TestSource.g
             
                 if (arg.EndsWith(":false", StringComparison.InvariantCultureIgnoreCase) || arg.EndsWith("=false", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    var optionName = arg.Substring(0, arg.Length - 6);
+                    var argOptionName = arg.Substring(0, arg.Length - 6);
 
-                    if (Array.IndexOf(optionNames, optionName) >= 0)
+                    if (optionName == argOptionName || optionAlias.Length > 0 && optionAlias == argOptionName)
                     {
                         value = false;
                         unclaimedArgs.Clear(index);
@@ -342,7 +342,7 @@ namespace Consolo.TestSource.g
                     }
                 }
 
-                if (Array.IndexOf(optionNames, arg) >= 0)
+                if (optionName == arg || optionAlias.Length > 0 && optionAlias == arg)
                 {
                     value = true;
                     unclaimedArgs.Clear(index);
@@ -356,14 +356,14 @@ namespace Consolo.TestSource.g
         // Returns 0 if the option is not found
         // Returns 1 if the option is found and the value is found
         // Returns 2 if the option is found but the value is missing
-        static int MatchNextOption<T>(string[] args, string[] optionNames, ref T value, Func<string, T> mapper, ref UnclaimedArgs unclaimedArgs)
+        static int MatchNextOption<T>(string[] args, string optionName, string optionAlias, ref T value, Func<string, T> mapper, ref UnclaimedArgs unclaimedArgs)
         {
             for (var i = 0; i < unclaimedArgs.Length; i++)
             {
                 if (!unclaimedArgs[i]) continue;
                 var arg = args[i];
 
-                if (Array.IndexOf(optionNames, arg) >= 0)
+                if (optionName == arg || optionAlias.Length > 0 && optionAlias == arg)
                 {
                     if (i + 1 < args.Length && unclaimedArgs[i + 1] && !args[i + 1].StartsWith("-"))
                     {
@@ -378,7 +378,7 @@ namespace Consolo.TestSource.g
 
                 var colonIndex = arg.IndexOf(':');
 
-                if (colonIndex >= 0 && IsOptionName(optionNames, arg, colonIndex))
+                if (colonIndex >= 0 && IsOptionName(optionName, optionAlias, arg, colonIndex))
                 {
                     value = mapper(arg.Substring(colonIndex + 1));
                     unclaimedArgs.Clear(i);
@@ -387,7 +387,7 @@ namespace Consolo.TestSource.g
 
                 var equalsIndex = arg.IndexOf('=');
 
-                if (equalsIndex >= 0 && IsOptionName(optionNames, arg, equalsIndex))
+                if (equalsIndex >= 0 && IsOptionName(optionName, optionAlias, arg, equalsIndex))
                 {
                     value = mapper(arg.Substring(equalsIndex + 1));
                     unclaimedArgs.Clear(i);
@@ -398,17 +398,10 @@ namespace Consolo.TestSource.g
             return 0;
         }
 
-        static bool IsOptionName(string[] optionNames, string arg, int nameLength)
+        static bool IsOptionName(string optionName, string optionAlias, string arg, int nameLength)
         {
-            foreach (var name in optionNames)
-            {
-                if (name.Length == nameLength && string.CompareOrdinal(arg, 0, name, 0, nameLength) == 0)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return (optionName.Length == nameLength && string.CompareOrdinal(arg, 0, optionName, 0, nameLength) == 0)
+                || (optionAlias.Length > 0 && optionAlias.Length == nameLength && string.CompareOrdinal(arg, 0, optionAlias, 0, nameLength) == 0);
         }
         
         #pragma warning restore CS8321
