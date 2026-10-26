@@ -11,6 +11,7 @@ class BenchmarkResultsTests(unittest.TestCase):
     def test_parse_measurements_converts_units(self):
         self.assertEqual(parse_measurement("1.25 μs", {"μs": 1_000}), 1_250)
         self.assertEqual(parse_measurement("3 KB", {"KB": 1_000}), 3_000)
+        self.assertEqual(parse_measurement("5,974.76 ns", {"ns": 1}), 5_974.76)
 
     def test_comparison_uses_generated_results_and_raw_allocation_difference(self):
         current = {
@@ -100,6 +101,51 @@ class BenchmarkResultsTests(unittest.TestCase):
             self.assertIn("timing regression +25.0%", summary_text)
             self.assertIn("allocation regression +4 B", summary_text)
             self.assertIn("do not fail this workflow", summary_text)
+
+    def test_summary_includes_results_without_previous_benchmark(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            directory = Path(temporary_directory)
+            reports = directory / "reports"
+            reports.mkdir()
+            report_path = reports / "benchmark-report.csv"
+            with report_path.open("w", newline="", encoding="utf-8") as report_file:
+                writer = csv.DictWriter(
+                    report_file,
+                    fieldnames=["Method", "Mean", "Allocated"],
+                )
+                writer.writeheader()
+                writer.writerow(
+                    {"Method": "GeneratedCommand", "Mean": "125 ns", "Allocated": "24 B"}
+                )
+
+            output = directory / "results.json"
+            summary = directory / "summary.md"
+
+            import sys
+
+            original_argv = sys.argv
+            try:
+                sys.argv = [
+                    "benchmark_results.py",
+                    "--reports-dir",
+                    str(reports),
+                    "--commit-sha",
+                    "current",
+                    "--output",
+                    str(output),
+                    "--summary",
+                    str(summary),
+                ]
+                main()
+            finally:
+                sys.argv = original_argv
+
+            summary_text = summary.read_text(encoding="utf-8")
+            self.assertIn(
+                "| Generated benchmark | Mean (ns) | Allocated (bytes) | Comparison |",
+                summary_text,
+            )
+            self.assertIn("| GeneratedCommand | 125.00 | 24 | no prior result |", summary_text)
 
 
 if __name__ == "__main__":

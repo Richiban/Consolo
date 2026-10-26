@@ -6,7 +6,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-VALUE_PATTERN = re.compile(r"^\s*([\d.]+)\s*([A-Za-zμ]+)?\s*$")
+VALUE_PATTERN = re.compile(
+    r"^\s*((?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?)\s*([A-Za-zμ]+)?\s*$"
+)
 TIME_TO_NS = {"ns": 1, "us": 1_000, "μs": 1_000, "ms": 1_000_000, "s": 1_000_000_000}
 BYTES_TO_BYTES = {"B": 1, "KB": 1_000, "MB": 1_000_000, "GB": 1_000_000_000}
 TIMING_TOLERANCE = 0.20
@@ -17,7 +19,7 @@ def parse_measurement(value, units):
     if match is None:
         raise ValueError(f"Unrecognized benchmark measurement: {value!r}")
 
-    number = float(match.group(1))
+    number = float(match.group(1).replace(",", ""))
     unit = match.group(2)
     if unit not in units:
         raise ValueError(f"Unrecognized benchmark unit: {unit!r}")
@@ -83,35 +85,43 @@ def write_summary(current, previous, summary_path):
                 f"{TIMING_TOLERANCE:.0%} and any allocation increase are reported only; "
                 "they do not fail this workflow.",
                 "",
-                "| Generated benchmark | Mean (ns) | Allocated (bytes) | Comparison |",
-                "| --- | ---: | ---: | --- |",
             ]
         )
-        comparisons = {
+    lines.extend(
+        [
+            "| Generated benchmark | Mean (ns) | Allocated (bytes) | Comparison |",
+            "| --- | ---: | ---: | --- |",
+        ]
+    )
+    comparisons = (
+        {
             comparison["method"]: comparison
             for comparison in compare_results(current, previous)
         }
-        for method, result in sorted(current["benchmarks"].items()):
-            comparison = comparisons.get(method)
-            notes = []
-            if comparison is None:
-                notes.append("no prior result")
-            else:
-                timing_change = comparison["timing_change"]
-                if timing_change is not None and timing_change > TIMING_TOLERANCE:
-                    notes.append(f"timing regression +{timing_change:.1%}")
-                if comparison["allocation_change"] > 0:
-                    notes.append(
-                        f"allocation regression +{comparison['allocation_change']:.0f} B"
-                    )
-                if not notes:
-                    notes.append("within tolerance")
+        if previous is not None
+        else {}
+    )
+    for method, result in sorted(current["benchmarks"].items()):
+        comparison = comparisons.get(method)
+        notes = []
+        if comparison is None:
+            notes.append("no prior result")
+        else:
+            timing_change = comparison["timing_change"]
+            if timing_change is not None and timing_change > TIMING_TOLERANCE:
+                notes.append(f"timing regression +{timing_change:.1%}")
+            if comparison["allocation_change"] > 0:
+                notes.append(
+                    f"allocation regression +{comparison['allocation_change']:.0f} B"
+                )
+            if not notes:
+                notes.append("within tolerance")
 
-            lines.append(
-                f"| {method} | {result['mean_ns']:.2f} | "
-                f"{result['allocated_bytes']:.0f} | {', '.join(notes)} |"
-            )
-        lines.append("")
+        lines.append(
+            f"| {method} | {result['mean_ns']:.2f} | "
+            f"{result['allocated_bytes']:.0f} | {', '.join(notes)} |"
+        )
+    lines.append("")
 
     Path(summary_path).write_text("\n".join(lines), encoding="utf-8")
 
