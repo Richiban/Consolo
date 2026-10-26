@@ -1,4 +1,5 @@
 using System.Text;
+using System.Diagnostics;
 using System.IO;
 using Consolo.Samples.g;
 
@@ -195,5 +196,63 @@ internal class E2ETests
 
         _testError.ToString().ShouldBeEmpty();
         _testOutput.ToString().ShouldMatchSnapshot();
+    }
+
+    private static (int ExitCode, string Output, string Error) RunSampleProcess(params string[] args)
+    {
+        var samplePath = Path.Combine(AppContext.BaseDirectory, "Consolo.Samples.dll");
+        var startInfo = new ProcessStartInfo("dotnet")
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+        startInfo.ArgumentList.Add(samplePath);
+        foreach (var arg in args)
+        {
+            startInfo.ArgumentList.Add(arg);
+        }
+
+        using var process = Process.Start(startInfo)!;
+        var outputTask = process.StandardOutput.ReadToEndAsync();
+        var errorTask = process.StandardError.ReadToEndAsync();
+        process.WaitForExit();
+
+        return (process.ExitCode, outputTask.Result, errorTask.Result);
+    }
+
+    [Test]
+    public void ProcessExitsWithNonZeroCodeForMissingArgument()
+    {
+        var (exitCode, _, error) = RunSampleProcess("log");
+
+        exitCode.ShouldNotBe(0);
+        error.ShouldBe($"Missing value for argument 'lines'{Environment.NewLine}");
+    }
+
+    [Test]
+    public void ProcessExitsWithNonZeroCodeForUnrecognisedArgument()
+    {
+        var (exitCode, _, error) = RunSampleProcess("log", "1", "--foo");
+
+        exitCode.ShouldNotBe(0);
+        error.ShouldBe($"Unrecognised args: --foo{Environment.NewLine}");
+    }
+
+    [Test]
+    public void ProcessExitsWithNonZeroCodeForUnknownCommand()
+    {
+        var (exitCode, _, error) = RunSampleProcess("unknown");
+
+        exitCode.ShouldNotBe(0);
+        error.ShouldContain("Unknown command: unknown");
+    }
+
+    [Test]
+    public void ProcessExitsWithZeroForSuccessAndHelp()
+    {
+        RunSampleProcess("log", "1").ExitCode.ShouldBe(0);
+        RunSampleProcess("--help").ExitCode.ShouldBe(0);
+        RunSampleProcess("log", "--help").ExitCode.ShouldBe(0);
     }
 }

@@ -12,8 +12,9 @@ namespace Consolo.TestSource.g
         /// <summary>
         /// Entrypoint for Consolo.TestSource
         /// </summary>
-        public static void Main(string[] args)
+        public static int Main(string[] args)
         {
+            var exitCode = 0;
             var consoleColor = Console.ForegroundColor;
             var helpTextColor = ConsoleColor.Green;
             var commandNameColor = ConsoleColor.Yellow;
@@ -72,6 +73,7 @@ namespace Consolo.TestSource.g
 
                         if (unclaimedArgs.Any)
                         {
+                            exitCode = 1;
                             Console.ForegroundColor = ConsoleColor.Red;
                             Console.Error.WriteLine($"Unrecognised args: " + unclaimedArgs.Describe(args) + "");
                             Console.ForegroundColor = consoleColor;
@@ -81,7 +83,7 @@ namespace Consolo.TestSource.g
                         if (!processingError)
                         {
                             PrintVersion();
-                            return;
+                            return exitCode;
                         }
                     }
 
@@ -103,7 +105,7 @@ namespace Consolo.TestSource.g
                     Console.WriteLine("Show help and usage information");
                     Console.ForegroundColor = consoleColor;
                     Console.WriteLine();
-                    return;
+                    return exitCode;
                 }
                 if (!isHelp)
                 {
@@ -112,6 +114,7 @@ namespace Consolo.TestSource.g
 
                     if (unclaimedArgs.Any)
                     {
+                        exitCode = 1;
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.Error.WriteLine($"Unrecognised args: " + unclaimedArgs.Describe(args) + "");
                         Console.ForegroundColor = consoleColor;
@@ -121,7 +124,7 @@ namespace Consolo.TestSource.g
                     if (!processingError)
                     {
                         TestSamples.RootContainer.RootMethod();
-                        return;
+                        return exitCode;
                     }
                 }
 
@@ -139,7 +142,7 @@ namespace Consolo.TestSource.g
                 Console.ForegroundColor = consoleColor;
                 Console.WriteLine();
                 Console.WriteLine("Commands:");
-                return;
+                return exitCode;
             }
         }
 

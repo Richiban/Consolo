@@ -50,10 +50,11 @@ internal class ProgramClassFileGenerator(
             _codeBuilder.AppendLine("/// <summary>");
             _codeBuilder.AppendLine("/// Entrypoint for " + applicationName);
             _codeBuilder.AppendLine("/// </summary>");
-            _codeBuilder.AppendLine("public static void Main(string[] args)");
+            _codeBuilder.AppendLine("public static int Main(string[] args)");
             {
                 using var _3 = _codeBuilder.IndentBraces();
 
+                _codeBuilder.AppendLine("var exitCode = 0;");
                 _codeBuilder.AppendLine("var consoleColor = Console.ForegroundColor;");
                 _codeBuilder.AppendLine("var helpTextColor = ConsoleColor.Green;");
                 _codeBuilder.AppendLine("var commandNameColor = ConsoleColor.Yellow;");
@@ -166,7 +167,7 @@ internal class ProgramClassFileGenerator(
 
             _codeBuilder.AppendLine("");
             WriteHelp(path, command);
-            _codeBuilder.AppendLine("return;");
+            _codeBuilder.AppendLine("return exitCode;");
         }
     }
 
@@ -211,7 +212,7 @@ internal class ProgramClassFileGenerator(
                 line += ';';
                 
                 _codeBuilder.AppendLine(line);
-                _codeBuilder.AppendLine("return;");
+                _codeBuilder.AppendLine("return exitCode;");
             }
         }
     }
@@ -348,6 +349,7 @@ internal class ProgramClassFileGenerator(
 
     private void WriteError(string errorMessage)
     {
+        _codeBuilder.AppendLine("exitCode = 1;");
         _codeBuilder.AppendLine($"Console.ForegroundColor = ConsoleColor.Red;");
         _codeBuilder.AppendLine($"Console.Error.WriteLine($\"{errorMessage}\");");
         _codeBuilder.AppendLine($"Console.ForegroundColor = consoleColor;");

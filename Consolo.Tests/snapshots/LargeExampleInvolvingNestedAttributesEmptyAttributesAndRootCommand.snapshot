@@ -12,8 +12,9 @@ namespace Consolo.TestSource.g
         /// <summary>
         /// Entrypoint for Consolo.TestSource
         /// </summary>
-        public static void Main(string[] args)
+        public static int Main(string[] args)
         {
+            var exitCode = 0;
             var consoleColor = Console.ForegroundColor;
             var helpTextColor = ConsoleColor.Green;
             var commandNameColor = ConsoleColor.Yellow;
@@ -79,6 +80,7 @@ namespace Consolo.TestSource.g
                             var remoteName = default(System.String);
                             if (!MatchNextPositional(args, ref remoteName, s => s, ref unclaimedArgs))
                             {
+                                exitCode = 1;
                                 Console.ForegroundColor = ConsoleColor.Red;
                                 Console.Error.WriteLine($"Missing value for argument 'remoteName'");
                                 Console.ForegroundColor = consoleColor;
@@ -87,6 +89,7 @@ namespace Consolo.TestSource.g
 
                             if (unclaimedArgs.Any)
                             {
+                                exitCode = 1;
                                 Console.ForegroundColor = ConsoleColor.Red;
                                 Console.Error.WriteLine($"Unrecognised args: " + unclaimedArgs.Describe(args) + "");
                                 Console.ForegroundColor = consoleColor;
@@ -96,7 +99,7 @@ namespace Consolo.TestSource.g
                             if (!processingError)
                             {
                                 Consolo.Samples.SampleProgram.RemoveRemote(remoteName);
-                                return;
+                                return exitCode;
                             }
                         }
 
@@ -123,7 +126,7 @@ namespace Consolo.TestSource.g
                         Console.WriteLine("Show help and usage information");
                         Console.ForegroundColor = consoleColor;
                         Console.WriteLine();
-                        return;
+                        return exitCode;
                     }
                     if (args.Length >= 2 && args[1] == "add")
                     {
@@ -135,6 +138,7 @@ namespace Consolo.TestSource.g
                             var remoteName = default(System.String);
                             if (!MatchNextPositional(args, ref remoteName, s => s, ref unclaimedArgs))
                             {
+                                exitCode = 1;
                                 Console.ForegroundColor = ConsoleColor.Red;
                                 Console.Error.WriteLine($"Missing value for argument 'remoteName'");
                                 Console.ForegroundColor = consoleColor;
@@ -144,6 +148,7 @@ namespace Consolo.TestSource.g
                             var url = default(System.String);
                             if (!MatchNextPositional(args, ref url, s => s, ref unclaimedArgs))
                             {
+                                exitCode = 1;
                                 Console.ForegroundColor = ConsoleColor.Red;
                                 Console.Error.WriteLine($"Missing value for argument 'url'");
                                 Console.ForegroundColor = consoleColor;
@@ -152,6 +157,7 @@ namespace Consolo.TestSource.g
 
                             if (unclaimedArgs.Any)
                             {
+                                exitCode = 1;
                                 Console.ForegroundColor = ConsoleColor.Red;
                                 Console.Error.WriteLine($"Unrecognised args: " + unclaimedArgs.Describe(args) + "");
                                 Console.ForegroundColor = consoleColor;
@@ -161,7 +167,7 @@ namespace Consolo.TestSource.g
                             if (!processingError)
                             {
                                 Consolo.Samples.SampleProgram.AddRemote(remoteName, url);
-                                return;
+                                return exitCode;
                             }
                         }
 
@@ -192,7 +198,7 @@ namespace Consolo.TestSource.g
                         Console.WriteLine("Show help and usage information");
                         Console.ForegroundColor = consoleColor;
                         Console.WriteLine();
-                        return;
+                        return exitCode;
                     }
                     if (!isHelp)
                     {
@@ -201,6 +207,7 @@ namespace Consolo.TestSource.g
 
                         if (unclaimedArgs.Any)
                         {
+                            exitCode = 1;
                             Console.ForegroundColor = ConsoleColor.Red;
                             Console.Error.WriteLine($"Unrecognised args: " + unclaimedArgs.Describe(args) + "");
                             Console.ForegroundColor = consoleColor;
@@ -210,7 +217,7 @@ namespace Consolo.TestSource.g
                         if (!processingError)
                         {
                             Consolo.Samples.SampleProgram.ListRemotes();
-                            return;
+                            return exitCode;
                         }
                     }
 
@@ -240,7 +247,7 @@ namespace Consolo.TestSource.g
                     Console.ForegroundColor = helpTextColor;
                     Console.WriteLine("  ");
                     Console.ForegroundColor = consoleColor;
-                    return;
+                    return exitCode;
                 }
                 if (args.Length >= 1 && args[0] == "branch")
                 {
@@ -251,6 +258,7 @@ namespace Consolo.TestSource.g
 
                         if (unclaimedArgs.Any)
                         {
+                            exitCode = 1;
                             Console.ForegroundColor = ConsoleColor.Red;
                             Console.Error.WriteLine($"Unrecognised args: " + unclaimedArgs.Describe(args) + "");
                             Console.ForegroundColor = consoleColor;
@@ -260,7 +268,7 @@ namespace Consolo.TestSource.g
                         if (!processingError)
                         {
                             Consolo.Samples.BranchActions.ListBranches();
-                            return;
+                            return exitCode;
                         }
                     }
 
@@ -281,7 +289,7 @@ namespace Consolo.TestSource.g
                     Console.WriteLine("Show help and usage information");
                     Console.ForegroundColor = consoleColor;
                     Console.WriteLine();
-                    return;
+                    return exitCode;
                 }
                 if (args.Length >= 1 && args[0] == "--version")
                 {
@@ -292,6 +300,7 @@ namespace Consolo.TestSource.g
 
                         if (unclaimedArgs.Any)
                         {
+                            exitCode = 1;
                             Console.ForegroundColor = ConsoleColor.Red;
                             Console.Error.WriteLine($"Unrecognised args: " + unclaimedArgs.Describe(args) + "");
                             Console.ForegroundColor = consoleColor;
@@ -301,7 +310,7 @@ namespace Consolo.TestSource.g
                         if (!processingError)
                         {
                             PrintVersion();
-                            return;
+                            return exitCode;
                         }
                     }
 
@@ -323,7 +332,7 @@ namespace Consolo.TestSource.g
                     Console.WriteLine("Show help and usage information");
                     Console.ForegroundColor = consoleColor;
                     Console.WriteLine();
-                    return;
+                    return exitCode;
                 }
                 if (!isHelp)
                 {
@@ -332,6 +341,7 @@ namespace Consolo.TestSource.g
 
                     if (unclaimedArgs.Any)
                     {
+                        exitCode = 1;
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.Error.WriteLine($"Unrecognised args: " + unclaimedArgs.Describe(args) + "");
                         Console.ForegroundColor = consoleColor;
@@ -341,7 +351,7 @@ namespace Consolo.TestSource.g
                     if (!processingError)
                     {
                         Consolo.Samples.Root.MainRoot();
-                        return;
+                        return exitCode;
                     }
                 }
 
@@ -371,7 +381,7 @@ namespace Consolo.TestSource.g
                 Console.ForegroundColor = helpTextColor;
                 Console.WriteLine("  ");
                 Console.ForegroundColor = consoleColor;
-                return;
+                return exitCode;
             }
         }
 
