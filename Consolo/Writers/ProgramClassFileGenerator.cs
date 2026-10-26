@@ -98,7 +98,7 @@ internal class ProgramClassFileGenerator(
                 }
                 _codeBuilder.AppendLine();
 
-                _codeBuilder.AppendLines("var isHelp = false;", "for (var i = 0; i < args.Length; i++)");
+                _codeBuilder.AppendLines("var isHelp = false;", "for (var i = args.Length - 1; i >= 0; i--)");
                 using (_codeBuilder.IndentBraces())
                 {
                     _codeBuilder.AppendLine("if (args[i] == \"--help\" || args[i] == \"-h\" || args[i] == \"-?\")");
