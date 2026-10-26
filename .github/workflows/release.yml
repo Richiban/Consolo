@@ -46,30 +46,10 @@ jobs:
         shell: pwsh
         run: ./version.ps1 -projectFileName Consolo.csproj
 
-  breaking-change:
-    name: Breaking change check
-    runs-on: ubuntu-latest
-    needs: version
-    outputs:
-      change_validation: ${{ steps.breaking.outputs.Consolo_ChangeValidationProperties }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          filter: tree:0
-      - name: Breaking change baseline
-        id: breaking
-        shell: pwsh
-        run: >-
-          ./breaking-change.ps1
-          -projectFileName Consolo.csproj
-          -previousVersion ${{ needs.version.outputs.previous_version }}
-          -currentVersion ${{ needs.version.outputs.package_version }}
-
   pack:
     name: Nuget pack 
     runs-on: ubuntu-latest
-    needs: [build-test, version, breaking-change]
+    needs: [build-test, version]
 
     outputs:
       package_version: ${{ needs.version.outputs.package_version }}
@@ -93,12 +73,6 @@ jobs:
           $version = '${{ needs.version.outputs.package_version }}'
           if (-not $version) { throw 'CurrentVersion not set by version.ps1' }
 
-          $changeValidation = '${{ needs.breaking-change.outputs.change_validation }}'
-          if ($changeValidation) {
-            $changeValidation = $changeValidation.Trim()
-          }
-          # Disabled change validation as it's not yet clear what this means for a source generator
-          # $packageVersionArg = "/p:PackageVersion=$version$changeValidation"
           $packageVersionArg = "/p:PackageVersion=$version"
 
           dotnet pack .\Consolo\Consolo.csproj -c Release -o .\artifacts $packageVersionArg
