@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
@@ -26,12 +25,45 @@ namespace Consolo.TestSource.g
                     // c command*
                 // --version command*
 
-            if (args.Any(arg => arg.StartsWith(' ') && ! arg.StartsWith("--")))
+            var normalizeArgs = false;
+            for (var i = 0; i < args.Length; i++)
             {
-                args = args.SelectMany(arg => arg.StartsWith(' ') && ! arg.StartsWith("--") ? arg.Skip(1).Select(c => $"-{c}") : new [] { arg }).ToArray();
+                if (args[i].StartsWith(' ') && !args[i].StartsWith("--"))
+                {
+                    normalizeArgs = true;
+                    break;
+                }
+            }
+            if (normalizeArgs)
+            {
+                var normalizedArgs = new List<string>();
+                for (var i = 0; i < args.Length; i++)
+                {
+                    var arg = args[i];
+                    if (arg.StartsWith(' ') && !arg.StartsWith("--"))
+                    {
+                        for (var j = 1; j < arg.Length; j++)
+                        {
+                            normalizedArgs.Add($"-{arg[j]}");
+                        }
+                    }
+                    else
+                    {
+                        normalizedArgs.Add(arg);
+                    }
+                }
+                args = normalizedArgs.ToArray();
             }
 
-            var isHelp = args.Any(arg => arg == "--help" || arg == "-h" || arg == "-?");
+            var isHelp = false;
+            for (var i = 0; i < args.Length; i++)
+            {
+                if (args[i] == "--help" || args[i] == "-h" || args[i] == "-?")
+                {
+                    isHelp = true;
+                    break;
+                }
+            }
 
             {
                 if (args.Length >= 1 && args[0] == "a")
@@ -123,13 +155,13 @@ namespace Consolo.TestSource.g
                         if (args.Length == 1)
                         {
                             Console.ForegroundColor = ConsoleColor.Red;
-                            Console.Error.WriteLine($"Missing command after: " + string.Join(" ", args.Skip(0)) + "");
+                            Console.Error.WriteLine($"Missing command after: " + string.Join(" ", args, 0, args.Length - 0) + "");
                             Console.ForegroundColor = consoleColor;
                         }
                         else
                         {
                             Console.ForegroundColor = ConsoleColor.Red;
-                            Console.Error.WriteLine($"Unknown command: " + string.Join(" ", args.Skip(1)) + "");
+                            Console.Error.WriteLine($"Unknown command: " + string.Join(" ", args, 1, args.Length - 1) + "");
                             Console.ForegroundColor = consoleColor;
                         }
                     }
@@ -203,7 +235,7 @@ namespace Consolo.TestSource.g
                     else
                     {
                         Console.ForegroundColor = ConsoleColor.Red;
-                        Console.Error.WriteLine($"Unknown command: " + string.Join(" ", args.Skip(0)) + "");
+                        Console.Error.WriteLine($"Unknown command: " + string.Join(" ", args, 0, args.Length - 0) + "");
                         Console.ForegroundColor = consoleColor;
                     }
                 }
@@ -316,7 +348,7 @@ namespace Consolo.TestSource.g
                 {
                     var optionName = arg.Substring(0, arg.Length - 5);
 
-                    if (optionNames.Contains(optionName))
+                    if (Array.IndexOf(optionNames, optionName) >= 0)
                     {
                         value = true;
                         unclaimedArgs.Clear(index);
@@ -328,7 +360,7 @@ namespace Consolo.TestSource.g
                 {
                     var optionName = arg.Substring(0, arg.Length - 6);
 
-                    if (optionNames.Contains(optionName))
+                    if (Array.IndexOf(optionNames, optionName) >= 0)
                     {
                         value = false;
                         unclaimedArgs.Clear(index);
@@ -336,7 +368,7 @@ namespace Consolo.TestSource.g
                     }
                 }
 
-                if (optionNames.Contains(arg))
+                if (Array.IndexOf(optionNames, arg) >= 0)
                 {
                     value = true;
                     unclaimedArgs.Clear(index);
@@ -357,7 +389,7 @@ namespace Consolo.TestSource.g
                 if (!unclaimedArgs[i]) continue;
                 var arg = args[i];
 
-                if (optionNames.Contains(arg))
+                if (Array.IndexOf(optionNames, arg) >= 0)
                 {
                     if (i + 1 < args.Length && unclaimedArgs[i + 1] && !args[i + 1].StartsWith("-"))
                     {
