@@ -1,50 +1,50 @@
 {
   "benchmarks": {
     "Generated64ArgumentMaskBoundary": {
-      "allocated_bytes": 2080.0,
-      "mean_ns": 4024.08
+      "allocated_bytes": 0.0,
+      "mean_ns": 2156.39
     },
     "Generated65ArgumentMaskFallback": {
-      "allocated_bytes": 2176.0,
-      "mean_ns": 4300.48
+      "allocated_bytes": 96.0,
+      "mean_ns": 2050.69
     },
     "GeneratedFlags": {
-      "allocated_bytes": 72.0,
-      "mean_ns": 152.05
+      "allocated_bytes": 0.0,
+      "mean_ns": 71.03
     },
     "GeneratedInvalidInput": {
       "allocated_bytes": 168.0,
-      "mean_ns": 200.63
+      "mean_ns": 189.02
     },
     "GeneratedMultipleParameters": {
       "allocated_bytes": 0.0,
-      "mean_ns": 70.96
+      "mean_ns": 42.54
     },
     "GeneratedOptionAlias": {
-      "allocated_bytes": 40.0,
-      "mean_ns": 77.58
+      "allocated_bytes": 0.0,
+      "mean_ns": 36.16
     },
     "GeneratedOptionColonValue": {
-      "allocated_bytes": 72.0,
-      "mean_ns": 75.67
+      "allocated_bytes": 32.0,
+      "mean_ns": 37.79
     },
     "GeneratedOptionEqualsValue": {
-      "allocated_bytes": 72.0,
-      "mean_ns": 77.46
+      "allocated_bytes": 32.0,
+      "mean_ns": 38.96
     },
     "GeneratedOptionsAbsent": {
-      "allocated_bytes": 40.0,
-      "mean_ns": 50.02
+      "allocated_bytes": 0.0,
+      "mean_ns": 22.49
     },
     "GeneratedOptionsPresent": {
-      "allocated_bytes": 40.0,
-      "mean_ns": 76.55
+      "allocated_bytes": 0.0,
+      "mean_ns": 36.39
     },
     "GeneratedSimplePositional": {
       "allocated_bytes": 0.0,
-      "mean_ns": 24.45
+      "mean_ns": 17.16
     }
   },
-  "captured_utc": "2026-10-26T12:07:29.209929+00:00",
-  "commit": "6852f534759067b89ef0aaacfae6dd30ac59c772"
+  "captured_utc": "2026-10-26T14:12:34.178784+00:00",
+  "commit": "0715d3b2607782dabeba44899a7dbd7fb87fe69a"
 }
