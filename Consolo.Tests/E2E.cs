@@ -55,6 +55,14 @@ internal class E2ETests
     }
 
     [Test]
+    public void UnknownCommandPreservesErrorText()
+    {
+        Program.Main(["unknown"]);
+
+        _testError.ToString().ShouldBe($"Unknown command: unknown{Environment.NewLine}");
+    }
+
+    [Test]
     public void LogCommandWithLinesArgumentRunsCommand()
     {
         Program.Main(["log", "1"]);
