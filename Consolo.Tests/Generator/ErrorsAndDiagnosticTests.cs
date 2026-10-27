@@ -91,6 +91,24 @@ internal class ErrorsAndDiagnosticsTests : GeneratorTests
     }
 
     [Test]
+    public void LocalFunctionWithAttribute()
+    {
+        var source = """
+                     using Consolo;
+
+                     [Consolo]
+                     static void M(bool uppercase = false)
+                     {
+                     }
+                     """;
+
+        var (_, diagnostics) = RunGenerator(source);
+        var error = diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error).ShouldHaveSingleItem();
+
+        error.Id.ShouldBe("Consolo0016");
+    }
+
+    [Test]
     public void ClassNamedProgram()
     {
         var source = """
@@ -373,6 +391,6 @@ internal class ErrorsAndDiagnosticsTests : GeneratorTests
         var (_, diagnostics) = RunGenerator(source);
         var errors = diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error);
 
-        errors.ShouldHaveSingleItem().Id.ShouldBe("Consolo0016");
+        errors.ShouldHaveSingleItem().Id.ShouldBe("Consolo0017");
     }
 }

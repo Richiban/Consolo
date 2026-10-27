@@ -12,12 +12,20 @@ internal class ConsoloSyntaxReceiver : ISyntaxReceiver
     public GlobalStatementSyntax? FirstGlobalStatement { get; set; }
     internal List<MethodDeclarationSyntax> MarkedMethods { get; } = [];
 
+    internal List<LocalFunctionStatementSyntax> MarkedLocalFunctions { get; } = [];
+
     public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
     {
         if (syntaxNode is GlobalStatementSyntax statement)
         {
             FirstGlobalStatement ??= statement;
             return;
+        }
+
+        if (syntaxNode is LocalFunctionStatementSyntax localFunction &&
+            localFunction.AttributeLists.SelectMany(x => x.Attributes).Any(ConsoloAttributeDefinition.Matches))
+        {
+            MarkedLocalFunctions.Add(localFunction);
         }
 
         if (syntaxNode is not MethodDeclarationSyntax method)
