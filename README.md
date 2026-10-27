@@ -24,6 +24,31 @@ dotnet add package Consolo
 
 > Note that to make use of Consolo your console app must **not** have a `Main` method or any top-level statements; Consolo will generate these for you.
 
+## File-based apps
+
+Consolo also works in a single C# file-based app. This requires the .NET 10 SDK or later:
+
+```cs
+#:package Consolo@0.26.0
+
+using Consolo;
+
+public static class P
+{
+    [Consolo]
+    public static void O()
+    {
+        Console.WriteLine("Hello from P!");
+    }
+}
+```
+
+Save the code as `Program.cs` and run it with:
+
+```bash
+dotnet run Program.cs
+```
+
 [Optional, but highly-recommended] If you want your XML comments to flow through to the generated code, you will need to add the following to your `csproj` file:
 
 ```xml
