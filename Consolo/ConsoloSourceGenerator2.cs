@@ -19,8 +19,19 @@ internal static class ConsoloSourceGenerator2
                 mainMethod.Identifier.GetLocation()));
         }
         
+        foreach (var localFunction in receiver.MarkedLocalFunctions)
+        {
+            diagnosticsManager.ReportDiagnostic(
+                DiagnosticModel.LocalFunctionNotSupported(localFunction.Identifier.GetLocation()));
+        }
+
         if (receiver.MarkedMethods.Count == 0)
         {
+            if (receiver.MarkedLocalFunctions.Count > 0)
+            {
+                return None;
+            }
+
             diagnosticsManager.ReportDiagnostic(DiagnosticModel.NoMethodsFound());
 
             return None;
