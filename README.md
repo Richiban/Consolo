@@ -33,20 +33,28 @@ Consolo also works in a single C# file-based app. This requires the .NET 10 SDK 
 
 using Consolo;
 
-public static class P
+public static class Program
 {
-    [Consolo]
-    public static void O()
+    [Consolo("")]
+    public static void PrintFileContents(string message, PrintMode mode = PrintMode.Normal)
     {
-        Console.WriteLine("Hello from P!");
+        Console.Write("From Consolo: ");
+        Console.WriteLine(mode == PrintMode.Uppercase ? message.ToUpper() : message);
     }
+}
+
+public enum PrintMode
+{
+    Normal,
+    Uppercase
 }
 ```
 
 Save the code as `Program.cs` and run it with:
 
 ```bash
-dotnet run Program.cs
+$ dotnet run .\Main.cs -- "Hello world" --mode uppercase
+From Consolo: HELLO WORLD
 ```
 
 [Optional, but highly-recommended] If you want your XML comments to flow through to the generated code, you will need to add the following to your `csproj` file:
