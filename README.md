@@ -24,6 +24,39 @@ dotnet add package Consolo
 
 > Note that to make use of Consolo your console app must **not** have a `Main` method or any top-level statements; Consolo will generate these for you.
 
+## File-based apps
+
+Consolo also works in a single C# file-based app. This requires the .NET 10 SDK or later:
+
+```cs
+#:package Consolo@0.26.0
+
+using Consolo;
+
+public static class Program
+{
+    [Consolo("")]
+    public static void PrintFileContents(string message, PrintMode mode = PrintMode.Normal)
+    {
+        Console.Write("From Consolo: ");
+        Console.WriteLine(mode == PrintMode.Uppercase ? message.ToUpper() : message);
+    }
+}
+
+public enum PrintMode
+{
+    Normal,
+    Uppercase
+}
+```
+
+Save the code as `Program.cs` and run it with:
+
+```bash
+$ dotnet run .\Main.cs -- "Hello world" --mode uppercase
+From Consolo: HELLO WORLD
+```
+
 [Optional, but highly-recommended] If you want your XML comments to flow through to the generated code, you will need to add the following to your `csproj` file:
 
 ```xml
