@@ -24,6 +24,15 @@ dotnet add package Consolo
 
 > Note that to make use of Consolo your console app must **not** have a `Main` method or any top-level statements; Consolo will generate these for you.
 
+## Collection parameters
+
+Parameters may be collections of any supported scalar type; each element is converted using the usual rules.
+
+* A required `params T[]` parameter (it must be last) consumes all remaining positional arguments and may be empty.
+* A required collection parameter without `params` consumes all remaining positional arguments, but needs at least one.
+* A collection parameter with a default value (e.g. `string[] tag = null`) is an option that may be repeated: `--tag one --tag two`. If omitted the method receives an empty collection.
+* `T[]`, `IEnumerable<T>`, `IReadOnlyCollection<T>`, `IReadOnlyList<T>`, `ICollection<T>` and `IList<T>` are supported by passing an array. Other collection types are not.
+
 ## File-based apps
 
 Consolo also works in a single C# file-based app. This requires the .NET 10 SDK or later:

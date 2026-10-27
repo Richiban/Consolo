@@ -20,6 +20,8 @@ static class ParameterModelBuilder
     {
         var diagnostics = new List<DiagnosticModel>();
 
+        var collectionElementType = GetCollectionElementType(parameterSymbol.Type);
+        var isCollection = collectionElementType is not null;
         var type = parameterSymbol.Type.GetFullyQualifiedName();
         var isFlag = type == "System.Boolean";
         var name = isFlag
@@ -28,11 +30,11 @@ static class ParameterModelBuilder
         var alias = (Option<string>)None;
         var isRequired = !parameterSymbol.HasExplicitDefaultValue;
         var defaultValue =
-            parameterSymbol.HasExplicitDefaultValue
+            parameterSymbol.HasExplicitDefaultValue && !isCollection
             ? SourceValueUtils.SourceValue(parameterSymbol.ExplicitDefaultValue, parameterSymbol.Type)
             : null;
         var helpDefaultValue =
-            parameterSymbol.HasExplicitDefaultValue
+            parameterSymbol.HasExplicitDefaultValue && !isCollection
                 ? GetHelpDefaultValue(parameterSymbol)
                 : null;
         var xmlComment = methodXmlComments.FlatMap(x => x[parameterSymbol.Name]);
@@ -83,7 +85,7 @@ static class ParameterModelBuilder
         }
 
         return TypeModelBuilder
-            .GetTypeModel(parameterSymbol.Type)
+            .GetTypeModel(collectionElementType ?? parameterSymbol.Type)
             .FlatMap(parameterType =>
                 new ResultWithDiagnostics<ParameterModel>(
                     new ParameterModel(
@@ -98,11 +100,34 @@ static class ParameterModelBuilder
                         Type: parameterType,
                         Location: parameterSymbol.Locations.FirstOrDefault(),
                         NameLocation: nameLocation,
-                        AliasLocation: aliasLocation
+                        AliasLocation: aliasLocation,
+                        IsCollection: isCollection,
+                        IsParams: isCollection && parameterSymbol.IsParams
                     ),
                     diagnostics
                 )
             );
+    }
+
+    private static ITypeSymbol? GetCollectionElementType(ITypeSymbol type)
+    {
+        if (type is IArrayTypeSymbol { Rank: 1 } array)
+        {
+            return array.ElementType;
+        }
+
+        if (type is INamedTypeSymbol { IsGenericType: true, TypeArguments.Length: 1 } named
+            && named.OriginalDefinition.SpecialType is
+                SpecialType.System_Collections_Generic_IEnumerable_T
+                or SpecialType.System_Collections_Generic_IReadOnlyCollection_T
+                or SpecialType.System_Collections_Generic_IReadOnlyList_T
+                or SpecialType.System_Collections_Generic_ICollection_T
+                or SpecialType.System_Collections_Generic_IList_T)
+        {
+            return named.TypeArguments[0];
+        }
+
+        return null;
     }
 
     private static string GetHelpDefaultValue(IParameterSymbol parameterSymbol)

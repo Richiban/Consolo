@@ -392,6 +392,41 @@ namespace Consolo.TestSource.g
             return false;
         }
 
+        // Consumes every remaining positional argument, returning how many were consumed
+        static int MatchAllPositionals<T>(string[] args, List<T> values, Func<string, T> mapper, ref UnclaimedArgs unclaimedArgs)
+        {
+            var count = 0;
+
+            for (var index = 0; index < unclaimedArgs.Length; index++)
+            {
+                if (!unclaimedArgs[index]) continue;
+                var arg = args[index];
+                if (!arg.StartsWith("-"))
+                {
+                    values.Add(mapper(arg));
+                    unclaimedArgs.Clear(index);
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        // Consumes every occurrence of the option; returns true if any occurrence is missing its value
+        static bool MatchAllOptions<T>(string[] args, string optionName, string optionAlias, List<T> values, Func<string, T> mapper, ref UnclaimedArgs unclaimedArgs)
+        {
+            while (true)
+            {
+                var value = default(T);
+                var result = MatchNextOption(args, optionName, optionAlias, ref value, mapper, ref unclaimedArgs);
+
+                if (result == 0) return false;
+                if (result == 2) return true;
+
+                values.Add(value);
+            }
+        }
+
         static bool MatchNextFlag(string[] args, string optionName, string optionAlias, ref bool value, ref UnclaimedArgs unclaimedArgs)
         {
             for (var index = 0; index < unclaimedArgs.Length; index++)

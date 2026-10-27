@@ -252,7 +252,9 @@ static class CommandTreeBuilder
                 name: param.Name,
                 sourceName: param.SourceName,
                 type: parameterType,
-                description: param.Description | param.Type.Name);
+                description: param.Description | param.Type.Name,
+                isCollection: param.IsCollection,
+                isParams: param.IsParams);
         }
         else
         {
@@ -275,11 +277,14 @@ static class CommandTreeBuilder
                 name: name,
                 alias: alias,
                 type: parameterType,
-                defaultValue: param.DefaultValue | $"default({parameterType.FullyQualifiedTypeName})",
+                defaultValue: param.IsCollection
+                    ? $"new global::System.Collections.Generic.List<{parameterType.FullyQualifiedTypeName}>()"
+                    : param.DefaultValue | $"default({parameterType.FullyQualifiedTypeName})",
                 helpDefaultValue: param.HelpDefaultValue,
                 description: description | param.Type.Name,
                 sourceName: param.SourceName,
-                isFlag: param.IsFlag);
+                isFlag: param.IsFlag,
+                isCollection: param.IsCollection);
         }
     }
 

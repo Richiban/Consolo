@@ -14,4 +14,6 @@ internal record ParameterModel(
     TypeModel Type,
     Option<Location> Location,
     Option<Location> NameLocation,
-    Option<Location> AliasLocation);
+    Option<Location> AliasLocation,
+    bool IsCollection = false,
+    bool IsParams = false);
