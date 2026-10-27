@@ -5,6 +5,24 @@ namespace Consolo.Tests.Generator;
 internal class ErrorsAndDiagnosticsTests : GeneratorTests
 {
     [Test]
+    public void PrivateMethodGivesSpecificError()
+    {
+        var source = """
+                     using Consolo;
+                     public class TestClass
+                     {
+                         [Consolo]
+                         private static void M() {}
+                     }
+                     """;
+
+        var (_, diagnostics) = RunGenerator(source);
+        var errors = diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error);
+
+        errors.ShouldHaveSingleItem().Id.ShouldBe("Consolo0015");
+    }
+
+    [Test]
     public void MainMethodResultsInError()
     {
         var source = """
@@ -87,7 +105,7 @@ internal class ErrorsAndDiagnosticsTests : GeneratorTests
         var (_, diagnostics) = RunGenerator(source);
         var error = diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error).ShouldHaveSingleItem();
 
-        error.Id.ShouldBe("Consolo0015");
+        error.Id.ShouldBe("Consolo0016");
     }
 
     [Test]

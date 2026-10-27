@@ -112,9 +112,17 @@ record DiagnosticModel(string Code, string Message, Location? Location, Diagnost
             Location: location | null!,
             Severity: DiagnosticSeverity.Error);
 
-    internal static DiagnosticModel LocalFunctionNotSupported(Option<Location> location) =>
+    internal static DiagnosticModel MethodNotAccessible(IMethodSymbol methodSymbol) =>
         new DiagnosticModel(
             Code: "Consolo0015",
+            Message:
+            $"Method {methodSymbol} must not be private or protected in order to use the {ConsoloAttributeDefinition.ShortName} attribute.",
+            Location: methodSymbol.Locations.FirstOrDefault(),
+            Severity: DiagnosticSeverity.Error);
+
+    internal static DiagnosticModel LocalFunctionNotSupported(Option<Location> location) =>
+        new DiagnosticModel(
+            Code: "Consolo0016",
             Message:
             $"The {ConsoloAttributeDefinition.ShortName} attribute cannot be used on a local function (such as a top-level statement method). Move the method into a class as a static method.",
             Location: location | null!,
