@@ -13,18 +13,26 @@ abstract class CommandParameter
     public abstract ParameterType Type { get; }
     public string FullyQualifiedTypeName => Type.FullyQualifiedTypeName;
     public abstract string DefaultValue { get; }
+    public abstract bool IsCollection { get; }
+    public virtual bool AllowsEmptyCollection => true;
 
     public sealed class Positional(
             string name,
             string sourceName,
             ParameterType type,
-            string description) : CommandParameter
+            string description,
+            bool isCollection = false,
+            bool isParams = false) : CommandParameter
     {
+        public override bool IsCollection { get; } = isCollection;
+        public override bool AllowsEmptyCollection { get; } = isParams;
         public override Option<string> Name { get; } = name;
         public override ParameterType Type { get; } = type;
         public override Option<string> Description { get; } = description;
         public override string SourceName { get; } = sourceName;
-        public override string DefaultValue { get; } = $"default({type.FullyQualifiedTypeName})";
+        public override string DefaultValue { get; } = isCollection
+            ? $"new global::System.Collections.Generic.List<{type.FullyQualifiedTypeName}>()"
+            : $"default({type.FullyQualifiedTypeName})";
     }
 
     public sealed class Option(
@@ -35,8 +43,10 @@ abstract class CommandParameter
             Option<string> alias,
             string description,
             string sourceName,
-            bool isFlag) : CommandParameter
+            bool isFlag,
+            bool isCollection = false) : CommandParameter
     {
+        public override bool IsCollection { get; } = isCollection;
         public override Option<string> Name { get; } = name;
         public override ParameterType Type { get; } = type;
         public override Option<string> Description { get; } = description;

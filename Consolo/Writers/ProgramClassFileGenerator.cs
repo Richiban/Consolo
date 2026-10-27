@@ -200,7 +200,7 @@ internal class ProgramClassFileGenerator(
 
             using (_codeBuilder.IndentBraces())
             {
-                var argString = String.Join(", ", method.Parameters.Select(x => x.SourceName));
+                var argString = String.Join(", ", method.Parameters.Select(x => x.IsCollection ? $"{x.SourceName}.ToArray()" : x.SourceName));
 
                 var line = $"{method.FullyQualifiedName}({argString})";
 
@@ -225,6 +225,7 @@ internal class ProgramClassFileGenerator(
                 {
                     CommandParameter.Option { IsFlag: true } => 0,
                     CommandParameter.Option => 1,
+                    { IsCollection: true } => 3,
                     _ => 2
                 }
                 ))
@@ -239,6 +240,17 @@ internal class ProgramClassFileGenerator(
                             $"MatchNextFlag(args, {GetMatcherNameArguments(flag)}, ref {flag.SourceName}, ref unclaimedArgs);");
                         break;
                     }
+                case CommandParameter.Option { IsCollection: true } option:
+                    {
+                        _codeBuilder.AppendLine(
+                            $"if (MatchAllOptions(args, {GetMatcherNameArguments(option)}, {option.SourceName}, s => {ConvertParameter(option.Type, "s")}, ref unclaimedArgs))");
+                        using (_codeBuilder.IndentBraces())
+                        {
+                            WriteError($"Missing value for option '--{option.Name}'");
+                            _codeBuilder.AppendLine("processingError = true;");
+                        }
+                        break;
+                    }
                 case CommandParameter.Option option:
                     {
                         _codeBuilder.AppendLine(
@@ -246,6 +258,18 @@ internal class ProgramClassFileGenerator(
                         using (_codeBuilder.IndentBraces())
                         {
                             WriteError($"Missing value for option '--{option.Name}'");
+                            _codeBuilder.AppendLine("processingError = true;");
+                        }
+                        break;
+                    }
+                case CommandParameter.Positional { IsCollection: true } positional:
+                    {
+                        var emptyOk = positional.AllowsEmptyCollection ? "true" : "false";
+                        _codeBuilder.AppendLine(
+                            $"if (MatchAllPositionals(args, {positional.SourceName}, s => {ConvertParameter(positional.Type, "s")}, ref unclaimedArgs) == 0 && !{emptyOk})");
+                        using (_codeBuilder.IndentBraces())
+                        {
+                            WriteError($"Missing value for argument '{positional.SourceName}' (expected one or more values)");
                             _codeBuilder.AppendLine("processingError = true;");
                         }
                         break;
@@ -289,6 +313,8 @@ internal class ProgramClassFileGenerator(
             CommandParameter.Option p when IsFlag(p) => $"[<{p.Name}>]",
             CommandParameter.Option p when p.Alias.IsSome(out var alias) => $"[-{alias}, --{p.Name} <{p.SourceName}>]",
             CommandParameter.Option p => $"[--{p.Name}]",
+            CommandParameter.Positional p when p.IsCollection && p.AllowsEmptyCollection => $"[<{p.Name}>...]",
+            CommandParameter.Positional p when p.IsCollection => $"<{p.Name}>...",
             var p => $"<{p.Name}>",
         };
 
@@ -305,6 +331,7 @@ internal class ProgramClassFileGenerator(
         {
             { Type: ParameterType.Enum e } =>
                 $"<{e.EnumValues.Select(v => v.HelpName).Truncate(3, "..").StringJoin("|")}>",
+            { IsCollection: true } p => $"{p.Name}...",
             var p => $"{p.Name}",
         };
     }
@@ -324,8 +351,15 @@ internal class ProgramClassFileGenerator(
         };
     }
 
+    private string GetPositionalDescription(CommandParameter.Positional parameter) =>
+        parameter.IsCollection
+            ? $"{parameter.Description | ""} ({(parameter.AllowsEmptyCollection ? "zero or more" : "one or more")} values)"
+            : parameter.Description | "";
+
     private string GetOptionDescription(CommandParameter.Option parameter) =>
-        parameter.HelpDefaultValue.IsSome(out var defaultValue)
+        parameter.IsCollection
+            ? $"{parameter.Description | ""} (can be repeated)"
+            : parameter.HelpDefaultValue.IsSome(out var defaultValue)
             ? $"{parameter.Description | ""} (default: {defaultValue})"
             : parameter.Description | "";
 
@@ -456,6 +490,41 @@ internal class ProgramClassFileGenerator(
                         }
 
                         return false;
+                    }
+
+                    // Consumes every remaining positional argument, returning how many were consumed
+                    static int MatchAllPositionals<T>(string[] args, List<T> values, Func<string, T> mapper, ref UnclaimedArgs unclaimedArgs)
+                    {
+                        var count = 0;
+
+                        for (var index = 0; index < unclaimedArgs.Length; index++)
+                        {
+                            if (!unclaimedArgs[index]) continue;
+                            var arg = args[index];
+                            if (!arg.StartsWith("-"))
+                            {
+                                values.Add(mapper(arg));
+                                unclaimedArgs.Clear(index);
+                                count++;
+                            }
+                        }
+
+                        return count;
+                    }
+
+                    // Consumes every occurrence of the option; returns true if any occurrence is missing its value
+                    static bool MatchAllOptions<T>(string[] args, string optionName, string optionAlias, List<T> values, Func<string, T> mapper, ref UnclaimedArgs unclaimedArgs)
+                    {
+                        while (true)
+                        {
+                            var value = default(T);
+                            var result = MatchNextOption(args, optionName, optionAlias, ref value, mapper, ref unclaimedArgs);
+
+                            if (result == 0) return false;
+                            if (result == 2) return true;
+
+                            values.Add(value);
+                        }
                     }
 
                     static bool MatchNextFlag(string[] args, string optionName, string optionAlias, ref bool value, ref UnclaimedArgs unclaimedArgs)
@@ -619,7 +688,7 @@ internal class ProgramClassFileGenerator(
                 );
 
                 var helpNames =
-                    method.MandatoryParameters.Select(p => (GetSoloHelpFirstColumn(p), p.Description));
+                    method.MandatoryParameters.Select(p => (GetSoloHelpFirstColumn(p), GetPositionalDescription(p)));
 
                 var longestParameter = helpNames.MaxOrDefault(x => x.Item1.Length);
 
