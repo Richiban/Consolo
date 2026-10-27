@@ -112,6 +112,14 @@ record DiagnosticModel(string Code, string Message, Location? Location, Diagnost
             Location: location | null!,
             Severity: DiagnosticSeverity.Error);
 
+    internal static DiagnosticModel MethodNotAccessible(IMethodSymbol methodSymbol) =>
+        new DiagnosticModel(
+            Code: "Consolo0015",
+            Message:
+            $"Method {methodSymbol} must not be private or protected in order to use the {ConsoloAttributeDefinition.ShortName} attribute.",
+            Location: methodSymbol.Locations.FirstOrDefault(),
+            Severity: DiagnosticSeverity.Error);
+
     public static DiagnosticModel
         MethodScanInfo(ResultWithDiagnostics<IReadOnlyCollection<MethodModel>> methodResults) =>
         new(
