@@ -29,6 +29,12 @@ internal static class MethodModelBuilder
                 DiagnosticModel.MethodMustBeStatic(methodSymbol));
         }
 
+        if (IsInaccessible(methodSymbol))
+        {
+            return ResultWithDiagnostics.DiagnosticOnly<MethodModel>(
+                DiagnosticModel.MethodNotAccessible(methodSymbol));
+        }
+
         var xmlComments = XmlCommentModelBuilder.GetXmlComments(methodSymbol);
 
         var parameterResults = methodSymbol.Parameters
@@ -55,6 +61,26 @@ internal static class MethodModelBuilder
                 ReturnType: methodSymbol.ReturnType
             ),
             diagnostics);
+    }
+
+    private static bool IsInaccessible(IMethodSymbol methodSymbol)
+    {
+        ISymbol? symbol = methodSymbol;
+
+        while (symbol != null)
+        {
+            if (symbol.DeclaredAccessibility is
+                Accessibility.Private or
+                Accessibility.Protected or
+                Accessibility.ProtectedAndInternal)
+            {
+                return true;
+            }
+
+            symbol = symbol.ContainingType;
+        }
+
+        return false;
     }
 
     private static ImmutableList<CommandPathItem> GetCommandPath(ISymbol symbol, List<DiagnosticModel> diagnostics)
