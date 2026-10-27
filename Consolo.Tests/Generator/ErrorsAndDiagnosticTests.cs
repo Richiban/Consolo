@@ -355,4 +355,24 @@ internal class ErrorsAndDiagnosticsTests : GeneratorTests
                     loc => loc.GetLineSpan().StartLinePosition.Character.ShouldBe(12),
                     loc => loc.SourceTree.GetText().ToString(loc.SourceSpan).ShouldBe("x")));
     }
+
+    [Test]
+    public void TopLevelStatementsWithConsoloResultsInError()
+    {
+        var source = """
+                     using Consolo;
+                     System.Console.WriteLine("hi");
+
+                     public class TestClass
+                     {
+                         [Consolo]
+                         public static void M() {}
+                     }
+                     """;
+
+        var (_, diagnostics) = RunGenerator(source);
+        var errors = diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error);
+
+        errors.ShouldHaveSingleItem().Id.ShouldBe("Consolo0016");
+    }
 }
