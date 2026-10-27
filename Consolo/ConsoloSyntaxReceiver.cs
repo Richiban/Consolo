@@ -9,12 +9,19 @@ namespace Consolo;
 internal class ConsoloSyntaxReceiver : ISyntaxReceiver
 {
     public MethodDeclarationSyntax? MainMethod { get; set; }
+    public GlobalStatementSyntax? FirstGlobalStatement { get; set; }
     internal List<MethodDeclarationSyntax> MarkedMethods { get; } = [];
 
     internal List<LocalFunctionStatementSyntax> MarkedLocalFunctions { get; } = [];
 
     public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
     {
+        if (syntaxNode is GlobalStatementSyntax statement)
+        {
+            FirstGlobalStatement ??= statement;
+            return;
+        }
+
         if (syntaxNode is LocalFunctionStatementSyntax localFunction &&
             localFunction.AttributeLists.SelectMany(x => x.Attributes).Any(ConsoloAttributeDefinition.Matches))
         {

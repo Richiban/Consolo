@@ -112,6 +112,13 @@ record DiagnosticModel(string Code, string Message, Location? Location, Diagnost
             Location: location | null!,
             Severity: DiagnosticSeverity.Error);
 
+    internal static DiagnosticModel TopLevelStatementsFound(Option<Location> location) =>
+        new DiagnosticModel(
+            Code: "Consolo0017",
+            Message: "You cannot mix top-level statements and Consolo in the same project",
+            Location: location | null!,
+            Severity: DiagnosticSeverity.Error);
+
     internal static DiagnosticModel MethodNotAccessible(IMethodSymbol methodSymbol) =>
         new DiagnosticModel(
             Code: "Consolo0015",

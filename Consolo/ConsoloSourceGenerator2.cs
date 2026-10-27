@@ -37,6 +37,12 @@ internal static class ConsoloSourceGenerator2
             return None;
         }
 
+        if (receiver.FirstGlobalStatement is {} globalStatement)
+        {
+            diagnosticsManager.ReportDiagnostic(DiagnosticModel.TopLevelStatementsFound(
+                globalStatement.GetLocation()));
+        }
+
         var methodResults = BuildMethods(context, receiver.MarkedMethods);
 
         if (methodResults.Result.Count == 0 && methodResults.Diagnostics.Count == 0)
