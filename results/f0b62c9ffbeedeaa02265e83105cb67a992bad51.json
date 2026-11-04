@@ -1,0 +1,50 @@
+{
+  "benchmarks": {
+    "Generated64ArgumentMaskBoundary": {
+      "allocated_bytes": 0.0,
+      "mean_ns": 4410.35
+    },
+    "Generated65ArgumentMaskFallback": {
+      "allocated_bytes": 96.0,
+      "mean_ns": 4637.91
+    },
+    "GeneratedFlags": {
+      "allocated_bytes": 0.0,
+      "mean_ns": 148.29
+    },
+    "GeneratedInvalidInput": {
+      "allocated_bytes": 168.0,
+      "mean_ns": 285.78
+    },
+    "GeneratedMultipleParameters": {
+      "allocated_bytes": 0.0,
+      "mean_ns": 85.83
+    },
+    "GeneratedOptionAlias": {
+      "allocated_bytes": 0.0,
+      "mean_ns": 74.05
+    },
+    "GeneratedOptionColonValue": {
+      "allocated_bytes": 32.0,
+      "mean_ns": 74.27
+    },
+    "GeneratedOptionEqualsValue": {
+      "allocated_bytes": 32.0,
+      "mean_ns": 75.78
+    },
+    "GeneratedOptionsAbsent": {
+      "allocated_bytes": 0.0,
+      "mean_ns": 45.17
+    },
+    "GeneratedOptionsPresent": {
+      "allocated_bytes": 0.0,
+      "mean_ns": 73.14
+    },
+    "GeneratedSimplePositional": {
+      "allocated_bytes": 0.0,
+      "mean_ns": 35.01
+    }
+  },
+  "captured_utc": "2026-11-04T21:34:49.245801+00:00",
+  "commit": "f0b62c9ffbeedeaa02265e83105cb67a992bad51"
+}
