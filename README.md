@@ -413,6 +413,8 @@ The generated `Main` exits with `1` when the command line can't be parsed. Other
 public static int Build(string path) => Compile(path) ? 0 : 1;
 ```
 
+If any command returns `Task` or `Task<int>`, the generated `Main` is `async` and awaits it, so exceptions surface unwrapped rather than as `AggregateException`. Async `Main` needs C# 7.1 or later; on older language versions the generated `Main` stays synchronous and blocks on the task instead.
+
 # Troubleshooting
 
 **Build error about a `Main` method or top-level statements**

@@ -20,11 +20,15 @@ internal abstract class GeneratorTests
     }
 
     protected static (Compilation, ImmutableArray<Diagnostic>) RunGenerator(
-        string source, string assemblyName = "Consolo.TestSource")
+        string source,
+        string assemblyName = "Consolo.TestSource",
+        LanguageVersion languageVersion = LanguageVersion.Default)
     {
+        var parseOptions = new CSharpParseOptions(languageVersion);
+
         var inputCompilation = CSharpCompilation.Create(
             assemblyName,
-            [CSharpSyntaxTree.ParseText(source)],
+            [CSharpSyntaxTree.ParseText(source, parseOptions)],
             [
                 MetadataReference.CreateFromFile(
                         typeof(Binder).GetTypeInfo().Assembly.Location),
@@ -34,7 +38,7 @@ internal abstract class GeneratorTests
 
         var generator = new ConsoloSourceGenerator();
 
-        var driver = CSharpGeneratorDriver.Create(generator)
+        var driver = CSharpGeneratorDriver.Create(new ISourceGenerator[] { generator }, parseOptions: parseOptions)
             .RunGeneratorsAndUpdateCompilation(
                 inputCompilation,
                 out var outputCompilation,

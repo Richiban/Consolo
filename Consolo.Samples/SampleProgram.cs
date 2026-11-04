@@ -193,5 +193,16 @@ namespace Consolo.Samples
         {
             Environment.ExitCode = code;
         }
+
+        /// <summary>
+        /// Exit by asynchronously throwing an exception
+        /// </summary>
+        /// <param name="message">The exception message</param>
+        [Consolo("throw-async")]
+        public static async Task ThrowAsync(string message)
+        {
+            await Task.Yield();
+            throw new InvalidOperationException(message);
+        }
     }
 }

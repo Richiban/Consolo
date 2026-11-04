@@ -149,6 +149,14 @@ internal class E2ETests
     }
 
     [Test]
+    public void AsyncCommandExceptionIsNotWrappedInAggregateException()
+    {
+        var ex = Assert.Throws<InvalidOperationException>(() => Program.Main(["exit", "throw-async", "boom"]));
+
+        ex.Message.ShouldBe("boom");
+    }
+
+    [Test]
     public void VersionCommandPrintsVersion()
     {
         Program.Main(["--version"]);
