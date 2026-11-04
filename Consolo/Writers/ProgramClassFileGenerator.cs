@@ -202,17 +202,26 @@ internal class ProgramClassFileGenerator(
             {
                 var argString = String.Join(", ", method.Parameters.Select(x => x.SourceName));
 
-                var line = $"{method.FullyQualifiedName}({argString})";
+                var call = $"{method.FullyQualifiedName}({argString})";
 
-                if (method.IsTaskReturn)
+                // An int-returning command supplies the exit code; otherwise honour Environment.ExitCode
+                switch (method)
                 {
-                    line += ".Wait()";
+                    case { IsTaskReturn: true, IsIntReturn: true }:
+                        _codeBuilder.AppendLine($"return {call}.Result;");
+                        break;
+                    case { IsIntReturn: true }:
+                        _codeBuilder.AppendLine($"return {call};");
+                        break;
+                    case { IsTaskReturn: true }:
+                        _codeBuilder.AppendLine($"{call}.Wait();");
+                        _codeBuilder.AppendLine("return Environment.ExitCode;");
+                        break;
+                    default:
+                        _codeBuilder.AppendLine($"{call};");
+                        _codeBuilder.AppendLine("return Environment.ExitCode;");
+                        break;
                 }
-
-                line += ';';
-                
-                _codeBuilder.AppendLine(line);
-                _codeBuilder.AppendLine("return exitCode;");
             }
         }
     }

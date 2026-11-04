@@ -12,7 +12,8 @@ internal static class VersionCommandAdder
             FullyQualifiedClassName: "", 
             Parameters: [],
             Description: "Prints the version of the application",
-            IsTaskReturn: false),
+            IsTaskReturn: false,
+            IsIntReturn: false),
         Description = "Prints the version of the application"
     };
 
