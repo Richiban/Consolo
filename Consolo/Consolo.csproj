@@ -11,13 +11,23 @@
         <authors>richiban</authors>
         <AssemblyName>Consolo</AssemblyName>
         <PackageId>Consolo</PackageId>
+        <Description>A source generator that turns your C# methods into a command-line app. Decorate methods with [Consolo] and get argument parsing, type conversion, sub-command routing and auto-generated help, with no Main method, no reflection and compile-time errors for misconfiguration.</Description>
+        <PackageTags>cli;command-line;console;arguments;parser;source-generator</PackageTags>
+        <PackageIcon>icon.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/Richiban/Consolo</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/Richiban/Consolo</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
     </PropertyGroup>
     <ItemGroup>
         <None Include="..\README.md"
               Pack="true"
               PackagePath="\" />
+        <None Include="..\assets\icon.png"
+              Pack="true"
+              PackagePath="\"
+              Visible="false" />
     </ItemGroup>
     <ItemGroup>
         <None Include="$(OutputPath)\$(AssemblyName).dll"
