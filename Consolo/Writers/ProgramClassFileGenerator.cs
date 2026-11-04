@@ -11,7 +11,8 @@ namespace Consolo;
 internal class ProgramClassFileGenerator(
     string applicationName,
     string generatedNamespace,
-    Root rootCommand) : CodeFileGenerator
+    Root rootCommand,
+    bool isAsyncMain) : CodeFileGenerator
 {
     private readonly CodeBuilder _codeBuilder = new();
     public override string FileName => "Program.g.cs";
@@ -50,7 +51,10 @@ internal class ProgramClassFileGenerator(
             _codeBuilder.AppendLine("/// <summary>");
             _codeBuilder.AppendLine("/// Entrypoint for " + applicationName);
             _codeBuilder.AppendLine("/// </summary>");
-            _codeBuilder.AppendLine("public static int Main(string[] args)");
+            _codeBuilder.AppendLine(
+                isAsyncMain
+                    ? "public static async global::System.Threading.Tasks.Task<int> Main(string[] args)"
+                    : "public static int Main(string[] args)");
             {
                 using var _3 = _codeBuilder.IndentBraces();
 
@@ -202,17 +206,29 @@ internal class ProgramClassFileGenerator(
             {
                 var argString = String.Join(", ", method.Parameters.Select(x => x.IsCollection ? $"{x.SourceName}.ToArray()" : x.SourceName));
 
-                var line = $"{method.FullyQualifiedName}({argString})";
+                var call = $"{method.FullyQualifiedName}({argString})";
 
-                if (method.IsTaskReturn)
+                // Without async Main, block with GetAwaiter().GetResult() so exceptions aren't wrapped in AggregateException
+                var awaitedCall = isAsyncMain ? $"await {call}" : $"{call}.GetAwaiter().GetResult()";
+
+                // An int-returning command supplies the exit code; otherwise honour Environment.ExitCode
+                switch (method)
                 {
-                    line += ".Wait()";
+                    case { IsTaskReturn: true, IsIntReturn: true }:
+                        _codeBuilder.AppendLine($"return {awaitedCall};");
+                        break;
+                    case { IsIntReturn: true }:
+                        _codeBuilder.AppendLine($"return {call};");
+                        break;
+                    case { IsTaskReturn: true }:
+                        _codeBuilder.AppendLine($"{awaitedCall};");
+                        _codeBuilder.AppendLine("return Environment.ExitCode;");
+                        break;
+                    default:
+                        _codeBuilder.AppendLine($"{call};");
+                        _codeBuilder.AppendLine("return Environment.ExitCode;");
+                        break;
                 }
-
-                line += ';';
-                
-                _codeBuilder.AppendLine(line);
-                _codeBuilder.AppendLine("return exitCode;");
             }
         }
     }

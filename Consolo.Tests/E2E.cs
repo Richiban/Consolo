@@ -149,6 +149,14 @@ internal class E2ETests
     }
 
     [Test]
+    public void AsyncCommandExceptionIsNotWrappedInAggregateException()
+    {
+        var ex = Assert.Throws<InvalidOperationException>(() => Program.Main(["exit", "throw-async", "boom"]));
+
+        ex.Message.ShouldBe("boom");
+    }
+
+    [Test]
     public void VersionCommandPrintsVersion()
     {
         Program.Main(["--version"]);
@@ -246,6 +254,15 @@ internal class E2ETests
 
         exitCode.ShouldNotBe(0);
         error.ShouldContain("Unknown command: unknown");
+    }
+
+    [TestCase("return")]
+    [TestCase("return-async")]
+    [TestCase("set")]
+    public void ProcessExitsWithCodeFromCommand(string command)
+    {
+        RunSampleProcess("exit", command, "3").ExitCode.ShouldBe(3);
+        RunSampleProcess("exit", command, "0").ExitCode.ShouldBe(0);
     }
 
     [Test]

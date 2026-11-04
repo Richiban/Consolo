@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace Consolo.Tests.Generator;
 
@@ -191,6 +192,98 @@ internal class SnapshotTests : GeneratorTests
         var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
 
         programText.ShouldMatchSnapshot();
+    }
+
+    [Test]
+    public void IntReturningMethodsSupplyExitCode()
+    {
+        var source =
+            """
+            using Consolo;
+            using System.Threading.Tasks;
+
+            namespace TestSamples;
+
+            public class TestClass
+            {
+                [Consolo]
+                public static int SyncMethod() => 3;
+
+                [Consolo]
+                public static async Task<int> AsyncMethod() => await Task.FromResult(4);
+            }
+            """;
+
+        var (compilation, diagnostics) = RunGenerator(source);
+
+        diagnostics.WarningsAndErrors().ShouldBeEmpty();
+        compilation.GetDiagnostics()
+            .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            .ShouldBeEmpty();
+
+        var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
+
+        programText.ShouldContain("public static async global::System.Threading.Tasks.Task<int> Main(string[] args)");
+        programText.ShouldContain("return TestSamples.TestClass.SyncMethod();");
+        programText.ShouldContain("return await TestSamples.TestClass.AsyncMethod();");
+    }
+
+    [Test]
+    public void SyncOnlyCommandsKeepSynchronousMain()
+    {
+        var source =
+            """
+            using Consolo;
+
+            namespace TestSamples;
+
+            public class TestClass
+            {
+                [Consolo]
+                public static void TestMethod()
+                {
+                }
+            }
+            """;
+
+        var (compilation, diagnostics) = RunGenerator(source);
+
+        diagnostics.WarningsAndErrors().ShouldBeEmpty();
+
+        GetProgramSyntaxTree(compilation).GetText().ToString()
+            .ShouldContain("public static int Main(string[] args)");
+    }
+
+    [Test]
+    public void TaskReturningCommandsBlockWhenLanguageVersionPredatesAsyncMain()
+    {
+        var source =
+            """
+            using Consolo;
+            using System.Threading.Tasks;
+
+            namespace TestSamples
+            {
+                public class TestClass
+                {
+                    [Consolo]
+                    public static Task TestMethod() => Task.CompletedTask;
+
+                    [Consolo]
+                    public static Task<int> TestMethodWithResult() => Task.FromResult(4);
+                }
+            }
+            """;
+
+        var (compilation, diagnostics) = RunGenerator(source, languageVersion: LanguageVersion.CSharp7);
+
+        diagnostics.WarningsAndErrors().ShouldBeEmpty();
+
+        var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
+
+        programText.ShouldContain("public static int Main(string[] args)");
+        programText.ShouldContain("TestSamples.TestClass.TestMethod().GetAwaiter().GetResult();");
+        programText.ShouldContain("return TestSamples.TestClass.TestMethodWithResult().GetAwaiter().GetResult();");
     }
 
     [Test]

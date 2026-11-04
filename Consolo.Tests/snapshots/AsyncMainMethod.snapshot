@@ -12,7 +12,7 @@ namespace Consolo.TestSource.g
         /// <summary>
         /// Entrypoint for Consolo.TestSource
         /// </summary>
-        public static int Main(string[] args)
+        public static async global::System.Threading.Tasks.Task<int> Main(string[] args)
         {
             var exitCode = 0;
             var consoleColor = Console.ForegroundColor;
@@ -83,8 +83,8 @@ namespace Consolo.TestSource.g
 
                         if (!processingError)
                         {
-                            TestSamples.TestClass.TestMethod().Wait();
-                            return exitCode;
+                            await TestSamples.TestClass.TestMethod();
+                            return Environment.ExitCode;
                         }
                     }
 
@@ -126,7 +126,7 @@ namespace Consolo.TestSource.g
                         if (!processingError)
                         {
                             PrintVersion();
-                            return exitCode;
+                            return Environment.ExitCode;
                         }
                     }
 

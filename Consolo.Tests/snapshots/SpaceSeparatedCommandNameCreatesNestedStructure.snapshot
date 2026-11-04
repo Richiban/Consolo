@@ -90,7 +90,7 @@ namespace Consolo.TestSource.g
                                 if (!processingError)
                                 {
                                     TestSamples.Actions.Action();
-                                    return exitCode;
+                                    return Environment.ExitCode;
                                 }
                             }
 
@@ -192,7 +192,7 @@ namespace Consolo.TestSource.g
                         if (!processingError)
                         {
                             PrintVersion();
-                            return exitCode;
+                            return Environment.ExitCode;
                         }
                     }
 

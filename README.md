@@ -410,6 +410,20 @@ Options:
 
 ```
 
+# Exit codes
+
+The generated `Main` exits with `1` when the command line can't be parsed. Otherwise the exit code comes from your command:
+
+- A command returning `int` or `Task<int>` exits with the returned value.
+- A command returning `void` or `Task` exits with `Environment.ExitCode`, so you can set that to signal failure.
+
+```csharp
+[Consolo]
+public static int Build(string path) => Compile(path) ? 0 : 1;
+```
+
+If any command returns `Task` or `Task<int>`, the generated `Main` is `async` and awaits it, so exceptions surface unwrapped rather than as `AggregateException`. Async `Main` needs C# 7.1 or later; on older language versions the generated `Main` stays synchronous and blocks on the task instead.
+
 # Troubleshooting
 
 **Build error about a `Main` method or top-level statements**

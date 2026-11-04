@@ -93,7 +93,7 @@ namespace Consolo.TestSource.g
                                 if (!processingError)
                                 {
                                     TestSamples.OuterTest.InnerTest1.TestMethod1();
-                                    return exitCode;
+                                    return Environment.ExitCode;
                                 }
                             }
 
@@ -155,7 +155,7 @@ namespace Consolo.TestSource.g
                                 if (!processingError)
                                 {
                                     TestSamples.OuterTest.InnerTest1.TestMethod2(arg1, arg2);
-                                    return exitCode;
+                                    return Environment.ExitCode;
                                 }
                             }
 
@@ -243,7 +243,7 @@ namespace Consolo.TestSource.g
                                 if (!processingError)
                                 {
                                     TestSamples.OuterTest.InnerTest2.TestMethod3();
-                                    return exitCode;
+                                    return Environment.ExitCode;
                                 }
                             }
 
@@ -349,7 +349,7 @@ namespace Consolo.TestSource.g
                         if (!processingError)
                         {
                             PrintVersion();
-                            return exitCode;
+                            return Environment.ExitCode;
                         }
                     }
 
