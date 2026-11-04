@@ -15,5 +15,12 @@ internal record ParameterModel(
     Option<Location> Location,
     Option<Location> NameLocation,
     Option<Location> AliasLocation,
-    bool IsCollection = false,
-    bool IsParams = false);
+    ParamsKind Params = ParamsKind.None);
+
+internal enum ParamsKind
+{
+    None,
+    Array,
+    // A C# 13 params collection, e.g. params IEnumerable<T> or params List<T>
+    Collection
+}

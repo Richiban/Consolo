@@ -24,14 +24,20 @@ dotnet add package Consolo
 
 > Note that to make use of Consolo your console app must **not** have a `Main` method or any top-level statements; Consolo will generate these for you.
 
-## Collection parameters
+## Params parameters
 
-Parameters may be collections of any supported scalar type; each element is converted using the usual rules.
+A `params` parameter takes all remaining positional arguments, converting each one using the usual rules. It may be empty.
 
-* A required `params T[]` parameter (it must be last) consumes all remaining positional arguments and may be empty.
-* A required collection parameter without `params` consumes all remaining positional arguments, but needs at least one.
-* A collection parameter with a default value (e.g. `string[] tag = null`) is an option that may be repeated: `--tag one --tag two`. If omitted the method receives an empty collection.
-* `T[]`, `IEnumerable<T>`, `IReadOnlyCollection<T>`, `IReadOnlyList<T>`, `ICollection<T>` and `IList<T>` are supported by passing an array. Other collection types are not.
+```cs
+[Consolo]
+public static void Echo(string prefix, params string[] words) { }
+// echo p a b c  ->  prefix = "p", words = ["a", "b", "c"]
+// echo p        ->  words = []
+```
+
+`params` arrays work with any language version. With C# 13 or later, params collections such as `params IEnumerable<T>`, `params List<T>` and `params ReadOnlySpan<T>` are supported too.
+
+Collection parameters that aren't `params` (e.g. `string[] words`) are not supported.
 
 ## File-based apps
 

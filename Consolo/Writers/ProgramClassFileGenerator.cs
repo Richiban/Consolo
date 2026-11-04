@@ -204,7 +204,7 @@ internal class ProgramClassFileGenerator(
 
             using (_codeBuilder.IndentBraces())
             {
-                var argString = String.Join(", ", method.Parameters.Select(x => x.IsCollection ? $"{x.SourceName}.ToArray()" : x.SourceName));
+                var argString = String.Join(", ", method.Parameters.Select(GetArgumentExpression));
 
                 var call = $"{method.FullyQualifiedName}({argString})";
 
@@ -233,6 +233,16 @@ internal class ProgramClassFileGenerator(
         }
     }
 
+    // Params values are gathered into a List<T>; a collection expression converts to any C# 13 params collection
+    // type, while arrays use ToArray() so they still compile on language versions without collection expressions
+    private static string GetArgumentExpression(CommandParameter parameter) =>
+        parameter switch
+        {
+            CommandParameter.Positional { Params: ParamsKind.Array } p => $"{p.SourceName}.ToArray()",
+            CommandParameter.Positional { Params: ParamsKind.Collection } p => $"[.. {p.SourceName}]",
+            var p => p.SourceName
+        };
+
     private void WriteParameterAssignments(CommandMethod method)
     {
         foreach (var p in
@@ -241,7 +251,7 @@ internal class ProgramClassFileGenerator(
                 {
                     CommandParameter.Option { IsFlag: true } => 0,
                     CommandParameter.Option => 1,
-                    { IsCollection: true } => 3,
+                    CommandParameter.Positional { IsParams: true } => 3,
                     _ => 2
                 }
                 ))
@@ -256,17 +266,6 @@ internal class ProgramClassFileGenerator(
                             $"MatchNextFlag(args, {GetMatcherNameArguments(flag)}, ref {flag.SourceName}, ref unclaimedArgs);");
                         break;
                     }
-                case CommandParameter.Option { IsCollection: true } option:
-                    {
-                        _codeBuilder.AppendLine(
-                            $"if (MatchAllOptions(args, {GetMatcherNameArguments(option)}, {option.SourceName}, s => {ConvertParameter(option.Type, "s")}, ref unclaimedArgs))");
-                        using (_codeBuilder.IndentBraces())
-                        {
-                            WriteError($"Missing value for option '--{option.Name}'");
-                            _codeBuilder.AppendLine("processingError = true;");
-                        }
-                        break;
-                    }
                 case CommandParameter.Option option:
                     {
                         _codeBuilder.AppendLine(
@@ -278,16 +277,10 @@ internal class ProgramClassFileGenerator(
                         }
                         break;
                     }
-                case CommandParameter.Positional { IsCollection: true } positional:
+                case CommandParameter.Positional { IsParams: true } positional:
                     {
-                        var emptyOk = positional.AllowsEmptyCollection ? "true" : "false";
                         _codeBuilder.AppendLine(
-                            $"if (MatchAllPositionals(args, {positional.SourceName}, s => {ConvertParameter(positional.Type, "s")}, ref unclaimedArgs) == 0 && !{emptyOk})");
-                        using (_codeBuilder.IndentBraces())
-                        {
-                            WriteError($"Missing value for argument '{positional.SourceName}' (expected one or more values)");
-                            _codeBuilder.AppendLine("processingError = true;");
-                        }
+                            $"MatchAllPositionals(args, {positional.SourceName}, s => {ConvertParameter(positional.Type, "s")}, ref unclaimedArgs);");
                         break;
                     }
                 case var positional:
@@ -329,8 +322,7 @@ internal class ProgramClassFileGenerator(
             CommandParameter.Option p when IsFlag(p) => $"[<{p.Name}>]",
             CommandParameter.Option p when p.Alias.IsSome(out var alias) => $"[-{alias}, --{p.Name} <{p.SourceName}>]",
             CommandParameter.Option p => $"[--{p.Name}]",
-            CommandParameter.Positional p when p.IsCollection && p.AllowsEmptyCollection => $"[<{p.Name}>...]",
-            CommandParameter.Positional p when p.IsCollection => $"<{p.Name}>...",
+            CommandParameter.Positional { IsParams: true } p => $"[<{p.Name}>...]",
             var p => $"<{p.Name}>",
         };
 
@@ -345,9 +337,9 @@ internal class ProgramClassFileGenerator(
     {
         return parameter switch
         {
-            { Type: ParameterType.Enum e } =>
-                $"<{e.EnumValues.Select(v => v.HelpName).Truncate(3, "..").StringJoin("|")}>",
-            { IsCollection: true } p => $"{p.Name}...",
+            { Type: ParameterType.Enum e } p =>
+                $"<{e.EnumValues.Select(v => v.HelpName).Truncate(3, "..").StringJoin("|")}>{(p.IsParams ? "..." : "")}",
+            { IsParams: true } p => $"{p.Name}...",
             var p => $"{p.Name}",
         };
     }
@@ -368,14 +360,12 @@ internal class ProgramClassFileGenerator(
     }
 
     private string GetPositionalDescription(CommandParameter.Positional parameter) =>
-        parameter.IsCollection
-            ? $"{parameter.Description | ""} ({(parameter.AllowsEmptyCollection ? "zero or more" : "one or more")} values)"
+        parameter.IsParams
+            ? $"{parameter.Description | ""} (zero or more values)"
             : parameter.Description | "";
 
     private string GetOptionDescription(CommandParameter.Option parameter) =>
-        parameter.IsCollection
-            ? $"{parameter.Description | ""} (can be repeated)"
-            : parameter.HelpDefaultValue.IsSome(out var defaultValue)
+        parameter.HelpDefaultValue.IsSome(out var defaultValue)
             ? $"{parameter.Description | ""} (default: {defaultValue})"
             : parameter.Description | "";
 
@@ -508,11 +498,9 @@ internal class ProgramClassFileGenerator(
                         return false;
                     }
 
-                    // Consumes every remaining positional argument, returning how many were consumed
-                    static int MatchAllPositionals<T>(string[] args, List<T> values, Func<string, T> mapper, ref UnclaimedArgs unclaimedArgs)
+                    // Consumes every remaining positional argument into a params parameter
+                    static void MatchAllPositionals<T>(string[] args, List<T> values, Func<string, T> mapper, ref UnclaimedArgs unclaimedArgs)
                     {
-                        var count = 0;
-
                         for (var index = 0; index < unclaimedArgs.Length; index++)
                         {
                             if (!unclaimedArgs[index]) continue;
@@ -521,25 +509,7 @@ internal class ProgramClassFileGenerator(
                             {
                                 values.Add(mapper(arg));
                                 unclaimedArgs.Clear(index);
-                                count++;
                             }
-                        }
-
-                        return count;
-                    }
-
-                    // Consumes every occurrence of the option; returns true if any occurrence is missing its value
-                    static bool MatchAllOptions<T>(string[] args, string optionName, string optionAlias, List<T> values, Func<string, T> mapper, ref UnclaimedArgs unclaimedArgs)
-                    {
-                        while (true)
-                        {
-                            var value = default(T);
-                            var result = MatchNextOption(args, optionName, optionAlias, ref value, mapper, ref unclaimedArgs);
-
-                            if (result == 0) return false;
-                            if (result == 2) return true;
-
-                            values.Add(value);
                         }
                     }
 

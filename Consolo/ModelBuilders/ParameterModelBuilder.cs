@@ -20,8 +20,7 @@ static class ParameterModelBuilder
     {
         var diagnostics = new List<DiagnosticModel>();
 
-        var collectionElementType = GetCollectionElementType(parameterSymbol.Type);
-        var isCollection = collectionElementType is not null;
+        var paramsElementType = GetParamsElementType(parameterSymbol);
         var type = parameterSymbol.Type.GetFullyQualifiedName();
         var isFlag = type == "System.Boolean";
         var name = isFlag
@@ -30,11 +29,11 @@ static class ParameterModelBuilder
         var alias = (Option<string>)None;
         var isRequired = !parameterSymbol.HasExplicitDefaultValue;
         var defaultValue =
-            parameterSymbol.HasExplicitDefaultValue && !isCollection
+            parameterSymbol.HasExplicitDefaultValue
             ? SourceValueUtils.SourceValue(parameterSymbol.ExplicitDefaultValue, parameterSymbol.Type)
             : null;
         var helpDefaultValue =
-            parameterSymbol.HasExplicitDefaultValue && !isCollection
+            parameterSymbol.HasExplicitDefaultValue
                 ? GetHelpDefaultValue(parameterSymbol)
                 : null;
         var xmlComment = methodXmlComments.FlatMap(x => x[parameterSymbol.Name]);
@@ -85,7 +84,7 @@ static class ParameterModelBuilder
         }
 
         return TypeModelBuilder
-            .GetTypeModel(collectionElementType ?? parameterSymbol.Type)
+            .GetTypeModel(paramsElementType ?? parameterSymbol.Type)
             .FlatMap(parameterType =>
                 new ResultWithDiagnostics<ParameterModel>(
                     new ParameterModel(
@@ -101,33 +100,45 @@ static class ParameterModelBuilder
                         Location: parameterSymbol.Locations.FirstOrDefault(),
                         NameLocation: nameLocation,
                         AliasLocation: aliasLocation,
-                        IsCollection: isCollection,
-                        IsParams: isCollection && parameterSymbol.IsParams
+                        Params: paramsElementType is null
+                            ? ParamsKind.None
+                            : parameterSymbol.Type is IArrayTypeSymbol
+                                ? ParamsKind.Array
+                                : ParamsKind.Collection
                     ),
                     diagnostics
                 )
             );
     }
 
-    private static ITypeSymbol? GetCollectionElementType(ITypeSymbol type)
+    // Covers params arrays and C# 13 params collections (spans, interfaces and concrete collection types)
+    private static ITypeSymbol? GetParamsElementType(IParameterSymbol parameterSymbol)
     {
-        if (type is IArrayTypeSymbol { Rank: 1 } array)
+        if (!parameterSymbol.IsParams)
         {
-            return array.ElementType;
+            return null;
         }
 
-        if (type is INamedTypeSymbol { IsGenericType: true, TypeArguments.Length: 1 } named
-            && named.OriginalDefinition.SpecialType is
-                SpecialType.System_Collections_Generic_IEnumerable_T
-                or SpecialType.System_Collections_Generic_IReadOnlyCollection_T
-                or SpecialType.System_Collections_Generic_IReadOnlyList_T
-                or SpecialType.System_Collections_Generic_ICollection_T
-                or SpecialType.System_Collections_Generic_IList_T)
+        switch (parameterSymbol.Type)
         {
-            return named.TypeArguments[0];
+            case IArrayTypeSymbol array:
+                return array.ElementType;
+
+            case INamedTypeSymbol { TypeArguments.Length: 1 } named when IsEnumerableOfT(named) || IsSpan(named):
+                return named.TypeArguments[0];
+
+            case INamedTypeSymbol named:
+                return named.AllInterfaces.FirstOrDefault(IsEnumerableOfT)?.TypeArguments[0];
+
+            default:
+                return null;
         }
 
-        return null;
+        static bool IsEnumerableOfT(INamedTypeSymbol t) =>
+            t.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T;
+
+        static bool IsSpan(INamedTypeSymbol t) =>
+            t.Name is "Span" or "ReadOnlySpan" && t.ContainingNamespace.ToDisplayString() == "System";
     }
 
     private static string GetHelpDefaultValue(IParameterSymbol parameterSymbol)
