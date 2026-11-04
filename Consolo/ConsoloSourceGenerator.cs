@@ -90,10 +90,21 @@ public class ConsoloSourceGenerator : ISourceGenerator
                 ? assemblyTitle!.Trim()
                 : assemblyName ?? "Unknown assembly";
 
+        // LanguageVersion is the effective version (default/latest already resolved); async Main needs C# 7.1
+        var supportsAsyncMain =
+            context.ParseOptions is CSharpParseOptions { LanguageVersion: >= LanguageVersion.CSharp7_1 };
+
         context.AddCodeFile(
             new ProgramClassFileGenerator(
-                applicationName, generatedNamespace, rootCommandModel));
+                applicationName,
+                generatedNamespace,
+                rootCommandModel,
+                isAsyncMain: supportsAsyncMain && HasTaskReturningCommand(rootCommandModel)));
     }
+
+    private static bool HasTaskReturningCommand(CommandTree command) =>
+        command.Method.IsSome(out var method) && method.IsTaskReturn
+        || command.SubCommands.Any(HasTaskReturningCommand);
 
     private static string GetValidNamespace(string namespaceName) =>
         string.Join(
