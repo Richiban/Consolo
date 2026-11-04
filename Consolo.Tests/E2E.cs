@@ -248,6 +248,15 @@ internal class E2ETests
         error.ShouldContain("Unknown command: unknown");
     }
 
+    [TestCase("return")]
+    [TestCase("return-async")]
+    [TestCase("set")]
+    public void ProcessExitsWithCodeFromCommand(string command)
+    {
+        RunSampleProcess("exit", command, "3").ExitCode.ShouldBe(3);
+        RunSampleProcess("exit", command, "0").ExitCode.ShouldBe(0);
+    }
+
     [Test]
     public void ProcessExitsWithZeroForSuccessAndHelp()
     {

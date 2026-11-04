@@ -194,6 +194,39 @@ internal class SnapshotTests : GeneratorTests
     }
 
     [Test]
+    public void IntReturningMethodsSupplyExitCode()
+    {
+        var source =
+            """
+            using Consolo;
+            using System.Threading.Tasks;
+
+            namespace TestSamples;
+
+            public class TestClass
+            {
+                [Consolo]
+                public static int SyncMethod() => 3;
+
+                [Consolo]
+                public static async Task<int> AsyncMethod() => await Task.FromResult(4);
+            }
+            """;
+
+        var (compilation, diagnostics) = RunGenerator(source);
+
+        diagnostics.WarningsAndErrors().ShouldBeEmpty();
+        compilation.GetDiagnostics()
+            .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            .ShouldBeEmpty();
+
+        var programText = GetProgramSyntaxTree(compilation).GetText().ToString();
+
+        programText.ShouldContain("return TestSamples.TestClass.SyncMethod();");
+        programText.ShouldContain("return TestSamples.TestClass.AsyncMethod().Result;");
+    }
+
+    [Test]
     public void ExplicitNameChangesCommandName()
     {
         var source =

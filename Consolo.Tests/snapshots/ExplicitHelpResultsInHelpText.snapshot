@@ -10,3 +10,4 @@ Commands:
     remote                  List remotes
     remote ..               Commands for managing remotes
     clean [options]         Clean the working directory
+    exit ..                 Commands that exit with a given code

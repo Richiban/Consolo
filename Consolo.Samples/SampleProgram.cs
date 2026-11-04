@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Threading.Tasks;
 
 
 namespace Consolo.Samples
@@ -156,6 +157,41 @@ namespace Consolo.Samples
             [Consolo(Alias = "f")] bool force = false)
         {
             Console.WriteLine($"Cleaning the working directory ({new { bypassGitIgnore, includeDirectories, force }})");
+        }
+    }
+
+    /// <summary>
+    /// Commands that exit with a given code
+    /// </summary>
+    [Consolo("exit")]
+    class ExitCommands
+    {
+        /// <summary>
+        /// Exit by returning the code
+        /// </summary>
+        /// <param name="code">The exit code</param>
+        [Consolo("return")]
+        public static int Return(int code) => code;
+
+        /// <summary>
+        /// Exit by asynchronously returning the code
+        /// </summary>
+        /// <param name="code">The exit code</param>
+        [Consolo("return-async")]
+        public static async Task<int> ReturnAsync(int code)
+        {
+            await Task.Yield();
+            return code;
+        }
+
+        /// <summary>
+        /// Exit by setting Environment.ExitCode
+        /// </summary>
+        /// <param name="code">The exit code</param>
+        [Consolo("set")]
+        public static void Set(int code)
+        {
+            Environment.ExitCode = code;
         }
     }
 }

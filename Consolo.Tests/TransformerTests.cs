@@ -30,6 +30,8 @@ class TransformerTests
             .Setup(t => t.ToDisplayString(It.IsAny<SymbolDisplayFormat?>()))
             .Returns("void");
         
+        TaskMock.Setup(t => t.SpecialType).Returns(SpecialType.None);
+
         TaskMock
             .Setup(t => t.ToDisplayString(It.IsAny<SymbolDisplayFormat>()))
             .Returns("System.Threading.Tasks.Task");
@@ -97,7 +99,8 @@ class TransformerTests
                     "SomeNamespace.SomeClass.SomeFunction"),
                 method => method.Options.ShouldBeEmpty(),
                 method => method.MandatoryParameterCount.ShouldBe(0),
-                method => method.IsTaskReturn.ShouldBe(true));
+                method => method.IsTaskReturn.ShouldBe(true),
+                method => method.IsIntReturn.ShouldBe(false));
     }
 
     [Test]

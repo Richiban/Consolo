@@ -84,7 +84,7 @@ namespace Consolo.TestSource.g
                         if (!processingError)
                         {
                             TestSamples.TestClass.TestMethod().Wait();
-                            return exitCode;
+                            return Environment.ExitCode;
                         }
                     }
 
@@ -126,7 +126,7 @@ namespace Consolo.TestSource.g
                         if (!processingError)
                         {
                             PrintVersion();
-                            return exitCode;
+                            return Environment.ExitCode;
                         }
                     }
 

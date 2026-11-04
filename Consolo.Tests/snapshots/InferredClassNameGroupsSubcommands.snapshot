@@ -89,7 +89,7 @@ namespace Consolo.TestSource.g
                             if (!processingError)
                             {
                                 TestSamples.Fancy.Table();
-                                return exitCode;
+                                return Environment.ExitCode;
                             }
                         }
 
@@ -131,7 +131,7 @@ namespace Consolo.TestSource.g
                             if (!processingError)
                             {
                                 TestSamples.Fancy.Choice();
-                                return exitCode;
+                                return Environment.ExitCode;
                             }
                         }
 
@@ -173,7 +173,7 @@ namespace Consolo.TestSource.g
                             if (!processingError)
                             {
                                 TestSamples.Fancy.Throw();
-                                return exitCode;
+                                return Environment.ExitCode;
                             }
                         }
 
@@ -253,7 +253,7 @@ namespace Consolo.TestSource.g
                         if (!processingError)
                         {
                             PrintVersion();
-                            return exitCode;
+                            return Environment.ExitCode;
                         }
                     }
 

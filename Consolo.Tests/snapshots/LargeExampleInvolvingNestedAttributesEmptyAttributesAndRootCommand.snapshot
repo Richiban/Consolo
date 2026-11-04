@@ -99,7 +99,7 @@ namespace Consolo.TestSource.g
                             if (!processingError)
                             {
                                 Consolo.Samples.SampleProgram.RemoveRemote(remoteName);
-                                return exitCode;
+                                return Environment.ExitCode;
                             }
                         }
 
@@ -167,7 +167,7 @@ namespace Consolo.TestSource.g
                             if (!processingError)
                             {
                                 Consolo.Samples.SampleProgram.AddRemote(remoteName, url);
-                                return exitCode;
+                                return Environment.ExitCode;
                             }
                         }
 
@@ -217,7 +217,7 @@ namespace Consolo.TestSource.g
                         if (!processingError)
                         {
                             Consolo.Samples.SampleProgram.ListRemotes();
-                            return exitCode;
+                            return Environment.ExitCode;
                         }
                     }
 
@@ -268,7 +268,7 @@ namespace Consolo.TestSource.g
                         if (!processingError)
                         {
                             Consolo.Samples.BranchActions.ListBranches();
-                            return exitCode;
+                            return Environment.ExitCode;
                         }
                     }
 
@@ -310,7 +310,7 @@ namespace Consolo.TestSource.g
                         if (!processingError)
                         {
                             PrintVersion();
-                            return exitCode;
+                            return Environment.ExitCode;
                         }
                     }
 
@@ -351,7 +351,7 @@ namespace Consolo.TestSource.g
                     if (!processingError)
                     {
                         Consolo.Samples.Root.MainRoot();
-                        return exitCode;
+                        return Environment.ExitCode;
                     }
                 }
 

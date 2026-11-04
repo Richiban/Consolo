@@ -401,6 +401,18 @@ Options:
 
 ```
 
+# Exit codes
+
+The generated `Main` exits with `1` when the command line can't be parsed. Otherwise the exit code comes from your command:
+
+- A command returning `int` or `Task<int>` exits with the returned value.
+- A command returning `void` or `Task` exits with `Environment.ExitCode`, so you can set that to signal failure.
+
+```csharp
+[Consolo]
+public static int Build(string path) => Compile(path) ? 0 : 1;
+```
+
 # Troubleshooting
 
 **Build error about a `Main` method or top-level statements**

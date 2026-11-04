@@ -199,10 +199,19 @@ static class CommandTreeBuilder
             MethodName: methodModel.MethodName,
             Parameters: MapParameters(methodModel, diagnostics),
             Description: methodModel.Description,
-            IsTaskReturn: IsTaskReturn(methodModel));
+            IsTaskReturn: IsTaskReturn(methodModel),
+            IsIntReturn: IsIntReturn(methodModel));
 
-    private static bool IsTaskReturn(MethodModel methodModel) => 
+    // Matches both Task and Task<T>, since the display format omits type arguments
+    private static bool IsTaskReturn(MethodModel methodModel) =>
         methodModel.ReturnType.GetFullyQualifiedName() == "System.Threading.Tasks.Task";
+
+    // Matches int and Task<int>; the result becomes the process exit code
+    private static bool IsIntReturn(MethodModel methodModel) =>
+        methodModel.ReturnType.SpecialType == SpecialType.System_Int32
+        || IsTaskReturn(methodModel)
+        && methodModel.ReturnType is INamedTypeSymbol { TypeArguments.Length: 1 } namedType
+        && namedType.TypeArguments[0].SpecialType == SpecialType.System_Int32;
 
     private static IReadOnlyCollection<CommandParameter> MapParameters(MethodModel methodModel,
         List<DiagnosticModel> diagnostics)
