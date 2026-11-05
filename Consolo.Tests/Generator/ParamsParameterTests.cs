@@ -1,5 +1,6 @@
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -10,12 +11,23 @@ internal class ParamsParameterTests : GeneratorTests
     private const string Source =
         """
         using System;
+        using System.Collections;
         using System.Collections.Generic;
+        using System.Threading.Tasks;
         using Consolo;
 
         namespace ParamsTests;
 
         public enum Colour { Red, Green, Blue }
+
+        // A params collection that has only the GetEnumerator pattern, not IEnumerable<T>
+        public class Words : IEnumerable
+        {
+            private readonly List<string> _items = new();
+            public void Add(string item) => _items.Add(item);
+            public List<string>.Enumerator GetEnumerator() => _items.GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        }
 
         public static class Commands
         {
@@ -62,6 +74,21 @@ internal class ParamsParameterTests : GeneratorTests
             {
                 Result = string.Join("+", parts.ToArray());
             }
+
+            [Consolo]
+            public static Task Later(params ReadOnlySpan<string> parts)
+            {
+                Result = "later:" + string.Join("+", parts.ToArray());
+                return Task.CompletedTask;
+            }
+
+            [Consolo]
+            public static void Collect(params Words words)
+            {
+                var collected = new List<string>();
+                foreach (var word in words) collected.Add(word);
+                Result = "words:" + string.Join(",", collected);
+            }
         }
         """;
 
@@ -93,7 +120,12 @@ internal class ParamsParameterTests : GeneratorTests
             Console.SetOut(output);
             Console.SetError(error);
 
-            var exitCode = (int)main.Invoke(null, [args])!;
+            // Main is async when any command returns a Task
+            var exitCode = main.Invoke(null, [args]) switch
+            {
+                Task<int> task => task.GetAwaiter().GetResult(),
+                var value => (int)value!
+            };
             var result = (string)commands.GetField("Result")!.GetValue(null)!;
 
             return (exitCode, result, error.ToString(), output.ToString());
@@ -187,6 +219,58 @@ internal class ParamsParameterTests : GeneratorTests
 
         exitCode.ShouldBe(0);
         result.ShouldBe("a+b");
+    }
+
+    [Test]
+    public void ParamsReadOnlySpanWorksWithAsyncMain()
+    {
+        var (exitCode, result, _, _) = Run("later", "a", "b");
+
+        exitCode.ShouldBe(0);
+        result.ShouldBe("later:a+b");
+    }
+
+    [Test]
+    public void ParamsCollectionWithOnlyEnumeratorPatternIsSupported()
+    {
+        var (exitCode, result, _, _) = Run("collect", "a", "b");
+
+        exitCode.ShouldBe(0);
+        result.ShouldBe("words:a,b");
+    }
+
+    [Test]
+    public void ParamsCollectionCallsTheAnnotatedOverload()
+    {
+        const string source =
+            """
+            using System.Collections.Generic;
+            using Consolo;
+
+            namespace ParamsTests;
+
+            public static class Commands
+            {
+                public static string Result = "";
+
+                [Consolo]
+                public static void Echo(params IEnumerable<string> items)
+                {
+                    Result = "annotated:" + string.Join(",", items);
+                }
+
+                // A List<T> is a better target for a bare collection expression than IEnumerable<T>
+                public static void Echo(List<string> items)
+                {
+                    Result = "other overload";
+                }
+            }
+            """;
+
+        var (exitCode, result, _, _) = Run(source, LanguageVersion.CSharp13, "echo", "a", "b");
+
+        exitCode.ShouldBe(0);
+        result.ShouldBe("annotated:a,b");
     }
 
     [Test]

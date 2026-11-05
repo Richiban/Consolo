@@ -19,13 +19,16 @@ abstract class CommandParameter
             string sourceName,
             ParameterType type,
             string description,
-            ParamsKind @params = ParamsKind.None) : CommandParameter
+            ParamsKind @params = ParamsKind.None,
+            string paramsTypeName = "") : CommandParameter
     {
         public override Option<string> Name { get; } = name;
         public override ParameterType Type { get; } = type;
         public override Option<string> Description { get; } = description;
         public override string SourceName { get; } = sourceName;
         public ParamsKind Params { get; } = @params;
+        // The declared params type, e.g. global::System.Collections.Generic.IEnumerable<string>
+        public string ParamsTypeName { get; } = paramsTypeName;
         public bool IsParams => Params != ParamsKind.None;
         public override string DefaultValue { get; } = @params != ParamsKind.None
             ? $"new global::System.Collections.Generic.List<{type.FullyQualifiedTypeName}>()"

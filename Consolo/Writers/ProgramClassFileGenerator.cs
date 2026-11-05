@@ -204,6 +204,13 @@ internal class ProgramClassFileGenerator(
 
             using (_codeBuilder.IndentBraces())
             {
+                // A collection expression is typed by overload resolution, so give it the declared type first;
+                // passed straight to the call it could bind to another overload of the command method
+                foreach (var p in method.MandatoryParameters.Where(p => p.Params == ParamsKind.Collection))
+                {
+                    _codeBuilder.AppendLine($"{p.ParamsTypeName} {p.SourceName}Argument = [.. {p.SourceName}];");
+                }
+
                 var argString = String.Join(", ", method.Parameters.Select(GetArgumentExpression));
 
                 var call = $"{method.FullyQualifiedName}({argString})";
@@ -239,7 +246,7 @@ internal class ProgramClassFileGenerator(
         parameter switch
         {
             CommandParameter.Positional { Params: ParamsKind.Array } p => $"{p.SourceName}.ToArray()",
-            CommandParameter.Positional { Params: ParamsKind.Collection } p => $"[.. {p.SourceName}]",
+            CommandParameter.Positional { Params: ParamsKind.Collection } p => $"{p.SourceName}Argument",
             var p => p.SourceName
         };
 

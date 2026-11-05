@@ -104,14 +104,16 @@ static class ParameterModelBuilder
                             ? ParamsKind.None
                             : parameterSymbol.Type is IArrayTypeSymbol
                                 ? ParamsKind.Array
-                                : ParamsKind.Collection
+                                : ParamsKind.Collection,
+                        ParamsTypeName: parameterSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
                     ),
                     diagnostics
                 )
             );
     }
 
-    // Covers params arrays and C# 13 params collections (spans, interfaces and concrete collection types)
+    // Covers params arrays and C# 13 params collections. A params collection's element type is its iteration type,
+    // found the way foreach finds it: the public GetEnumerator pattern first, then IEnumerable<T>
     private static ITypeSymbol? GetParamsElementType(IParameterSymbol parameterSymbol)
     {
         if (!parameterSymbol.IsParams)
@@ -119,26 +121,52 @@ static class ParameterModelBuilder
             return null;
         }
 
-        switch (parameterSymbol.Type)
+        return parameterSymbol.Type switch
         {
-            case IArrayTypeSymbol array:
-                return array.ElementType;
+            IArrayTypeSymbol array => array.ElementType,
+            INamedTypeSymbol { TypeKind: TypeKind.Interface } named => GetEnumerableOfTElementType(named),
+            INamedTypeSymbol named => GetPatternIterationType(named) ?? GetEnumerableOfTElementType(named),
+            _ => null
+        };
+    }
 
-            case INamedTypeSymbol { TypeArguments.Length: 1 } named when IsEnumerableOfT(named) || IsSpan(named):
-                return named.TypeArguments[0];
+    private static ITypeSymbol? GetEnumerableOfTElementType(INamedTypeSymbol type) =>
+        new[] { type }
+            .Concat(type.AllInterfaces)
+            .FirstOrDefault(t => t.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T)
+            ?.TypeArguments[0];
 
-            case INamedTypeSymbol named:
-                return named.AllInterfaces.FirstOrDefault(IsEnumerableOfT)?.TypeArguments[0];
+    private static ITypeSymbol? GetPatternIterationType(INamedTypeSymbol type)
+    {
+        var getEnumerator = GetTypeAndBaseTypes(type)
+            .SelectMany(t => t.GetMembers("GetEnumerator"))
+            .OfType<IMethodSymbol>()
+            .FirstOrDefault(m => m is { IsStatic: false, Parameters.Length: 0, DeclaredAccessibility: Accessibility.Public });
 
-            default:
-                return null;
+        return getEnumerator?.ReturnType switch
+        {
+            // e.g. a GetEnumerator() that returns IEnumerator<T>
+            INamedTypeSymbol { TypeKind: TypeKind.Interface } enumeratorInterface =>
+                new[] { enumeratorInterface }
+                    .Concat(enumeratorInterface.AllInterfaces)
+                    .FirstOrDefault(t => t.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerator_T)
+                    ?.TypeArguments[0],
+            INamedTypeSymbol enumeratorType =>
+                GetTypeAndBaseTypes(enumeratorType)
+                    .SelectMany(t => t.GetMembers("Current"))
+                    .OfType<IPropertySymbol>()
+                    .FirstOrDefault(p => p is { IsStatic: false, DeclaredAccessibility: Accessibility.Public })
+                    ?.Type,
+            _ => null
+        };
+    }
+
+    private static IEnumerable<INamedTypeSymbol> GetTypeAndBaseTypes(INamedTypeSymbol type)
+    {
+        for (var t = type; t is not null; t = t.BaseType)
+        {
+            yield return t;
         }
-
-        static bool IsEnumerableOfT(INamedTypeSymbol t) =>
-            t.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T;
-
-        static bool IsSpan(INamedTypeSymbol t) =>
-            t.Name is "Span" or "ReadOnlySpan" && t.ContainingNamespace.ToDisplayString() == "System";
     }
 
     private static string GetHelpDefaultValue(IParameterSymbol parameterSymbol)

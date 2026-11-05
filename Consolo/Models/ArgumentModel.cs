@@ -15,7 +15,8 @@ internal record ParameterModel(
     Option<Location> Location,
     Option<Location> NameLocation,
     Option<Location> AliasLocation,
-    ParamsKind Params = ParamsKind.None);
+    ParamsKind Params = ParamsKind.None,
+    string ParamsTypeName = "");
 
 internal enum ParamsKind
 {
