@@ -14,4 +14,14 @@ internal record ParameterModel(
     TypeModel Type,
     Option<Location> Location,
     Option<Location> NameLocation,
-    Option<Location> AliasLocation);
+    Option<Location> AliasLocation,
+    ParamsKind Params = ParamsKind.None,
+    string ParamsTypeName = "");
+
+internal enum ParamsKind
+{
+    None,
+    Array,
+    // A C# 13 params collection, e.g. params IEnumerable<T> or params List<T>
+    Collection
+}

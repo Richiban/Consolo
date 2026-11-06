@@ -261,7 +261,9 @@ static class CommandTreeBuilder
                 name: param.Name,
                 sourceName: param.SourceName,
                 type: parameterType,
-                description: param.Description | param.Type.Name);
+                description: param.Description | param.Type.Name,
+                @params: param.Params,
+                paramsTypeName: param.ParamsTypeName);
         }
         else
         {

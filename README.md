@@ -24,6 +24,21 @@ dotnet add package Consolo
 
 > Note that to make use of Consolo your console app must **not** have a `Main` method or any top-level statements; Consolo will generate these for you.
 
+## Params parameters
+
+A `params` parameter takes all remaining positional arguments, converting each one using the usual rules. It may be empty.
+
+```cs
+[Consolo]
+public static void Echo(string prefix, params string[] words) { }
+// echo p a b c  ->  prefix = "p", words = ["a", "b", "c"]
+// echo p        ->  words = []
+```
+
+`params` arrays work with any language version. With C# 13 or later, params collections such as `params IEnumerable<T>`, `params List<T>` and `params ReadOnlySpan<T>` are supported too.
+
+Collection parameters that aren't `params` (e.g. `string[] words`) are not supported.
+
 ## File-based apps
 
 Consolo also works in a single C# file-based app. This requires the .NET 10 SDK or later:

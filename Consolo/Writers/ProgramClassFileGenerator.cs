@@ -204,7 +204,14 @@ internal class ProgramClassFileGenerator(
 
             using (_codeBuilder.IndentBraces())
             {
-                var argString = String.Join(", ", method.Parameters.Select(x => x.SourceName));
+                // A collection expression is typed by overload resolution, so give it the declared type first;
+                // passed straight to the call it could bind to another overload of the command method
+                foreach (var p in method.MandatoryParameters.Where(p => p.Params == ParamsKind.Collection))
+                {
+                    _codeBuilder.AppendLine($"{p.ParamsTypeName} {p.SourceName}Argument = [.. {p.SourceName}];");
+                }
+
+                var argString = String.Join(", ", method.Parameters.Select(GetArgumentExpression));
 
                 var call = $"{method.FullyQualifiedName}({argString})";
 
@@ -233,6 +240,16 @@ internal class ProgramClassFileGenerator(
         }
     }
 
+    // Params values are gathered into a List<T>; a collection expression converts to any C# 13 params collection
+    // type, while arrays use ToArray() so they still compile on language versions without collection expressions
+    private static string GetArgumentExpression(CommandParameter parameter) =>
+        parameter switch
+        {
+            CommandParameter.Positional { Params: ParamsKind.Array } p => $"{p.SourceName}.ToArray()",
+            CommandParameter.Positional { Params: ParamsKind.Collection } p => $"{p.SourceName}Argument",
+            var p => p.SourceName
+        };
+
     private void WriteParameterAssignments(CommandMethod method)
     {
         foreach (var p in
@@ -241,6 +258,7 @@ internal class ProgramClassFileGenerator(
                 {
                     CommandParameter.Option { IsFlag: true } => 0,
                     CommandParameter.Option => 1,
+                    CommandParameter.Positional { IsParams: true } => 3,
                     _ => 2
                 }
                 ))
@@ -264,6 +282,12 @@ internal class ProgramClassFileGenerator(
                             WriteError($"Missing value for option '--{option.Name}'");
                             _codeBuilder.AppendLine("processingError = true;");
                         }
+                        break;
+                    }
+                case CommandParameter.Positional { IsParams: true } positional:
+                    {
+                        _codeBuilder.AppendLine(
+                            $"MatchAllPositionals(args, {positional.SourceName}, s => {ConvertParameter(positional.Type, "s")}, ref unclaimedArgs);");
                         break;
                     }
                 case var positional:
@@ -305,6 +329,7 @@ internal class ProgramClassFileGenerator(
             CommandParameter.Option p when IsFlag(p) => $"[<{p.Name}>]",
             CommandParameter.Option p when p.Alias.IsSome(out var alias) => $"[-{alias}, --{p.Name} <{p.SourceName}>]",
             CommandParameter.Option p => $"[--{p.Name}]",
+            CommandParameter.Positional { IsParams: true } p => $"[<{p.Name}>...]",
             var p => $"<{p.Name}>",
         };
 
@@ -319,8 +344,9 @@ internal class ProgramClassFileGenerator(
     {
         return parameter switch
         {
-            { Type: ParameterType.Enum e } =>
-                $"<{e.EnumValues.Select(v => v.HelpName).Truncate(3, "..").StringJoin("|")}>",
+            { Type: ParameterType.Enum e } p =>
+                $"<{e.EnumValues.Select(v => v.HelpName).Truncate(3, "..").StringJoin("|")}>{(p.IsParams ? "..." : "")}",
+            { IsParams: true } p => $"{p.Name}...",
             var p => $"{p.Name}",
         };
     }
@@ -339,6 +365,11 @@ internal class ProgramClassFileGenerator(
                 $"{parameterName} <{parameter.SourceName}>",
         };
     }
+
+    private string GetPositionalDescription(CommandParameter.Positional parameter) =>
+        parameter.IsParams
+            ? $"{parameter.Description | ""} (zero or more values)"
+            : parameter.Description | "";
 
     private string GetOptionDescription(CommandParameter.Option parameter) =>
         parameter.HelpDefaultValue.IsSome(out var defaultValue)
@@ -472,6 +503,21 @@ internal class ProgramClassFileGenerator(
                         }
 
                         return false;
+                    }
+
+                    // Consumes every remaining positional argument into a params parameter
+                    static void MatchAllPositionals<T>(string[] args, List<T> values, Func<string, T> mapper, ref UnclaimedArgs unclaimedArgs)
+                    {
+                        for (var index = 0; index < unclaimedArgs.Length; index++)
+                        {
+                            if (!unclaimedArgs[index]) continue;
+                            var arg = args[index];
+                            if (!arg.StartsWith("-"))
+                            {
+                                values.Add(mapper(arg));
+                                unclaimedArgs.Clear(index);
+                            }
+                        }
                     }
 
                     static bool MatchNextFlag(string[] args, string optionName, string optionAlias, ref bool value, ref UnclaimedArgs unclaimedArgs)
@@ -635,7 +681,7 @@ internal class ProgramClassFileGenerator(
                 );
 
                 var helpNames =
-                    method.MandatoryParameters.Select(p => (GetSoloHelpFirstColumn(p), p.Description));
+                    method.MandatoryParameters.Select(p => (GetSoloHelpFirstColumn(p), GetPositionalDescription(p)));
 
                 var longestParameter = helpNames.MaxOrDefault(x => x.Item1.Length);
 

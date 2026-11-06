@@ -233,6 +233,21 @@ namespace Consolo.TestSource.g
             return false;
         }
 
+        // Consumes every remaining positional argument into a params parameter
+        static void MatchAllPositionals<T>(string[] args, List<T> values, Func<string, T> mapper, ref UnclaimedArgs unclaimedArgs)
+        {
+            for (var index = 0; index < unclaimedArgs.Length; index++)
+            {
+                if (!unclaimedArgs[index]) continue;
+                var arg = args[index];
+                if (!arg.StartsWith("-"))
+                {
+                    values.Add(mapper(arg));
+                    unclaimedArgs.Clear(index);
+                }
+            }
+        }
+
         static bool MatchNextFlag(string[] args, string optionName, string optionAlias, ref bool value, ref UnclaimedArgs unclaimedArgs)
         {
             for (var index = 0; index < unclaimedArgs.Length; index++)
