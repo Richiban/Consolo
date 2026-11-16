@@ -97,7 +97,7 @@ internal class SnapshotTests : GeneratorTests
         programText.ShouldContain("var normalizeArgs = false;");
         programText.ShouldContain("normalizedArgs.Add($\"-{arg[j]}\");");
         programText.ShouldContain("var isHelp = false;");
-        programText.ShouldContain("for (var i = args.Length - 1; i >= 0; i--)");
+        programText.ShouldContain("for (var i = (endOfOptions < 0 ? args.Length : endOfOptions) - 1; i >= 0; i--)");
         programText.ShouldNotContain("using System.Linq;");
         programText.ShouldNotContain(".Any(");
         programText.ShouldNotContain(".Select");
