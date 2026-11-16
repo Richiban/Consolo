@@ -157,6 +157,23 @@ internal class E2ETests
     }
 
     [Test]
+    public void ArgumentAfterEndOfOptionsIsAPositionalValue()
+    {
+        Program.Main(["greet", "--", "-l"]);
+
+        _testError.ToString().ShouldBeEmpty();
+        _testOutput.ToString().ShouldBe("Hello, -l" + Environment.NewLine);
+    }
+
+    [Test]
+    public void ArgumentAfterEndOfOptionsWithNoParameterToTakeItIsUnrecognised()
+    {
+        Program.Main(["log", "1", "--", "--foo"]);
+
+        _testError.ToString().ShouldBe($"Unrecognised args: --foo{Environment.NewLine}");
+    }
+
+    [Test]
     public void VersionCommandPrintsVersion()
     {
         Program.Main(["--version"]);

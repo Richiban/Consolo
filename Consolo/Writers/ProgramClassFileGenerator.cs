@@ -68,9 +68,12 @@ internal class ProgramClassFileGenerator(
                 WriteCommandDebug(rootCommand);
                 _codeBuilder.AppendLine();
 
+                // Everything after the first "--" is a positional value, however it is spelt: never an option,
+                // never --help, never expanded
                 _codeBuilder.AppendLines("var normalizeArgs = false;", "for (var i = 0; i < args.Length; i++)");
                 using (_codeBuilder.IndentBraces())
                 {
+                    _codeBuilder.AppendLine("if (args[i] == \"--\") break;");
                     _codeBuilder.AppendLine("if (args[i].StartsWith(' ') && !args[i].StartsWith(\"--\"))");
                     using (_codeBuilder.IndentBraces())
                     {
@@ -80,11 +83,12 @@ internal class ProgramClassFileGenerator(
                 _codeBuilder.AppendLine("if (normalizeArgs)");
                 using (_codeBuilder.IndentBraces())
                 {
-                    _codeBuilder.AppendLines("var normalizedArgs = new List<string>();", "for (var i = 0; i < args.Length; i++)");
+                    _codeBuilder.AppendLines("var normalizedArgs = new List<string>();", "var literal = false;", "for (var i = 0; i < args.Length; i++)");
                     using (_codeBuilder.IndentBraces())
                     {
                         _codeBuilder.AppendLine("var arg = args[i];");
-                        _codeBuilder.AppendLine("if (arg.StartsWith(' ') && !arg.StartsWith(\"--\"))");
+                        _codeBuilder.AppendLine("literal = literal || arg == \"--\";");
+                        _codeBuilder.AppendLine("if (!literal && arg.StartsWith(' ') && !arg.StartsWith(\"--\"))");
                         using (_codeBuilder.IndentBraces())
                         {
                             _codeBuilder.AppendLine("for (var j = 1; j < arg.Length; j++)");
@@ -103,7 +107,10 @@ internal class ProgramClassFileGenerator(
                 }
                 _codeBuilder.AppendLine();
 
-                _codeBuilder.AppendLines("var isHelp = false;", "for (var i = args.Length - 1; i >= 0; i--)");
+                _codeBuilder.AppendLine("var endOfOptions = Array.IndexOf(args, \"--\");");
+                _codeBuilder.AppendLine();
+
+                _codeBuilder.AppendLines("var isHelp = false;", "for (var i = (endOfOptions < 0 ? args.Length : endOfOptions) - 1; i >= 0; i--)");
                 using (_codeBuilder.IndentBraces())
                 {
                     _codeBuilder.AppendLine("if (args[i] == \"--help\" || args[i] == \"-h\" || args[i] == \"-?\")");
@@ -184,7 +191,7 @@ internal class ProgramClassFileGenerator(
         using (_codeBuilder.IndentBraces())
         {
             _codeBuilder.AppendLine(
-                $"var unclaimedArgs = new UnclaimedArgs(args.Length, {path.Length});");
+                $"var unclaimedArgs = new UnclaimedArgs(args.Length, {path.Length}, endOfOptions);");
 
             _codeBuilder.AppendLine("var processingError = false;");
 
@@ -421,14 +428,17 @@ internal class ProgramClassFileGenerator(
                     #pragma warning disable CS8321
                     // Tracks unclaimed argument indexes. Up to 64 arguments are held in a ulong bit mask
                     // (a set bit means unclaimed); longer invocations fall back to a bool[].
+                    // Arguments from LiteralStart on follow a "--": they are values for positional parameters,
+                    // whatever they start with, and the "--" itself is claimed.
                     private struct UnclaimedArgs
                     {
                         private ulong _mask;
                         private readonly bool[] _flags;
 
-                        public UnclaimedArgs(int length, int start)
+                        public UnclaimedArgs(int length, int start, int endOfOptions)
                         {
                             Length = length;
+                            LiteralStart = endOfOptions < 0 ? length : endOfOptions + 1;
                             _mask = 0;
                             _flags = Array.Empty<bool>();
 
@@ -450,9 +460,18 @@ internal class ProgramClassFileGenerator(
                                     _flags[i] = true;
                                 }
                             }
+
+                            if (endOfOptions >= start && endOfOptions < length)
+                            {
+                                Clear(endOfOptions);
+                            }
                         }
 
                         public int Length { get; }
+
+                        public int LiteralStart { get; }
+
+                        public bool IsLiteral(int index) => index >= LiteralStart;
 
                         public bool this[int index] =>
                             index >= 0 && index < Length
@@ -494,7 +513,7 @@ internal class ProgramClassFileGenerator(
                         {
                             if (!unclaimedArgs[index]) continue;
                             var arg = args[index];
-                            if (!arg.StartsWith("-"))
+                            if (unclaimedArgs.IsLiteral(index) || !arg.StartsWith("-"))
                             {
                                 value = mapper(arg);
                                 unclaimedArgs.Clear(index);
@@ -512,7 +531,7 @@ internal class ProgramClassFileGenerator(
                         {
                             if (!unclaimedArgs[index]) continue;
                             var arg = args[index];
-                            if (!arg.StartsWith("-"))
+                            if (unclaimedArgs.IsLiteral(index) || !arg.StartsWith("-"))
                             {
                                 values.Add(mapper(arg));
                                 unclaimedArgs.Clear(index);
@@ -522,7 +541,7 @@ internal class ProgramClassFileGenerator(
 
                     static bool MatchNextFlag(string[] args, string optionName, string optionAlias, ref bool value, ref UnclaimedArgs unclaimedArgs)
                     {
-                        for (var index = 0; index < unclaimedArgs.Length; index++)
+                        for (var index = 0; index < unclaimedArgs.LiteralStart; index++)
                         {
                             if (!unclaimedArgs[index]) continue;
                             var arg = args[index];
@@ -567,14 +586,14 @@ internal class ProgramClassFileGenerator(
                     // Returns 2 if the option is found but the value is missing
                     static int MatchNextOption<T>(string[] args, string optionName, string optionAlias, ref T value, Func<string, T> mapper, ref UnclaimedArgs unclaimedArgs)
                     {
-                        for (var i = 0; i < unclaimedArgs.Length; i++)
+                        for (var i = 0; i < unclaimedArgs.LiteralStart; i++)
                         {
                             if (!unclaimedArgs[i]) continue;
                             var arg = args[i];
 
                             if (optionName == arg || optionAlias.Length > 0 && optionAlias == arg)
                             {
-                                if (i + 1 < args.Length && unclaimedArgs[i + 1] && !args[i + 1].StartsWith("-"))
+                                if (i + 1 < unclaimedArgs.LiteralStart && unclaimedArgs[i + 1] && !args[i + 1].StartsWith("-"))
                                 {
                                     value = mapper(args[i + 1]);
                                     unclaimedArgs.Clear(i);

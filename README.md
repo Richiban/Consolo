@@ -35,6 +35,12 @@ public static void Echo(string prefix, params string[] words) { }
 // echo p        ->  words = []
 ```
 
+A `--` ends the options: every argument after it is a positional value, even one that starts with `-`, and a `--help` after it is a value too.
+
+```
+echo p -- -a --b  ->  prefix = "p", words = ["-a", "--b"]
+```
+
 `params` arrays work with any language version. With C# 13 or later, params collections such as `params IEnumerable<T>`, `params List<T>` and `params ReadOnlySpan<T>` are supported too.
 
 Collection parameters that aren't `params` (e.g. `string[] words`) are not supported.

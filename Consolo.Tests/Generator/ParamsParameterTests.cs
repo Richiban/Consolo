@@ -195,6 +195,54 @@ internal class ParamsParameterTests : GeneratorTests
     }
 
     [Test]
+    public void ArgumentsAfterEndOfOptionsAreValuesWhateverTheyStartWith()
+    {
+        var (exitCode, result, error, _) = Run("echo", "p", "--", "-a", "--b", "--times", "2");
+
+        error.ShouldBeEmpty();
+        exitCode.ShouldBe(0);
+        result.ShouldBe("p:-a,--b,--times,2");
+    }
+
+    [Test]
+    public void OptionsBeforeEndOfOptionsAreStillRead()
+    {
+        var (exitCode, result, _, _) = Run("repeat", "--times", "2", "a", "--", "--times");
+
+        exitCode.ShouldBe(0);
+        result.ShouldBe("2:a,--times");
+    }
+
+    [Test]
+    public void HelpAfterEndOfOptionsIsAValue()
+    {
+        var (exitCode, result, _, output) = Run("echo", "--", "--help");
+
+        exitCode.ShouldBe(0);
+        result.ShouldBe("--help:");
+        output.ShouldNotContain("Usage:");
+    }
+
+    [Test]
+    public void AnOptionDoesNotTakeItsValueFromAfterEndOfOptions()
+    {
+        var (exitCode, _, error, _) = Run("repeat", "--times", "--", "2");
+
+        exitCode.ShouldBe(1);
+        error.ShouldStartWith("Missing value for option '--times'");
+    }
+
+    [Test]
+    public void EndOfOptionsAloneLeavesParamsEmpty()
+    {
+        var (exitCode, result, error, _) = Run("echo", "p", "--");
+
+        error.ShouldBeEmpty();
+        exitCode.ShouldBe(0);
+        result.ShouldBe("p:");
+    }
+
+    [Test]
     public void ParamsEnumerableIsSupported()
     {
         var (exitCode, result, _, _) = Run("enumerable", "a", "b");
